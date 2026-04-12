@@ -230,6 +230,12 @@ class GameEngine {
             const { row, col } = this.#randomEmptyCell(cells, config);
             // Copie profonde suffisante pour l'arme de base
             const player = { ...allPlayers[k], weapon: { ...allPlayers[k].weapon } };
+
+            // Le joueur à l'index 1 est toujours le bot si un mode IA est sélectionné
+            if (k === 1 && config.aiMode !== 'none') {
+                player.isAI = true;
+            }
+
             const playerInfo = { player, position: { row, col } };
             cells[row][col].player = player;
             players.push(playerInfo);

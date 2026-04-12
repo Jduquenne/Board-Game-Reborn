@@ -32,7 +32,10 @@ export class PlayersSidebar extends Component {
                 <div class="playerTopInfos">
                     <img class="playerImg" src="${AssetManager.player(player)}" alt="${player.name}">
                     <div class="playerInfos">
-                        <div class="playerName">${player.name}</div>
+                        <div class="playerName">
+                            ${player.name}
+                            ${player.isAI ? '<span class="ai-badge">IA</span>' : ''}
+                        </div>
                         <div class="playerHealth">Points de vie : ${player.health}</div>
                         <div class="playerMaxMove">PM : ${player.maxMove}</div>
                     </div>

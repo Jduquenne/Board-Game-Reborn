@@ -12,12 +12,18 @@ const OPTIONS = [
     { key: 'nbTraps',     label: 'Nombre de pièges',      min: 1, max: 5,  default: 3  },
 ];
 
+const AI_MODES = [
+    { key: 'none',   label: '2 Joueurs' },
+    { key: 'easy',   label: 'IA Facile'  },
+    { key: 'normal', label: 'IA Normal'  },
+];
+
 export class OptionsView extends Component {
     #config = { ...store.state.config };
 
     render() {
         return `
-            <div class="mainMenu">
+            <div class="mainMenu options-view">
                 <div class="title h150px fatFont">Board Game Reborn</div>
                 <div class="menuSelectOptions">
                     ${OPTIONS.map((opt, i) => `
@@ -33,6 +39,20 @@ export class OptionsView extends Component {
                         </div>
                     `).join('')}
                 </div>
+
+                <div class="ai-mode-selector">
+                    <span class="whiteFont">Mode de jeu</span>
+                    <div class="groupBtnRow">
+                        ${AI_MODES.map(m => `
+                            <button
+                                class="btn borderPixel ${this.#config.aiMode === m.key ? 'btn-active' : ''}"
+                                data-ai="${m.key}">
+                                ${m.label}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+
                 <div class="flex h150px">
                     <button class="btn borderPixel fatFont" id="btn-start">Lancer le combat</button>
                     <button class="btn borderPixel fatFont" id="btn-back">Retour</button>
@@ -42,23 +62,35 @@ export class OptionsView extends Component {
     }
 
     onMount() {
-        // Event delegation — un seul listener pour tous les spinners
+        // Event delegation — gère les spinners ET les boutons de mode IA
         this.root.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action]');
-            if (!btn) return;
+            // Spinners
+            const spinnerBtn = e.target.closest('[data-action]');
+            if (spinnerBtn) {
+                const key    = spinnerBtn.dataset.key;
+                const action = spinnerBtn.dataset.action;
+                const input  = this.query(`input[data-key="${key}"]`);
+                const min    = parseInt(input.dataset.min);
+                const max    = parseInt(input.dataset.max);
+                let   val    = parseInt(input.value);
 
-            const key    = btn.dataset.key;
-            const action = btn.dataset.action;
-            const input  = this.query(`input[data-key="${key}"]`);
-            const min    = parseInt(input.dataset.min);
-            const max    = parseInt(input.dataset.max);
-            let   val    = parseInt(input.value);
+                if (action === 'increment' && val < max) val++;
+                if (action === 'decrement' && val > min) val--;
 
-            if (action === 'increment' && val < max) val++;
-            if (action === 'decrement' && val > min) val--;
+                input.value = val;
+                this.#config[key] = val;
+                return;
+            }
 
-            input.value = val;
-            this.#config[key] = val;
+            // Mode IA
+            const aiBtn = e.target.closest('[data-ai]');
+            if (aiBtn) {
+                this.#config.aiMode = aiBtn.dataset.ai;
+                // Met à jour l'état visuel de tous les boutons de mode
+                this.queryAll('[data-ai]').forEach(btn => {
+                    btn.classList.toggle('btn-active', btn.dataset.ai === this.#config.aiMode);
+                });
+            }
         });
 
         this.query('#btn-start').addEventListener('click', () => {

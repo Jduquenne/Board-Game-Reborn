@@ -6,6 +6,12 @@
     --third:     #344973;
 }
 
+html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
 body {
     background-color: var(--third);
     font-family: 'VT323', monospace;
@@ -73,13 +79,14 @@ body {
 
 #app {
     background-color: var(--primary);
-    width: 100%;
-    min-height: 100vh;
+    width: 100vw;
+    height: 100vh;
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
     margin: auto;
     display: flex;
     justify-content: center;
+    overflow: hidden;
 }
 
 /* ─── Menu principal ──────────────────────────────────────────────────────── */
@@ -92,7 +99,9 @@ body {
     height: 100vh;
     width: 100vw;
     padding: 0 60px;
+    box-sizing: border-box;
     background-color: var(--primary);
+    overflow: hidden;
 }
 
 .mainMenu .title {
@@ -113,7 +122,8 @@ body {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(2, 1fr);
-    height: calc(100vh - 150px);
+    flex: 1;
+    min-height: 0;
     width: 100%;
 }
 
@@ -143,14 +153,93 @@ body {
     border-image-repeat: stretch;
 }
 
+/* ─── Options — mode IA ───────────────────────────────────────────────────── */
+
+.ai-mode-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0;
+}
+
+/* Bouton de mode actif (2 Joueurs / IA Facile / IA Normal) */
+.btn-active {
+    background-color: var(--secondary);
+    color: #dddddd;
+    box-shadow: 0 0 0 0.1875rem white, 0 0 0 0.375rem var(--secondary);
+}
+
+/* ─── Badge IA dans la sidebar ────────────────────────────────────────────── */
+
+.ai-badge {
+    display: inline-block;
+    background-color: var(--secondary);
+    color: #dddddd;
+    font-size: 14px;
+    font-family: inherit;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+/* ─── Options — responsive hauteur ───────────────────────────────────────── */
+/*
+ * Les surcharges ci-dessous s'appliquent uniquement à la vue Options.
+ * Elles utilisent clamp() pour que les éléments s'adaptent à la hauteur
+ * de l'écran sans jamais déborder du viewport.
+ */
+
+.options-view.mainMenu {
+    justify-content: flex-start;
+    padding-top: clamp(8px, 1.5vh, 30px);
+    padding-bottom: clamp(8px, 1.5vh, 30px);
+}
+
+.options-view .mainMenu .title,
+.options-view .title {
+    height: clamp(40px, 8vh, 150px);
+    font-size: clamp(20px, 4vh, 50px);
+}
+
+.options-view .fatFont {
+    font-size: clamp(18px, 3.5vh, 50px);
+    margin: clamp(3px, 0.6vh, 15px);
+}
+
+.options-view .btn {
+    padding: clamp(3px, 0.7vh, 12px) clamp(8px, 1.5vw, 40px);
+    margin: clamp(3px, 0.6vh, 15px);
+}
+
+.options-view .spinner {
+    font-size: clamp(14px, 2.5vh, 24px);
+    padding: clamp(6px, 1.2vh, 20px) clamp(8px, 1.5vw, 30px);
+}
+
+.options-view .h150px {
+    height: clamp(48px, 9vh, 150px);
+}
+
+.options-view .ai-mode-selector {
+    padding: clamp(3px, 0.6vh, 12px) 0;
+    gap: clamp(2px, 0.4vh, 8px);
+}
+
 /* ─── Plateau de jeu ──────────────────────────────────────────────────────── */
 
 .game {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
     align-items: center;
+    justify-content: center;
 }
 
 #board {
     position: relative;
+    flex-shrink: 0;
     box-sizing: border-box;
     border: 5px solid var(--secondary);
     transition: 1.5s;
@@ -178,8 +267,9 @@ body {
     justify-content: center;
     align-items: center;
     background-size: cover;
-    height: 60px;
-    width: 60px;
+    height: var(--cell-size, 60px);
+    width: var(--cell-size, 60px);
+    flex-shrink: 0;
 }
 
 .obstacle,
@@ -187,30 +277,30 @@ body {
 .obstacle::before {
     content: "";
     float: left;
-    height: 60px;
+    height: var(--cell-size, 60px);
     position: absolute;
-    width: 60px;
+    width: var(--cell-size, 60px);
 }
 
 .obstacle {
-    width: 60px;
-    height: 60px;
+    width: var(--cell-size, 60px);
+    height: var(--cell-size, 60px);
     position: relative;
     transform-style: preserve-3d;
-    transform: translateZ(60px);
+    transform: translateZ(var(--cell-size, 60px));
 }
 
 .obstacle::after {
     background-image: inherit;
     background-size: cover;
-    transform: rotateX(-90deg) translateY(60px);
+    transform: rotateX(-90deg) translateY(var(--cell-size, 60px));
     transform-origin: 100% 100%;
 }
 
 .obstacle::before {
     background-image: inherit;
     background-size: cover;
-    transform: rotateY(90deg) translateX(60px);
+    transform: rotateY(90deg) translateX(var(--cell-size, 60px));
     transform-origin: 100% 0;
 }
 
@@ -268,6 +358,10 @@ body {
     flex-direction: column;
     align-items: center;
     margin: 20px;
+    flex-shrink: 0;
+    max-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .playersTitle {

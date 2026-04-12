@@ -8,4 +8,5 @@ export const createPlayer = (name, health, image, maxMove) => ({
     weapon: createWeapon('Épée de boisaille', 10, 'basic_weapon.png'),
     image,
     maxMove,
+    isAI: false,
 });
