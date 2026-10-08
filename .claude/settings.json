@@ -1,0 +1,48 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "PowerShell(git status:*)",
+      "Bash(git diff:*)",
+      "PowerShell(git diff:*)",
+      "Bash(git log:*)",
+      "PowerShell(git log:*)",
+      "Bash(git show:*)",
+      "PowerShell(git show:*)"
+    ],
+    "ask": [
+      "Bash(git init:*)",
+      "PowerShell(git init:*)",
+      "Bash(git add:*)",
+      "PowerShell(git add:*)",
+      "Bash(git commit:*)",
+      "PowerShell(git commit:*)",
+      "Bash(git push:*)",
+      "PowerShell(git push:*)",
+      "Bash(git pull:*)",
+      "PowerShell(git pull:*)",
+      "Bash(git merge:*)",
+      "PowerShell(git merge:*)",
+      "Bash(git rebase:*)",
+      "PowerShell(git rebase:*)",
+      "Bash(git reset:*)",
+      "PowerShell(git reset:*)",
+      "Bash(git checkout:*)",
+      "PowerShell(git checkout:*)",
+      "Bash(git switch:*)",
+      "PowerShell(git switch:*)",
+      "Bash(git stash:*)",
+      "PowerShell(git stash:*)",
+      "Bash(git tag:*)",
+      "PowerShell(git tag:*)",
+      "Bash(git branch:*)",
+      "PowerShell(git branch:*)",
+      "Bash(git clean:*)",
+      "PowerShell(git clean:*)",
+      "Bash(git restore:*)",
+      "PowerShell(git restore:*)",
+      "Bash(git remote:*)",
+      "PowerShell(git remote:*)"
+    ]
+  }
+}
