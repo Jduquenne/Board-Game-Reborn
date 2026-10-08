@@ -51,6 +51,17 @@ export class BattleBanner extends Component {
     }
 
     #setBannerActionChoice(attacker) {
+        // Tour de l'IA : pas de boutons, AIEngine choisit l'action
+        if (attacker.player.isAI) {
+            this.root.innerHTML = `
+                <h2 class="battleInfosText">
+                    <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="">
+                    ${attacker.player.name} réfléchit…
+                </h2>
+            `;
+            return;
+        }
+
         this.root.innerHTML = `
             <h2 class="battleInfosText">
                 <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="">

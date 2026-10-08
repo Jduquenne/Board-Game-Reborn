@@ -1,33 +1,48 @@
 import { eventBus } from '../core/EventBus.js';
 import { store } from '../core/Store.js';
 import { gameEngine } from './GameEngine.js';
+import { fightEngine } from './FightEngine.js';
 
 // Délai en ms avant que l'IA joue — simule une "réflexion" et rend le tour visible
 const THINK_DELAY = 900;
 
+// Délai en ms avant une action de combat — doit rester supérieur aux délais
+// d'affichage de BattleBanner (1000 ms au début du combat, 600 ms entre les rounds)
+const FIGHT_THINK_DELAY = 1500;
+
+// Mode facile : probabilité d'attaquer plutôt que de se défendre
+const EASY_ATTACK_CHANCE = 0.7;
+
 class AIEngine {
-    #unsub   = null;
+    #unsubs  = [];
     #timeout = null;
 
     // Démarre l'écoute des événements — appelé par GameView au montage
     start() {
-        this.#unsub = eventBus.on('turn:changed', ({ activePlayerIndex }) => {
-            const { players, config, phase } = store.state;
+        this.#unsubs = [
+            eventBus.on('turn:changed', ({ activePlayerIndex }) => {
+                const { players, config, phase } = store.state;
 
-            if (phase !== 'playing')      return;
-            if (config.aiMode === 'none') return;
+                if (phase !== 'playing')      return;
+                if (config.aiMode === 'none') return;
 
-            const activeInfo = players[activePlayerIndex];
-            if (!activeInfo.player.isAI)  return;
+                const activeInfo = players[activePlayerIndex];
+                if (!activeInfo.player.isAI)  return;
 
-            // On attend avant de jouer pour que le joueur humain voie ce qui se passe
-            this.#timeout = setTimeout(() => this.#playTurn(config.aiMode), THINK_DELAY);
-        });
+                // On attend avant de jouer pour que le joueur humain voie ce qui se passe
+                this.#timeout = setTimeout(() => this.#playTurn(config.aiMode), THINK_DELAY);
+            }),
+
+            // Combat : l'IA joue quand elle est l'attaquant (début du combat ou nouveau round)
+            eventBus.on('fight:start',     ({ attacker })     => this.#scheduleFightAction(attacker)),
+            eventBus.on('fight:round-end', ({ nextAttacker }) => this.#scheduleFightAction(nextAttacker)),
+        ];
     }
 
     // Arrête tout — appelé par GameView au démontage
     stop() {
-        if (this.#unsub)   { this.#unsub(); this.#unsub = null; }
+        this.#unsubs.forEach(unsub => unsub());
+        this.#unsubs = [];
         if (this.#timeout) { clearTimeout(this.#timeout); this.#timeout = null; }
     }
 
@@ -47,6 +62,32 @@ class AIEngine {
             : this.#smartMove(movableCells, players, activePlayerIndex);
 
         gameEngine.movePlayer(chosen.row, chosen.col);
+    }
+
+    #scheduleFightAction(attackerInfo) {
+        const { config } = store.state;
+
+        if (config.aiMode === 'none')   return;
+        if (!attackerInfo.player.isAI)  return;
+
+        this.#timeout = setTimeout(() => this.#playFightAction(config.aiMode), FIGHT_THINK_DELAY);
+    }
+
+    #playFightAction(difficulty) {
+        const { fight, players, phase } = store.state;
+
+        if (phase !== 'fighting' || !fight) return;
+
+        const me    = players[fight.attackerIndex];
+        const enemy = players[fight.targetIndex];
+        if (!me.player.isAI) return;
+
+        const shouldAttack = difficulty === 'easy'
+            ? Math.random() < EASY_ATTACK_CHANCE
+            : this.#smartFightChoice(me.player, enemy.player);
+
+        if (shouldAttack) fightEngine.attack();
+        else              fightEngine.defend();
     }
 
     // ─── Stratégies ───────────────────────────────────────────────────────────
@@ -102,6 +143,20 @@ class AIEngine {
             const dCell = Math.abs(cell.row - targetPosition.row) + Math.abs(cell.col - targetPosition.col);
             return dCell < dBest ? cell : best;
         });
+    }
+
+    // Combat normal : retourne true pour attaquer, false pour se défendre
+    #smartFightChoice(me, enemy) {
+        // Priorité 1 : achever l'adversaire si notre coup suffit (sa défense divise par 2)
+        const myDamage = enemy.defense ? Math.floor(me.weapon.damage / 2) : me.weapon.damage;
+        if (myDamage >= enemy.health) return true;
+
+        // Priorité 2 : se défendre si le prochain coup adverse peut nous tuer
+        // (inutile si on est déjà en défense — le bonus ne se cumule pas)
+        if (!me.defense && enemy.weapon.damage >= me.health) return false;
+
+        // Priorité 3 : attaquer
+        return true;
     }
 }
 
