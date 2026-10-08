@@ -44,9 +44,21 @@ Confirmed by the owner on 2026-10-08.
 
 Decided by the owner on 2026-10-08. Approach recorded in [D-008](decisions.md#d-008--tests-with-nodes-built-in-test-runner); 44 tests cover `MovementSystem`, `GameEngine`, `FightEngine` and `AIEngine` (2026-10-08). The test command is part of the end-of-task checklist in `AGENTS.md`. Done when: a zero-dependency test approach is recorded in [decisions](decisions.md), `Engine/` logic (movement, pickups, traps, fights, AI choices) is covered, and the test command is part of the end-of-task checklist in `AGENTS.md`.
 
-### ⬜ Phase 5 — UI/UX overhaul
+### 🟡 Phase 5 — UI/UX overhaul
 
-Site-wide review of the UI/UX, decided by the owner on 2026-10-08 (includes the fixed `.h150px` heights). Done when: TODO(owner) — scope to be defined.
+Site-wide review of the UI/UX, decided by the owner on 2026-10-08 (includes the fixed `.h150px` heights). Inventory done on 2026-10-08: [UI/UX audit](ui-design.md#uiux-audit-2026-10-08) (U-01 … U-53). 
+
+Scope decided by the owner on 2026-10-08:
+- **Fully responsive on every screen type** (phone portrait/landscape, tablet, desktop).
+- **Keep the current visual style** (pixel border, VT323 font, dungeon tiles), cleaned up.
+- **Isometric view kept**, improved where needed.
+
+Delivered in three batches, each checked in a browser by the owner:
+- 🟡 **Batch A — quick fixes**: U-03 colour variables, U-04 focus / accessible close button / image `alt`, U-05 spelling, U-06 inline styles, U-52 duplicated banner CSS. Done on 2026-10-08; awaiting the owner's browser check.
+- ⬜ **Batch B — playability**: U-34 visible fight cells, U-35 active player on the board, U-36 weapon spin, U-37 confirm before leaving, U-41/U-42 complete rules and closing, U-51 health in the fight banner, U-53 end-of-game choice.
+- ⬜ **Batch C — responsive layout**: U-01, U-02, U-07?, U-10, U-20, U-21, U-30, U-31, U-32, U-33, U-40, U-50 (closes the last Phase 3 item). Keyboard play on the board (rest of U-04) to be decided.
+
+Done when: the three batches are done and the owner has checked every screen on a phone, a tablet and a desktop without scroll or overflow.
 
 ## Ideas / later
 

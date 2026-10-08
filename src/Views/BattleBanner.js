@@ -45,9 +45,9 @@ export class BattleBanner extends Component {
     #setBannerFightStart(attacker, target) {
         this.root.innerHTML = `
             <h2 class="battleInfosText">
-                <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="">
+                <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="${attacker.player.name}">
                 ${attacker.player.name} lance le combat contre ${target.player.name} !
-                <img class="targetImg" src="${AssetManager.player(target.player)}" alt="">
+                <img class="targetImg" src="${AssetManager.player(target.player)}" alt="${target.player.name}">
             </h2>
         `;
     }
@@ -57,7 +57,7 @@ export class BattleBanner extends Component {
         if (attacker.player.isAI) {
             this.root.innerHTML = `
                 <h2 class="battleInfosText">
-                    <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="">
+                    <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="${attacker.player.name}">
                     ${attacker.player.name} réfléchit…
                 </h2>
             `;
@@ -66,7 +66,7 @@ export class BattleBanner extends Component {
 
         this.root.innerHTML = `
             <h2 class="battleInfosText">
-                <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="">
+                <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="${attacker.player.name}">
                 <button class="btn" id="btn-attack">Attaquer</button>
                 <button class="btn" id="btn-defend">Se défendre</button>
             </h2>
@@ -78,11 +78,11 @@ export class BattleBanner extends Component {
     #setBannerDamage(attacker, target, damage) {
         this.root.innerHTML = `
             <h2 class="battleInfosText">
-                <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="">
+                <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="${attacker.player.name}">
                 ${attacker.player.name} inflige
                 <span class="bannerDmg">${damage}</span>
                 dégâts à ${target.player.name} !
-                <img class="targetImg" src="${AssetManager.player(target.player)}" alt="">
+                <img class="targetImg" src="${AssetManager.player(target.player)}" alt="${target.player.name}">
             </h2>
         `;
     }
@@ -90,7 +90,7 @@ export class BattleBanner extends Component {
     #setBannerDefend(attacker, target) {
         this.root.innerHTML = `
             <h2 class="battleInfosText">
-                <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="">
+                <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="${attacker.player.name}">
                 ${attacker.player.name} se défend ! Au tour de ${target.player.name}.
             </h2>
         `;
@@ -99,7 +99,7 @@ export class BattleBanner extends Component {
     #setBannerWin(winner) {
         this.root.innerHTML = `
             <h2 class="battleInfosText">
-                <img class="attackerImg" src="${AssetManager.player(winner.player)}" alt="">
+                <img class="attackerImg" src="${AssetManager.player(winner.player)}" alt="${winner.player.name}">
                 ${winner.player.name} remporte le duel ! Félicitations !
             </h2>
         `;

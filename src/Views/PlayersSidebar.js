@@ -41,7 +41,7 @@ export class PlayersSidebar extends Component {
                     </div>
                 </div>
                 <div class="playerWeapon">
-                    <img class="playerWeaponImg" src="${AssetManager.weapon(player.weapon)}" alt="arme">
+                    <img class="playerWeaponImg" src="${AssetManager.weapon(player.weapon)}" alt="${player.weapon.name}">
                     <div class="playerWeaponName">
                         ${player.weapon.name} <span class="red">${player.weapon.damage}</span>
                     </div>

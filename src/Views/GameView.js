@@ -17,28 +17,28 @@ export class GameView extends Component {
         const weapons = WeaponsRepository.findAll();
 
         return `
-            <div class="game" style="display:flex">
+            <div class="game">
                 <div id="board"></div>
 
                 <div id="menu">
                     <h2 class="playersTitle whiteFont">Joueurs</h2>
                     <div class="playerInterface"></div>
                     <div class="groupBtnRow menuBtn">
-                        <button class="btn" id="btn-rules">Régles</button>
+                        <button class="btn" id="btn-rules">Règles</button>
                         <button class="btn" id="btn-isometric">Isometric</button>
-                        <button class="btn" id="btn-topview" style="display:none">Dessus</button>
+                        <button class="btn hidden" id="btn-topview">Dessus</button>
                         <button class="btn" id="btn-menu">Menu</button>
                     </div>
                 </div>
 
                 <div class="modalRules hidden" id="modal">
                     <div class="modalContent borderPixel">
-                        <h2 class="rulesTitle">Régles</h2>
-                        <span class="close" id="btn-close-rules">X</span>
+                        <h2 class="rulesTitle">Règles</h2>
+                        <button class="close" id="btn-close-rules" aria-label="Fermer les règles">X</button>
                         <p class="rule">- Un joueur peut ramasser une arme en marchant dessus.</p>
                         <p class="rule">- Un joueur peut ramasser un bonus en marchant dessus.</p>
                         <p class="rule">- Un duel commence lorsque 2 joueurs sont côte à côte.</p>
-                        <p class="rule">- Dégats des armes sur le terrain :</p>
+                        <p class="rule">- Dégâts des armes sur le terrain :</p>
                         <div id="weaponList">
                             ${weapons.map(w => `
                                 <div class="weaponInfo">
@@ -91,14 +91,14 @@ export class GameView extends Component {
 
         this.query('#btn-isometric').addEventListener('click', () => {
             this.query('#board').classList.add('isometric');
-            this.query('#btn-isometric').style.display = 'none';
-            this.query('#btn-topview').style.display   = 'block';
+            this.query('#btn-isometric').classList.add('hidden');
+            this.query('#btn-topview').classList.remove('hidden');
         });
 
         this.query('#btn-topview').addEventListener('click', () => {
             this.query('#board').classList.remove('isometric');
-            this.query('#btn-topview').style.display   = 'none';
-            this.query('#btn-isometric').style.display = 'block';
+            this.query('#btn-topview').classList.add('hidden');
+            this.query('#btn-isometric').classList.remove('hidden');
         });
 
         this.query('#btn-menu').addEventListener('click', () => router.navigate('menu'));

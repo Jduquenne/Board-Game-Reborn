@@ -13,6 +13,16 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Phase 5 scoped, Batch A (UI quick fixes)
+
+- **Done**: UI/UX audit written in `docs/ui-design.md` (U-01 … U-53, from code). Owner scope recorded in the roadmap: fully responsive on every screen, keep the current style, keep and improve the isometric view, three batches (A quick fixes, B playability, C responsive). Batch A: colour variables in `:root` (U-03); `:focus-visible` on buttons, rules close button is a real `<button>` with `aria-label`, character / weapon names as image `alt` (U-04, partly); spelling "Règles", "Paramètres", "Dégâts" (U-05); no more inline `style` toggles — `.hidden` class and `.game` CSS (U-06); battle and trap modal/banner CSS merged (U-52).
+- **Numbers**: `node --check` 26/26, 44/44 tests, golden-rule greps OK; CSS braces balanced, no undefined or unused variable; local server serves the changed files (200).
+- **Problems**: no browser available to the agent; the visual result is not checked.
+- **Still open**:
+  - Owner's browser check of Batch A (menu, options, game, rules modal, isometric toggle, fight and trap banners, keyboard Tab focus).
+  - Batch B (playability) and Batch C (responsive layout).
+  - Keyboard play on the board (rest of U-04): to be decided.
+
 ## 2026-10-08 — Automated tests (Phase 4)
 
 - **Done**: test suite with Node's built-in runner, no dependency ([D-008](../docs/decisions.md#d-008--tests-with-nodes-built-in-test-runner)): `tests/helpers.mjs` + one file per engine (`MovementSystem`, `GameEngine`, `FightEngine`, `AIEngine`). Test command added to the `AGENTS.md` checklist and golden rule 9; development, conventions, architecture and roadmap updated. No source code changed.

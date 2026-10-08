@@ -15,11 +15,10 @@ export class TrapBanner extends Component {
     #show(playerInfo) {
         const modal = document.querySelector('#trap-modal');
         modal.classList.remove('hidden');
-        modal.style.display = 'flex';
 
         this.root.innerHTML = `
             <div class="trapInfosText">
-                <img class="currentPlayerImg" src="${AssetManager.player(playerInfo.player)}" alt="">
+                <img class="currentPlayerImg" src="${AssetManager.player(playerInfo.player)}" alt="${playerInfo.player.name}">
                 ${playerInfo.player.name} déclenche un piège, -20 points de vie !
             </div>
         `;
@@ -28,7 +27,6 @@ export class TrapBanner extends Component {
     #hide() {
         const modal = document.querySelector('#trap-modal');
         modal.classList.add('hidden');
-        modal.style.display = '';
         this.root.innerHTML = '';
     }
 }

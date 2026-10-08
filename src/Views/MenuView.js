@@ -9,7 +9,7 @@ export class MenuView extends Component {
                 <div class="title h150px fatFont">Board Game Reborn</div>
                 <div class="menuSelect">
                     <button class="btn borderPixel fatFont" id="btn-play">Lancer le combat</button>
-                    <button class="btn borderPixel fatFont" id="btn-options">Paramétres</button>
+                    <button class="btn borderPixel fatFont" id="btn-options">Paramètres</button>
                 </div>
             </div>
         `;
