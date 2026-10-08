@@ -101,6 +101,6 @@ Inventory for [roadmap Phase 5](roadmap.md#-phase-5--uiux-overhaul). Derived fro
 ## Known deviations
 
 - Fixed on 2026-10-08 (Batch C): internal scroll in the game sidebar and the rules dialog; fixed `.h150px` heights (class removed).
-- U-04 (rest): the board cannot be played with the keyboard. ⏸ Waiting for the owner's decision.
+- U-04 (rest): the board cannot be played with the keyboard. Rejected by the owner on 2026-10-08 (not wanted).
 - U-07: the VT323 font is loaded from Google Fonts; offline, the browser fallback monospace font is used. Not addressed (embedding the font would add a third-party file to `assets/`, see [ATTRIBUTION](../ATTRIBUTION.md)).
 - The 360×640 phone screens are dense (small text in the player cards and options); readable in headless Chrome screenshots, to be confirmed on a real phone.

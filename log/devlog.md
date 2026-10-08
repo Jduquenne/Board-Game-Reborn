@@ -13,6 +13,15 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Phase 6: automated UI checks
+
+- **Done**: roadmap updated with the owner's new priorities (Phase 6 UI checks, Phase 7 smarter AI, Phase 8 game feel and content; keyboard play rejected). Added `tools/ui-check.mjs` (zero dependency: `node:http` server + headless Chrome via the DevTools protocol and Node's `WebSocket`), `tools/output/` in `.gitignore`, decision D-009, docs (development, architecture), `AGENTS.md` checklist step 4 for UI changes and project map.
+- **Numbers**: on the repo, 72/72 cases without issue, exit code 0. On a scratch copy with broken CSS (`#menu` scrollable, 600px player cards), 7 phone-portrait cases failed (board outside the viewport, clipped `.game`), exit code 1.
+- **Problems**: the viewport filter is a substring match (`phone-portrait` also selects `iphone-portrait`) — documented.
+- **Still open**:
+  - Phase 7 (smarter AI) and Phase 8 (game feel and content): scope to validate with the owner.
+  - Offline font (Ideas / later): no answer yet.
+
 ## 2026-10-08 — Phase 5 Batch C (responsive layout)
 
 - **Done**: Batch B taken as validated (owner said "next"). Batch C:
@@ -24,9 +33,8 @@ Entry format:
 - **Numbers**: `node --check` 26/26, 44/44 tests, golden-rule greps OK; CSS braces balanced, every variable defined and used. Headless Chrome (CDP script outside the repo), 8 sizes from 360×640 to 1920×1080 × 9 screens: before 21/72 screens without issue (board invisible on phone portrait, overlapping options on phone landscape, internal scroll, banner / rules out of the viewport), after 72/72 with no page scroll, no element outside the viewport, no scrollable or clipped area. Screenshots reviewed for phone portrait / landscape, tablet and desktop.
 - **Problems**: Chrome served cached ES modules at first (stale results); fixed by disabling the network cache in the script. A `-`/`+` button with the pixel border looks heavy at small sizes (cosmetic).
 - **Still open**:
-  - Owner's check on real devices (phone, tablet, desktop), including rotation during a game.
-  - Keyboard play on the board (rest of U-04): owner decision.
-  - Offline font (U-07) not addressed.
+  - Validated by the owner on real devices ("c'est bon pour moi"); Phase 3 and Phase 5 closed.
+  - Keyboard play on the board (U-04) and offline font (U-07) moved to roadmap "Ideas / later".
 
 ## 2026-10-08 — Phase 5 Batch B (playability)
 

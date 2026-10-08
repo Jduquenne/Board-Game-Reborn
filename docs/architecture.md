@@ -64,6 +64,8 @@ src/
     ├── PlayersSidebar.js
     ├── BattleBanner.js            ← fight UI, calls fightEngine.attack()/defend(), restarts a game
     └── TrapBanner.js
+tools/
+└── ui-check.mjs                   ← responsive UI check with headless Chrome (D-009); output in tools/output/ (git-ignored)
 tests/
 ├── helpers.mjs                    ← builds controlled game states, records events
 └── *.test.mjs                     ← one file per engine (node:test), see D-008

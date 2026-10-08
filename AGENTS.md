@@ -58,6 +58,7 @@ src/
 ├── Repository/     ← static game content (PLAYER_DATA, WEAPON_DATA…)
 └── Views/          ← Menu, Options, Game + Board, PlayersSidebar, BattleBanner, TrapBanner
 tests/              ← node:test suites for src/Engine/ (see D-008)
+tools/ui-check.mjs  ← responsive UI check in headless Chrome (see D-009)
 docs/               ← project documentation (archive/ = original context files)
 log/devlog.md       ← session journal
 ```
@@ -97,12 +98,13 @@ Details: [`docs/conventions.md`](docs/conventions.md#layer-rules) and [`docs/ui-
 1. Syntax check: `for f in $(find src -name "*.js"); do node --check "$f"; done` (silent = OK).
 2. Tests: `node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning` (must end with `# fail 0`).
 3. Golden-rule greps (rules 1–2 above).
-4. Run `python -m http.server 8080` and check the affected screens at <http://localhost:8080>; if you could not test in a browser, say so.
-5. Add an entry to [`log/devlog.md`](log/devlog.md).
-6. Update [`docs/roadmap.md`](docs/roadmap.md) (and `docs/` if architecture, rules or conventions changed).
-7. Propose a commit message in Conventional Commits format (see [`docs/conventions.md`](docs/conventions.md#commit-messages)) — never commit.
+4. If the change touches the UI (`css/`, `src/Views/`, `index.html`): `node tools/ui-check.mjs` (must end with exit code 0) and look at the screenshots of the affected screens in `tools/output/`.
+5. Run `python -m http.server 8080` and check the affected screens at <http://localhost:8080>; if you could not test in a browser, say so.
+6. Add an entry to [`log/devlog.md`](log/devlog.md).
+7. Update [`docs/roadmap.md`](docs/roadmap.md) (and `docs/` if architecture, rules or conventions changed).
+8. Propose a commit message in Conventional Commits format (see [`docs/conventions.md`](docs/conventions.md#commit-messages)) — never commit.
 
-There is no build, lint or formatter. Tests cover `src/Engine/` only; Views need the browser check (step 4).
+There is no build, lint or formatter. Tests cover `src/Engine/` only; layout is checked by `tools/ui-check.mjs`; gameplay feel still needs the browser check (step 5).
 
 ## Where things are tracked
 

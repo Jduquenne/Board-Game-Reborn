@@ -58,6 +58,15 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Alternatives considered**: not documented.
 - **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
 
+## D-009 — Automated UI checks with headless Chrome
+
+- **Date**: 2026-10-08
+- **Status**: accepted
+- **Context**: the responsive layout (Phase 5) was verified with a throw-away script driving headless Chrome; the owner agreed to keep it (Phase 6) so every UI change can be checked on all screen sizes.
+- **Decision**: `tools/ui-check.mjs`, a zero-dependency Node script: it serves the project with `node:http`, starts the locally installed Chrome / Chromium / Edge in headless mode and drives it through the DevTools protocol with Node's built-in `WebSocket`. It opens every screen at 8 screen sizes, fails when it finds a page scroll, an element outside the viewport, a scrollable area or clipped content, and saves a screenshot per case in `tools/output/` (git-ignored).
+- **Alternatives considered**: Playwright / Puppeteer (rejected by D-001); manual checks only (too slow for 72 cases).
+- **Consequences**: requires a Chromium-based browser on the machine (`CHROME_PATH` if not found) and Node with a global `WebSocket` (verified with v22.14.0). It checks layout, not visual taste: screenshots still need a look. It drives the game through ES module imports in the page (`store`, `eventBus`), so renaming those modules or events requires updating the script.
+
 ## D-008 — Tests with Node's built-in test runner
 
 - **Date**: 2026-10-08

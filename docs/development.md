@@ -48,6 +48,22 @@ node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=Exp
 - Only `src/Engine/` logic is covered. Views (DOM) still require a manual check in the browser.
 - How to write tests: [`conventions.md`](conventions.md#testing).
 
+## UI check (responsive layout)
+
+```bash
+node tools/ui-check.mjs                                   # all 8 screen sizes × 9 screens (~2 min)
+node tools/ui-check.mjs --viewport phone --screen game    # filters (substring match on the names)
+```
+
+✅ Verified 2026-10-08 (Chrome, Node v22.14.0): 72/72 cases without issue, exit code 0; a deliberately broken copy of the CSS made it fail with exit code 1.
+
+- Starts its own local server: no need to run `python -m http.server` first.
+- Finds Chrome / Chromium / Edge in the usual install paths; otherwise set `CHROME_PATH`.
+- Screen sizes: 360×640, 640×360, 390×844, 844×390, 768×1024, 1024×768, 1366×768, 1920×1080. Screens: menu, options, game, isometric, rules, quit dialog, fight, end of game, trap.
+- Fails (exit code 1) on: page scroll, element outside the viewport, scrollable area, clipped content.
+- Screenshots and `report.json` go to `tools/output/` (git-ignored): look at the ones related to your change.
+- To check a new screen or dialog, add it to the `SCREENS` array in the script. Rationale: [D-009](decisions.md#d-009--automated-ui-checks-with-headless-chrome).
+
 ## Build, lint, format
 
 None exist.
