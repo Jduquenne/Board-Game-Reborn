@@ -122,6 +122,12 @@ export function applyPass(state) {
     return passTurn(state, []);
 }
 
+// Début de partie : si le premier joueur est bloqué (aucune case accessible), il passe son tour
+export function skipIfBlocked(state) {
+    if (state.phase !== 'playing' || hasMovableCell(state)) return unchanged(state);
+    return passTurn({ ...state, activePlayerIndex: nextIndex(state.activePlayerIndex, state.players) }, [], true);
+}
+
 // Attaque : dégâts de l'arme, divisés par 2 si la cible se défend ; les défenses sont consommées
 export function applyAttack(state) {
     const { fight, players, phase } = state;
@@ -216,12 +222,27 @@ export function refreshMarkings(state) {
 
 const nextIndex = (index, players) => (index + 1) % players.length;
 
-function passTurn(state, events) {
-    const next = nextIndex(state.activePlayerIndex, state.players);
-    return {
-        state: refreshMarkings({ ...state, activePlayerIndex: next }),
-        events: [...events, { name: 'turn:changed', payload: { activePlayerIndex: next } }],
-    };
+const hasMovableCell = state => state.cells.some(row => row.some(cell => cell.isMovable));
+
+// Donne le tour au joueur suivant. S'il est bloqué (aucune case accessible), il passe
+// automatiquement son tour (événement turn:skipped) et la main revient au joueur d'avant.
+// Si les deux joueurs sont bloqués, la partie ne peut plus avancer (cas extrêmement rare).
+// fromSkip : appelé par skipIfBlocked, le tour du joueur bloqué a déjà été sauté
+function passTurn(state, events, fromSkip = false) {
+    let next = fromSkip ? state.activePlayerIndex : nextIndex(state.activePlayerIndex, state.players);
+    let nextState = refreshMarkings({ ...state, activePlayerIndex: next });
+    const out = [...events];
+
+    if (fromSkip) {
+        out.push({ name: 'turn:skipped', payload: { playerInfo: state.players[nextIndex(next, state.players)] } });
+    } else if (!hasMovableCell(nextState)) {
+        out.push({ name: 'turn:skipped', payload: { playerInfo: nextState.players[next] } });
+        next = nextIndex(next, state.players);
+        nextState = refreshMarkings({ ...nextState, activePlayerIndex: next });
+    }
+
+    out.push({ name: 'turn:changed', payload: { activePlayerIndex: next } });
+    return { state: nextState, events: out };
 }
 
 function clearMarkings(cells) {

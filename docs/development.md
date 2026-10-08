@@ -80,6 +80,17 @@ node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/arena.mjs --games 1
 
 (1,000 games per pairing, seed 1, 2026-10-08.)
 
+## AI training
+
+- **In the browser**: menu → "Entraîner l'IA" (route `#training`). Training runs in a Web Worker (`src/AI/training.worker.js`), so the page needs the local HTTP server like the rest of the game. ✅ Checked 2026-10-08 in headless Chrome: ~17,500 training games in under 2 s at "Max".
+- **In the terminal**:
+
+```bash
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-fight.mjs --games 30000 --seed 1 --opponent normal
+```
+
+✅ Verified 2026-10-08: prints the evaluation every 5 % of the games, then the learned policy; writes `training/output/fight-model.json` (git-ignored). Result with seed 1: 11.8 % → 51.5 % wins against Normal in ~3,000 games (Normal's own fight rule: 51.5 % on the same games); 60,000 games in ~7 s.
+
 ## Build, lint, format
 
 None exist.

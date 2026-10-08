@@ -5,21 +5,27 @@ export class TrapBanner extends Component {
 
     onMount() {
         this.listen('trap:triggered', ({ playerInfo }) => {
-            this.#show(playerInfo);
+            this.#show(playerInfo, `${playerInfo.player.name} déclenche un piège, -20 points de vie !`);
+            setTimeout(() => this.#hide(), 1500);
+        });
+
+        // Même bannière pour signaler un joueur bloqué qui passe son tour
+        this.listen('turn:skipped', ({ playerInfo }) => {
+            this.#show(playerInfo, `${playerInfo.player.name} est bloqué et passe son tour.`);
             setTimeout(() => this.#hide(), 1500);
         });
     }
 
     // ─── Private ──────────────────────────────────────────────────────────────
 
-    #show(playerInfo) {
+    #show(playerInfo, message) {
         const modal = document.querySelector('#trap-modal');
         modal.classList.remove('hidden');
 
         this.root.innerHTML = `
             <div class="trapInfosText">
                 <img class="currentPlayerImg" src="${AssetManager.player(playerInfo.player)}" alt="${playerInfo.player.name}">
-                ${playerInfo.player.name} déclenche un piège, -20 points de vie !
+                ${message}
             </div>
         `;
     }

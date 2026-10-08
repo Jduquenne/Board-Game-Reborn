@@ -1,4 +1,4 @@
-import { createGame, applyMove, applyPass, applyAttack, applyDefend, resolveRound } from '../Engine/Rules.js';
+import { createGame, applyMove, applyPass, applyAttack, applyDefend, resolveRound, skipIfBlocked } from '../Engine/Rules.js';
 
 // Configuration par défaut d'une partie simulée (mêmes valeurs que les options par défaut du jeu)
 export const DEFAULT_CONFIG = Object.freeze({
@@ -34,7 +34,7 @@ export class GameEnv {
 
     // Nouvelle partie
     reset() {
-        this.state = createGame(this.#config, this.#rng);
+        this.state = skipIfBlocked(createGame(this.#config, this.#rng)).state;
         this.turns = 0;
         return this.state;
     }

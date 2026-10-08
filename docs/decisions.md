@@ -58,6 +58,18 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Alternatives considered**: not documented.
 - **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
 
+## D-012 — First learning: tabular Q-learning of fight decisions, training page in a Web Worker
+
+- **Date**: 2026-10-08
+- **Status**: accepted (Phase 7.2)
+- **Context**: first hands-on training step for a beginner; the owner wants a page to watch the training with a speed control up to "very, very fast".
+- **Decision**:
+  - Learn only attack / defend first, with a tabular Q-learning (`src/AI/QLearning.js`, generic) on a compact observation: hits needed by each side (1–10) and both defense flags (`src/AI/FightPolicy.js`, at most 400 situations). Reward only at the end of the game (+1 / −1 / 0). Blank table = small random values (the untrained AI fights at random); α = 0.05, γ = 0.95, ε from 1 to 0.05.
+  - Training page `#training` (`TrainingView`) talking by messages to a Web Worker (`TrainingSession`): speeds Regarder / Rapide (board frames) and Turbo / Max (batches of games, stats 5×/s). Evaluation on 400 fixed games (seed 777) against the opponent, compared with Normal's fight rule on the same games.
+  - The trained table is saved in `localStorage` (`ModelStorage`) and used by the new "IA Entraînée" mode; without a model it falls back to Normal.
+- **Alternatives considered**: start with the whole game or movement (state space far too large for a table); train in the main thread (page frozen at high speed); save models as files in the repository (needs a build or manual copy step — possible later).
+- **Consequences**: first measured result: from ~12 % to the level of Normal's hand-written rule (~51.5 %) in ~3,000 games, but not above — fights are mostly decided by health and weapons at the start, so the real gains are expected from movement (7.3). The model lives in one browser only (no sharing yet).
+
 ## D-011 — Personal learning notes in French, git-ignored
 
 - **Date**: 2026-10-08

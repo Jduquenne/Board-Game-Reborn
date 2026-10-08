@@ -40,6 +40,7 @@ src/
 ├── core/
 │   ├── EventBus.js                ← pub/sub, on() returns an unsubscribe function
 │   ├── Random.js                  ← createRng(seed): seeded random generator (reproducible games)
+│   ├── ModelStorage.js            ← trained model saved in localStorage (try/catch, null without a browser)
 │   ├── Store.js                   ← centralised state, emits 'state:changed'
 │   ├── Component.js               ← base class: render/mount/unmount/listen/query/queryAll
 │   └── Router.js                  ← hash-based: register/navigate/start
@@ -52,7 +53,12 @@ src/
 ├── AI/
 │   ├── ScriptedAgents.js          ← hand-written agents: random, easy, normal (SCRIPTED_AGENTS)
 │   ├── GameEnv.js                 ← simulator: reset() / step(action), no delays (training, arena)
-│   └── Arena.js                   ← playGame / runMatch between two agents, seeded
+│   ├── Arena.js                   ← playGame / runMatch between two agents, seeded
+│   ├── QLearning.js               ← generic tabular Q-learning (QTable), reusable for other games
+│   ├── FightPolicy.js             ← fight observation (fightStateKey) + trained agent (createQFightAgent)
+│   ├── FightTrainer.js            ← Q-learning training of fight decisions (games against an opponent, evaluation)
+│   ├── TrainingSession.js         ← speeds, evaluations and messages for the training page
+│   └── training.worker.js         ← Web Worker running a TrainingSession
 ├── Models/
 │   ├── Cell.js                    ← createCell() + DECOR constant
 │   ├── Player.js                  ← createPlayer()
@@ -71,9 +77,13 @@ src/
     ├── BoardView.js               ← event delegation on the board
     ├── PlayersSidebar.js
     ├── BattleBanner.js            ← fight UI, calls fightEngine.attack()/defend(), restarts a game
-    └── TrapBanner.js
+    ├── TrapBanner.js              ← trap and skipped-turn notices
+    ├── TrainingView.js            ← AI training page (#training): drives the Web Worker, chart, policy map, live board
+    └── boardTemplate.js           ← boardHtml(state): board HTML shared by BoardView and TrainingView
 training/
-└── arena.mjs                      ← CLI: scripted agents against each other (win rates, games/s)
+├── arena.mjs                      ← CLI: scripted agents against each other (win rates, games/s)
+├── train-fight.mjs                ← CLI: Q-learning of fight decisions, progress table, learned policy
+└── output/                        ← models written by the CLI (git-ignored)
 tools/
 └── ui-check.mjs                   ← responsive UI check with headless Chrome (D-009); output in tools/output/ (git-ignored)
 tests/
@@ -116,7 +126,7 @@ router.register('menu', () => new MenuView('#app')).start();
 router.navigate('game'); // unmounts the current view, mounts the new one
 ```
 
-Hash-based (`#menu`, `#options`, `#game`); default route is `menu`; listens to `popstate`.
+Hash-based (`#menu`, `#options`, `#game`, `#training`); default route is `menu`; listens to `popstate`.
 
 ## Events
 
@@ -125,6 +135,7 @@ Hash-based (`#menu`, `#options`, `#game`); default route is `menu`; listens to `
 | `game:started` | GameEngine | — |
 | `turn:changed` | GameEngine | `{ activePlayerIndex }` |
 | `trap:triggered` | GameEngine | `{ playerInfo }` |
+| `turn:skipped` | GameEngine | `{ playerInfo }` (blocked player, emitted before `turn:changed`) |
 | `fight:start` | GameEngine | `{ attacker, target }` |
 | `fight:attack` | FightEngine | `{ attacker, target, damage }` |
 | `fight:defend` | FightEngine | `{ attacker, target }` |
@@ -134,14 +145,14 @@ Hash-based (`#menu`, `#options`, `#game`); default route is `menu`; listens to `
 
 Events are produced by the pure rules (`Rules.js`) and emitted by `GameEngine` / `FightEngine` after the Store is updated.
 
-Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` (`game:started`, `state:changed`), `BattleBanner` (`fight:*`), `TrapBanner` (`trap:triggered`), `AIEngine` (`turn:changed`, `fight:start`, `fight:round-end`).
+Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` (`game:started`, `state:changed`), `BattleBanner` (`fight:*`), `TrapBanner` (`trap:triggered`, `turn:skipped`), `AIEngine` (`turn:changed`, `fight:start`, `fight:round-end`).
 
 ## State shape
 
 ```js
 {
   phase: 'menu' | 'playing' | 'fighting' | 'gameover',
-  config: { rows, cols, nbObstacles, nbWeapons, nbBonus, nbTraps, aiMode }, // aiMode: 'none' | 'easy' | 'normal'
+  config: { rows, cols, nbObstacles, nbWeapons, nbBonus, nbTraps, aiMode }, // aiMode: 'none' | 'easy' | 'normal' | 'trained'
   cells: Cell[][],        // 2D array of plain objects
   players: PlayerInfo[],  // [{ player, position: { row, col } }]
   activePlayerIndex: number,
@@ -167,6 +178,8 @@ flowchart LR
     FightEngine -->|setState + fight:*| Store & BattleBanner
     GameEngine -->|trap:triggered| TrapBanner
 ```
+
+AI training page: `TrainingView` ⇄ messages ⇄ `training.worker.js` → `TrainingSession` → `FightTrainer` → `GameEnv` → `Rules.js` (no Store, no EventBus). "Utiliser dans le jeu" saves the Q-table with `ModelStorage`; `AIEngine.start()` loads it for the `trained` mode.
 
 Game start: `OptionsView` writes `config` to the Store → `router.navigate('game')` → `GameView.onMount()` mounts sub-components, calls `aiEngine.start()`, then `gameEngine.startGame(config)`, then computes `--cell-size`.
 

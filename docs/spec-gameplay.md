@@ -30,6 +30,7 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
 - The active player moves in a straight line (up, down, left, right) by 1 to `maxMove` cells.
 - Movement stops at the board edge, an obstacle or a player.
 - Exactly one move per turn; then the turn passes to the other player.
+- A player with no reachable cell (surrounded by obstacles, the board edge or the other player) automatically skips their turn, with a message ("<nom> est bloqué et passe son tour."); this also applies to the first player at the start of a game. If both players are blocked the game cannot continue (extremely rare, not handled).
 - "Security zones" are the empty floor cells adjacent to the waiting player. Moving onto one starts a fight instead of ending the turn.
 
 ## Pickups and traps (on the destination cell)
@@ -49,7 +50,7 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
 
 ## AI
 
-The AI plays player index 1.
+The AI plays player index 1. Modes: `easy`, `normal`, and `trained` ("IA Entraînée").
 
 ### Movement
 
@@ -71,6 +72,14 @@ When the AI is the attacker (fight start or new round), it acts 1500 ms later; t
   1. Attack if the hit kills the enemy (damage halved if the enemy is defending).
   2. Otherwise defend if the enemy's next hit can kill the AI and the AI is not already defending.
   3. Otherwise attack.
+- **Trained** ("IA Entraînée"): moves like Normal; in fights, plays the best action of the Q-table saved from the training page ("Utiliser dans le jeu", stored in the browser). Without a saved model it fights like Normal.
+
+### Training page (`#training`, menu "Entraîner l'IA")
+
+- The learner moves like Normal and learns attack / defend by Q-learning against a chosen opponent (Aléatoire, IA Facile, IA Normal), starting from a blank (random) table.
+- Speeds: Regarder (one action every 0.5 s, board shown), Rapide (every 50 ms, board shown), Turbo and Max (no board, many games per update).
+- Shown: games played, exploration rate, win rate of the last evaluation (400 fixed games, no exploration) and the Normal AI's win rate on the same games (reference), learning curve, map of the learned strategy.
+- "Recommencer" and a change of opponent reset the learning; "Utiliser dans le jeu" saves the current table for the "IA Entraînée" mode.
 
 ## Content
 

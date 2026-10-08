@@ -68,6 +68,12 @@ const SCREENS = [
     ['trap',    '#game',    `(async () => {${fightSetup}
         eventBus.emit('trap:triggered', { playerInfo: a });
     })()`],
+    ['training',       '#training', null],
+    ['training-watch', '#training', `document.querySelector('#tr-toggle').click()`],
+    ['training-max',   '#training', `(() => {
+        document.querySelector('[data-speed="max"]').click();
+        document.querySelector('#tr-toggle').click();
+    })()`],
 ].filter(([name]) => name.includes(SCREEN_FILTER));
 
 // Mesures exécutées dans la page

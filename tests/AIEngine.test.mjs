@@ -219,3 +219,27 @@ test('stop() cancels a pending action', () => {
     mock.timers.tick(FIGHT_THINK_DELAY);
     assert.deepEqual(fightActions(), []);
 });
+
+// ─── IA Entraînée ─────────────────────────────────────────────────────────────
+
+test('trained mode: the AI fights with the model saved by the training page', () => {
+    // Modèle qui préfère toujours se défendre, stocké comme le fait la page d'entraînement
+    const model = { actions: ['attack', 'defend'], table: { '10|10|0|0': [0, 1] } };
+    globalThis.localStorage = { getItem: () => JSON.stringify(model), setItem: () => {} };
+    aiEngine.stop();
+    aiEngine.start(); // recharge le modèle
+
+    try {
+        aiFight({ aiMode: 'trained', human: { health: 100, weapon: weapon(10) }, ai: { health: 100, weapon: weapon(10) } });
+        mock.timers.tick(FIGHT_THINK_DELAY);
+        assert.deepEqual(fightActions(), ['fight:defend']);
+    } finally {
+        delete globalThis.localStorage;
+    }
+});
+
+test('trained mode without a saved model: the AI fights like the normal AI', () => {
+    aiFight({ aiMode: 'trained', human: { health: 100, weapon: weapon(20) }, ai: { health: 100, weapon: weapon(20) } });
+    mock.timers.tick(FIGHT_THINK_DELAY);
+    assert.deepEqual(fightActions(), ['fight:attack']);
+});

@@ -16,6 +16,7 @@ const AI_MODES = [
     { key: 'none',   label: '2 Joueurs' },
     { key: 'easy',   label: 'IA Facile'  },
     { key: 'normal', label: 'IA Normal'  },
+    { key: 'trained', label: 'IA Entraînée' },
 ];
 
 export class OptionsView extends Component {

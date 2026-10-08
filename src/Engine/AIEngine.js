@@ -2,7 +2,10 @@ import { eventBus } from '../core/EventBus.js';
 import { store } from '../core/Store.js';
 import { gameEngine } from './GameEngine.js';
 import { fightEngine } from './FightEngine.js';
-import { SCRIPTED_AGENTS } from '../AI/ScriptedAgents.js';
+import { SCRIPTED_AGENTS, normalAgent } from '../AI/ScriptedAgents.js';
+import { createQFightAgent } from '../AI/FightPolicy.js';
+import { QTable } from '../AI/QLearning.js';
+import { ModelStorage } from '../core/ModelStorage.js';
 
 // Délai en ms avant que l'IA joue — simule une "réflexion" et rend le tour visible
 const THINK_DELAY = 900;
@@ -14,11 +17,16 @@ const FIGHT_THINK_DELAY = 1500;
 // Branche un agent (src/AI/) sur la partie en cours : écoute les événements,
 // demande à l'agent de choisir, puis joue son choix via GameEngine / FightEngine
 class AIEngine {
-    #unsubs  = [];
-    #timeout = null;
+    #unsubs       = [];
+    #timeout      = null;
+    #trainedAgent = null;
 
     // Démarre l'écoute des événements — appelé par GameView au montage
     start() {
+        // IA Entraînée : modèle enregistré depuis la page d'entraînement ; sans modèle, elle combat comme l'IA Normal
+        const model = ModelStorage.loadFightModel();
+        this.#trainedAgent = model ? createQFightAgent(QTable.fromJSON(model)) : normalAgent;
+
         this.#unsubs = [
             eventBus.on('turn:changed', ({ activePlayerIndex }) => {
                 const { players, phase } = store.state;
@@ -48,13 +56,17 @@ class AIEngine {
 
     // Agent correspondant au mode de jeu choisi dans les options (null en mode 2 joueurs)
     #agent() {
-        return SCRIPTED_AGENTS[store.state.config.aiMode] ?? null;
+        const mode = store.state.config.aiMode;
+        if (mode === 'trained') return this.#trainedAgent;
+        return SCRIPTED_AGENTS[mode] ?? null;
     }
 
     #playTurn() {
         const state = store.state;
         const agent = this.#agent();
         if (state.phase !== 'playing' || !agent) return;
+        // Sécurité : ne jamais jouer à la place d'un humain (le tour a pu changer entre-temps)
+        if (!state.players[state.activePlayerIndex].player.isAI) return;
 
         const move = agent.chooseMove(state, () => Math.random());
         if (move) gameEngine.movePlayer(move.row, move.col);

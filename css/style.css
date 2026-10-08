@@ -19,6 +19,8 @@
     --weapon-bg:          gray;
     --ring-light:         white;
     --fight-zone-tint:    rgba(231, 53, 53, 0.35);
+    --panel-shade:        rgba(0, 0, 0, 0.15);
+    --unknown-cell:       rgba(0, 0, 0, 0.25);
 
     /* Tailles fluides : basées sur la plus petite dimension de l'écran (vmin) */
     --gap:          clamp(6px, 2vmin, 20px);
@@ -655,3 +657,189 @@ body {
 }
 
 .trapInfosText .currentPlayerImg { height: clamp(32px, 9vmin, 80px); }
+
+/* ─── Page d'entraînement de l'IA ─────────────────────────────────────────── */
+/*
+ * Paysage : colonne principale (contrôles, statistiques, courbe) + colonne latérale (plateau ou stratégie).
+ * Portrait : les deux colonnes l'une sous l'autre. Rien ne défile : la courbe et le plateau prennent la place restante.
+ */
+
+.training {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    width: 100%;
+    height: 100%;
+    padding: var(--gap);
+    box-sizing: border-box;
+    overflow: hidden;
+    color: var(--text-light);
+}
+
+.trainingHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap);
+}
+
+.trainingTitle {
+    margin: 0;
+    font-size: clamp(20px, 5vmin, 44px);
+    font-weight: normal;
+}
+
+.trainingHeader .btn,
+.trainingControls .btn {
+    margin: 0;
+    font-size: clamp(13px, 2.6vmin, 24px);
+    padding: 0.25em 0.8em;
+}
+
+.trainingBody {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: var(--gap);
+}
+
+.trainingMain,
+.trainingSide {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    min-width: 0;
+    min-height: 0;
+}
+
+.trainingControls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: clamp(4px, 1vmin, 10px);
+}
+
+.trainingSpeeds {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(3px, 0.8vmin, 8px);
+}
+
+.trainingOpponent {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-small);
+}
+
+.trainingOpponent select {
+    font-family: inherit;
+    font-size: var(--font-small);
+    color: var(--primary);
+    border-radius: 5px;
+    padding: 0.1em 0.3em;
+}
+
+.trainingStats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(4px, 1vmin, 10px);
+}
+
+.trainingStat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(3px, 1vmin, 10px);
+    border-radius: 5px;
+    background-color: var(--third);
+    text-align: center;
+    min-width: 0;
+}
+
+.trainingStatValue { font-size: clamp(16px, 4vmin, 36px); line-height: 1.1; }
+.trainingStatMain  { color: var(--spinner-text); }
+.trainingStatLabel { font-size: clamp(11px, 2vmin, 16px); line-height: 1.1; }
+
+.trainingChart {
+    flex: 1 1 0;
+    min-height: 60px;
+    border-radius: 5px;
+    background-color: var(--panel-shade);
+    overflow: hidden;
+}
+
+.trainingChart canvas { display: block; }
+
+.trainingBoardWrap,
+.trainingPolicy {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2px, 0.8vmin, 8px);
+}
+
+.trainingCaption {
+    margin: 0;
+    font-size: var(--font-small);
+    line-height: 1.15;
+}
+
+.trainingBoardArea {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.trainingBoard {
+    box-sizing: border-box;
+    border: 5px solid var(--secondary);
+    flex-shrink: 0;
+}
+
+.trainingBoard .cell { cursor: default; }
+
+.trainingPolicyGrid {
+    flex: 1 1 0;
+    min-height: 0;
+    aspect-ratio: 1;
+    max-width: 100%;
+    align-self: center;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    gap: 2px;
+}
+
+.policyCell        { border-radius: 2px; }
+.policyAttack      { background-color: var(--secondary); }
+.policyDefend      { background-color: var(--spinner-text); }
+.policyUnknown     { background-color: var(--unknown-cell); border: 1px dashed var(--text-light); opacity: 0.35; box-sizing: border-box; }
+
+.trainingLegend {
+    margin: 0;
+    font-size: clamp(11px, 2vmin, 16px);
+    line-height: 1.15;
+}
+
+.legendAttack  { color: var(--secondary); }
+.legendDefend  { color: var(--spinner-text); }
+.legendUnknown { color: var(--text-light); opacity: 0.6; }
+
+.trainingNotice {
+    margin: 0;
+    min-height: 1.2em;
+    font-size: var(--font-small);
+    color: var(--spinner-text);
+}
+
+/* Portrait : colonnes l'une sous l'autre, statistiques sur 2 × 2 */
+@media (orientation: portrait) {
+    .trainingBody  { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1.1fr) minmax(0, 1fr); }
+    .trainingStats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

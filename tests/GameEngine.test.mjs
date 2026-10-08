@@ -2,6 +2,7 @@ import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { store } from '../src/core/Store.js';
 import { gameEngine } from '../src/Engine/GameEngine.js';
+import { skipIfBlocked } from '../src/Engine/Rules.js';
 import { setBoard, recordEvents, createWeapon, DECOR } from './helpers.mjs';
 
 let events;
@@ -162,4 +163,36 @@ test('moving next to the waiting player starts a fight instead of passing the tu
     assert.deepEqual(fight, { attackerIndex: 0, targetIndex: 1 });
     assert.equal(activePlayerIndex, 0);
     assert.deepEqual(events.names(), ['fight:start']);
+});
+
+// ─── Joueur bloqué ────────────────────────────────────────────────────────────
+
+test('a blocked player automatically skips their turn', () => {
+    // Joueur 1 dans un coin, enfermé par deux obstacles
+    setBoard({
+        players: [{ row: 4, col: 4 }, { row: 0, col: 0 }],
+        setup: cells => { cells[0][1].decor = DECOR.OBSTACLE; cells[1][0].decor = DECOR.OBSTACLE; },
+    });
+    events = recordEvents(['turn:skipped', 'turn:changed']);
+
+    gameEngine.movePlayer(4, 3);
+
+    assert.equal(store.state.activePlayerIndex, 0, 'the turn comes back to player 0');
+    assert.deepEqual(events.names(), ['turn:skipped', 'turn:changed']);
+    assert.equal(events.log[0].payload.playerInfo, store.state.players[1]);
+    assert.deepEqual(events.log[1].payload, { activePlayerIndex: 0 });
+    assert.ok(store.state.cells.flat().some(c => c.isMovable), 'player 0 can move again');
+});
+
+test('a first player blocked at the start skips their turn', () => {
+    setBoard({
+        players: [{ row: 0, col: 0 }, { row: 4, col: 4 }],
+        setup: cells => { cells[0][1].decor = DECOR.OBSTACLE; cells[1][0].decor = DECOR.OBSTACLE; },
+    });
+    const { state, events: emitted } = skipIfBlocked(store.state);
+
+    assert.equal(state.activePlayerIndex, 1);
+    assert.deepEqual(emitted.map(e => e.name), ['turn:skipped', 'turn:changed']);
+    assert.equal(emitted[0].payload.playerInfo, store.state.players[0]);
+    assert.equal(skipIfBlocked(state).state, state, 'nothing to skip when the player can move');
 });

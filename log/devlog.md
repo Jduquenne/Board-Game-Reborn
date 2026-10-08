@@ -13,6 +13,24 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Phase 7.2: training page and Q-learning of fights; automatic turn skip
+
+- **Done**:
+  - Owner-approved fix: a player with no reachable cell automatically skips their turn (`turn:skipped`, shown in the trap banner), in the game and the simulator; `AIEngine` never plays for a human.
+  - `src/AI/QLearning.js` (generic tabular Q-learning), `FightPolicy.js` (fight observation, trained agent), `FightTrainer.js` (training against an opponent, step-by-step generator, evaluation on fixed games), `TrainingSession.js` + `training.worker.js` (speeds Regarder / Rapide / Turbo / Max).
+  - Page `#training` (`TrainingView`, menu "Entraîner l'IA"): controls, 4 stats, learning curve (canvas), strategy map, live board; board HTML shared with the game (`boardTemplate.js`).
+  - "IA Entraînée" mode: model saved in `localStorage` (`core/ModelStorage.js`), loaded by `AIEngine`; falls back to Normal.
+  - `training/train-fight.mjs` CLI; `tools/ui-check.mjs` covers the training page (3 new screens); `.gitignore`: `training/output/`.
+  - Docs: D-012, architecture, spec-gameplay, ui-design, development, conventions (add an AI mode), roadmap; learning notes for 7.2.
+- **Numbers**: 78/78 tests (20 new). Training with seed 1: 11.8 % → 51.5 % wins against Normal in ~3,000 games, stable on seeds 1–3 (Normal's own rule: 51.5 % on the same games); 60,000 games in ~7 s (Node); ~17,500 games in under 2 s in headless Chrome at "Max". UI check: 96/96 (8 sizes × 12 screens), exit code 0.
+- **Problems**:
+  - First version: zero-initialised table showed no learning ("always attack" ≈ Normal) and a coarse observation (hits capped at 5) caused collapses to 11.8 % (endless defending) → random initial values, hits up to 10, α 0.1 → 0.05.
+  - A test with fake timers looped forever at turbo speed (0 ms ticks); fixed the test and a real bug (a tick rescheduled itself after a pause).
+  - The learned fight policy equals Normal's rule but does not beat it: fights are mostly decided before they start.
+- **Still open**:
+  - Owner's check of the training page and of the "IA Entraînée" mode in the browser.
+  - Phase 7.3 (movement), where the real gains are expected.
+
 ## 2026-10-08 — Phase 7.1: environment for AI training
 
 - **Done**: owner's goal recorded (train the game AI, learn how to do it; beginner; French git-ignored notes; training page with speed control). Phase 7 rewritten as 7.1–7.5. Implemented 7.1:

@@ -1,6 +1,6 @@
 import { store } from '../core/Store.js';
 import { eventBus } from '../core/EventBus.js';
-import { createGame, applyMove } from './Rules.js';
+import { createGame, applyMove, skipIfBlocked } from './Rules.js';
 
 // Applique les règles pures (Rules.js) au Store du jeu et émet les événements correspondants
 class GameEngine {
@@ -8,6 +8,9 @@ class GameEngine {
     startGame(config) {
         store.setState(() => createGame(config));
         eventBus.emit('game:started');
+
+        // Rare : le premier joueur n'a aucune case accessible → il passe son tour
+        this.#commit(skipIfBlocked(store.state));
     }
 
     movePlayer(targetRow, targetCol) {
