@@ -93,6 +93,14 @@ node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-fight.mjs --g
 
 ✅ Verified 2026-10-08: prints the evaluation every 5 % of the games, then the learned policy; writes `training/output/fight-model.json` (git-ignored). Result with seed 1: 11.8 % → 51.5 % wins against Normal in ~3,000 games (Normal's own fight rule: 51.5 % on the same games); 60,000 games in ~7 s.
 
+Movement (genetic algorithm):
+
+```bash
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-move.mjs --generations 25 --seed 1 --opponent normal
+```
+
+✅ Verified 2026-10-08: prints best / average fitness and the evaluation of the champion per generation, then its weights; writes `training/output/move-model.json`. Result with seed 1: 47.5 % → 71.8 % wins against Normal in 25 generations (45,000 games, ~13 s); on 1,000 unseen games (seed 4242) two other seeds give 65.6 % and 66.8 %.
+
 ## Build, lint, format
 
 None exist.

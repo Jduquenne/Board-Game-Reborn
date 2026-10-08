@@ -40,7 +40,7 @@ src/
 ├── core/
 │   ├── EventBus.js                ← pub/sub, on() returns an unsubscribe function
 │   ├── Random.js                  ← createRng(seed): seeded random generator (reproducible games)
-│   ├── ModelStorage.js            ← trained model saved in localStorage (try/catch, null without a browser)
+│   ├── ModelStorage.js            ← trained models ('fight', 'move') saved in localStorage (try/catch, null without a browser)
 │   ├── Store.js                   ← centralised state, emits 'state:changed'
 │   ├── Component.js               ← base class: render/mount/unmount/listen/query/queryAll
 │   └── Router.js                  ← hash-based: register/navigate/start
@@ -57,7 +57,12 @@ src/
 │   ├── QLearning.js               ← generic tabular Q-learning (QTable), reusable for other games
 │   ├── FightPolicy.js             ← fight observation (fightStateKey) + trained agent (createQFightAgent)
 │   ├── FightTrainer.js            ← Q-learning training of fight decisions (games against an opponent, evaluation)
-│   ├── TrainingSession.js         ← speeds, evaluations and messages for the training page
+│   ├── Genetic.js                 ← generic genetic algorithm (GeneticAlgorithm), reusable for other games
+│   ├── MoveFeatures.js            ← movement features (visible information only) + weighted movement agent
+│   ├── MoveTrainer.js             ← genetic evolution of the movement weights (fitness = win rate)
+│   ├── FightLesson.js             ← training-page lesson "Combat" (wraps FightTrainer)
+│   ├── MoveLesson.js              ← training-page lesson "Déplacement" (wraps MoveTrainer, champion demos)
+│   ├── TrainingSession.js         ← speeds and messages for the training page; delegates to a lesson
 │   └── training.worker.js         ← Web Worker running a TrainingSession
 ├── Models/
 │   ├── Cell.js                    ← createCell() + DECOR constant
@@ -83,6 +88,7 @@ src/
 training/
 ├── arena.mjs                      ← CLI: scripted agents against each other (win rates, games/s)
 ├── train-fight.mjs                ← CLI: Q-learning of fight decisions, progress table, learned policy
+├── train-move.mjs                 ← CLI: genetic evolution of the movement, progress table, champion weights
 └── output/                        ← models written by the CLI (git-ignored)
 tools/
 └── ui-check.mjs                   ← responsive UI check with headless Chrome (D-009); output in tools/output/ (git-ignored)
@@ -179,7 +185,7 @@ flowchart LR
     GameEngine -->|trap:triggered| TrapBanner
 ```
 
-AI training page: `TrainingView` ⇄ messages ⇄ `training.worker.js` → `TrainingSession` → `FightTrainer` → `GameEnv` → `Rules.js` (no Store, no EventBus). "Utiliser dans le jeu" saves the Q-table with `ModelStorage`; `AIEngine.start()` loads it for the `trained` mode.
+AI training page: `TrainingView` ⇄ messages ⇄ `training.worker.js` → `TrainingSession` → `FightTrainer` → `GameEnv` → `Rules.js` (no Store, no EventBus). "Utiliser dans le jeu" saves the Q-table with `ModelStorage`; `AIEngine.start()` loads the saved models for the `trained` mode (evolved movement and/or Q-learning fights, Normal's rule for whatever is missing).
 
 Game start: `OptionsView` writes `config` to the Store → `router.navigate('game')` → `GameView.onMount()` mounts sub-components, calls `aiEngine.start()`, then `gameEngine.startGame(config)`, then computes `--cell-size`.
 

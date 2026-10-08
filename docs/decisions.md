@@ -58,6 +58,18 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Alternatives considered**: not documented.
 - **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
 
+## D-013 — Movement learned by a genetic algorithm on a weighted score of cells
+
+- **Date**: 2026-10-08
+- **Status**: accepted (Phase 7.3)
+- **Context**: fights are mostly decided before they start (D-012), so the margin is in movement; the full movement state is far too large for a Q-table.
+- **Decision**:
+  - Each reachable cell gets a score = Σ weight × feature, with 9 features computed only from information visible to a player (duel cell, advantage when striking first, weapon gain, life / move bonus, distance to the enemy, exposed to an enemy first strike and its danger, distance to a better weapon) — `src/AI/MoveFeatures.js`.
+  - The 9 weights are evolved by a generic genetic algorithm (`src/AI/Genetic.js`: elitism 3, tournament 3, uniform crossover, Gaussian mutation 0.3 / 0.3, population 30). Fitness = win rate (draw = ½) over 60 games against the opponent, all individuals of a generation on the same games.
+  - The training page gets lessons (`FightLesson`, `MoveLesson`) behind one interface; `TrainingSession` only handles speed and messages. Models are stored per lesson (`ModelStorage.save/load('fight' | 'move')`); "IA Entraînée" combines them.
+- **Alternatives considered**: Q-learning on movement (state space too large without a neural network — Phase 7.4); hand-tuning the weights (that is what the algorithm automates).
+- **Consequences**: first AI that clearly beats Normal: ~66–72 % against Normal, and it generalises to other opponents (95 % vs random, 92 % vs easy, against 84 % / 81 % for Normal). The learned behaviour is only as rich as the features chosen by hand.
+
 ## D-012 — First learning: tabular Q-learning of fight decisions, training page in a Web Worker
 
 - **Date**: 2026-10-08

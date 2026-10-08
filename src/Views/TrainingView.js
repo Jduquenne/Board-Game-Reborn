@@ -16,6 +16,11 @@ const OPPONENTS = [
     { key: 'normal', label: 'IA Normal' },
 ];
 
+const LESSONS_LABELS = [
+    { key: 'fight', label: 'Combat (Q-learning)' },
+    { key: 'move',  label: 'Déplacement (génétique)' },
+];
+
 const ACTION_TEXT = { move: 'se déplace', pass: 'passe son tour', attack: 'attaque', defend: 'se défend' };
 
 // Carte de la stratégie : coups nécessaires de 1 à 10 (10 = 10 ou plus), voir src/AI/FightPolicy.js
@@ -45,6 +50,12 @@ export class TrainingView extends Component {
                                 ${SPEED_LABELS.map(s => `<button class="btn trainingSpeed" data-speed="${s.key}">${s.label}</button>`).join('')}
                             </div>
                             <label class="trainingOpponent">
+                                Leçon
+                                <select id="tr-lesson">
+                                    ${LESSONS_LABELS.map(l => `<option value="${l.key}">${l.label}</option>`).join('')}
+                                </select>
+                            </label>
+                            <label class="trainingOpponent">
                                 Adversaire
                                 <select id="tr-opponent">
                                     ${OPPONENTS.map(o => `<option value="${o.key}" ${o.key === 'normal' ? 'selected' : ''}>${o.label}</option>`).join('')}
@@ -56,7 +67,7 @@ export class TrainingView extends Component {
 
                         <div class="trainingStats">
                             <div class="trainingStat"><span class="trainingStatValue" id="tr-games">0</span><span class="trainingStatLabel">parties jouées</span></div>
-                            <div class="trainingStat"><span class="trainingStatValue" id="tr-epsilon">100 %</span><span class="trainingStatLabel">exploration</span></div>
+                            <div class="trainingStat"><span class="trainingStatValue" id="tr-progress">—</span><span class="trainingStatLabel" id="tr-progress-label">exploration</span></div>
                             <div class="trainingStat"><span class="trainingStatValue trainingStatMain" id="tr-winrate">—</span><span class="trainingStatLabel" id="tr-winrate-label">l'élève bat l'adversaire</span></div>
                             <div class="trainingStat"><span class="trainingStatValue" id="tr-reference">—</span><span class="trainingStatLabel" id="tr-reference-label">l'IA Normal bat l'adversaire</span></div>
                         </div>
@@ -72,6 +83,11 @@ export class TrainingView extends Component {
                             <div class="trainingBoardArea" id="tr-board-area">
                                 <div class="trainingBoard" id="tr-board"></div>
                             </div>
+                        </div>
+
+                        <div class="trainingWeights hidden" id="tr-weights-wrap">
+                            <p class="trainingCaption">Poids du champion : + recherché, − évité</p>
+                            <div class="trainingWeightList" id="tr-weights"></div>
                         </div>
 
                         <div class="trainingPolicy" id="tr-policy-wrap">
@@ -107,15 +123,9 @@ export class TrainingView extends Component {
             if (btn) this.#worker.postMessage({ type: 'speed', speed: btn.dataset.speed });
         });
 
-        this.query('#tr-opponent').addEventListener('change', (e) => {
-            this.#worker.postMessage({ type: 'reset', opponent: e.target.value });
-            this.#notice('Nouvel adversaire : l\'entraînement repart de zéro.');
-        });
-
-        this.query('#tr-reset').addEventListener('click', () => {
-            this.#worker.postMessage({ type: 'reset', opponent: this.query('#tr-opponent').value });
-            this.#notice('Entraînement remis à zéro : l\'IA a tout oublié.');
-        });
+        this.query('#tr-opponent').addEventListener('change', () => this.#reset('Nouvel adversaire : l\'entraînement repart de zéro.'));
+        this.query('#tr-lesson').addEventListener('change', () => this.#reset('Nouvelle leçon : l\'entraînement repart de zéro.'));
+        this.query('#tr-reset').addEventListener('click', () => this.#reset('Entraînement remis à zéro : l\'IA a tout oublié.'));
 
         this.query('#tr-save').addEventListener('click', () => this.#worker.postMessage({ type: 'export' }));
 
@@ -139,11 +149,26 @@ export class TrainingView extends Component {
         if (data.type === 'stats') this.#renderStats(data);
         if (data.type === 'frame') this.#renderFrame(data);
         if (data.type === 'model') {
-            const saved = ModelStorage.saveFightModel({ ...data.model, gamesPlayed: data.gamesPlayed });
+            if (data.lesson === 'move' && !data.model.weights) {
+                this.#notice('Lance au moins une génération avant d\'enregistrer le déplacement.');
+                return;
+            }
+            const saved = ModelStorage.save(data.lesson, { ...data.model, gamesPlayed: data.gamesPlayed });
+            const what  = data.lesson === 'move' ? 'Déplacement' : 'Combat';
             this.#notice(saved
-                ? `Modèle enregistré (${data.gamesPlayed} parties d'entraînement). Choisis « IA Entraînée » dans les Paramètres pour l'affronter.`
+                ? `${what} enregistré (${data.gamesPlayed.toLocaleString('fr-FR')} parties d'entraînement). Choisis « IA Entraînée » dans les Paramètres pour l'affronter.`
                 : 'Impossible d\'enregistrer le modèle dans ce navigateur (stockage indisponible).');
         }
+    }
+
+    #reset(message) {
+        this.#lastFrame = null;
+        this.#worker.postMessage({
+            type: 'reset',
+            opponent: this.query('#tr-opponent').value,
+            lesson: this.query('#tr-lesson').value,
+        });
+        this.#notice(message);
     }
 
     #renderStats(stats) {
@@ -153,7 +178,8 @@ export class TrainingView extends Component {
 
         this.query('#tr-toggle').textContent = stats.running ? 'Pause' : 'Démarrer';
         this.query('#tr-games').textContent = stats.gamesPlayed.toLocaleString('fr-FR');
-        this.query('#tr-epsilon').textContent = pct(stats.epsilon);
+        this.query('#tr-progress').textContent = stats.progress.value;
+        this.query('#tr-progress-label').textContent = stats.progress.label;
         this.query('#tr-winrate').textContent = pct(last?.winRate);
         this.query('#tr-reference').textContent = pct(stats.reference);
 
@@ -164,12 +190,14 @@ export class TrainingView extends Component {
 
         this.queryAll('[data-speed]').forEach(btn => btn.classList.toggle('btn-active', btn.dataset.speed === stats.speed));
 
-        // Plateau visible aux vitesses où l'on regarde les parties, stratégie sinon
-        const watching = stats.speed === 'watch' || stats.speed === 'fast';
-        this.query('#tr-board-wrap').classList.toggle('hidden', !watching || !this.#lastFrame);
-        this.query('#tr-policy-wrap').classList.toggle('hidden', watching && !!this.#lastFrame);
+        // Plateau visible aux vitesses où l'on regarde les parties, sinon ce que l'IA a appris
+        const showBoard = (stats.speed === 'watch' || stats.speed === 'fast') && !!this.#lastFrame;
+        this.query('#tr-board-wrap').classList.toggle('hidden', !showBoard);
+        this.query('#tr-policy-wrap').classList.toggle('hidden', showBoard || stats.lesson !== 'fight');
+        this.query('#tr-weights-wrap').classList.toggle('hidden', showBoard || stats.lesson !== 'move');
 
-        this.#renderPolicy(stats.policy);
+        if (stats.policy)  this.#renderPolicy(stats.policy);
+        if (stats.weights) this.#renderWeights(stats.weights);
         this.#drawChart();
     }
 
@@ -178,10 +206,12 @@ export class TrainingView extends Component {
         this.#lastFrame = frame;
         const { state, learnerIndex, actor, action, gamesPlayed } = frame;
 
-        const name = i => `${state.players[i].player.name}${i === learnerIndex ? ' (élève)' : ''}`;
+        const role  = frame.demo ? 'champion' : 'élève';
+        const title = frame.demo ? 'Démonstration du champion' : `Partie ${gamesPlayed + 1}`;
+        const name  = i => `${state.players[i].player.name}${i === learnerIndex ? ` (${role})` : ''}`;
         this.query('#tr-caption').textContent = action
-            ? `Partie ${gamesPlayed + 1} — ${name(actor)} ${ACTION_TEXT[action.type]}`
-            : `Partie ${gamesPlayed + 1} — l'élève est ${name(learnerIndex)}`;
+            ? `${title} — ${name(actor)} ${ACTION_TEXT[action.type]}`
+            : `${title} — le ${role} est ${name(learnerIndex)}`;
 
         const board = this.query('#tr-board');
         board.innerHTML = boardHtml(state, learnerIndex);
@@ -223,6 +253,25 @@ export class TrainingView extends Component {
             }
         }
         this.query('#tr-policy').innerHTML = cells.join('');
+    }
+
+    // Poids du meilleur individu : une barre par caractéristique, vers la droite si positive
+    #renderWeights(weights) {
+        if (weights.length === 0) {
+            this.query('#tr-weights').innerHTML = '<p class="trainingCaption">Aucune génération pour l\'instant : démarre l\'entraînement.</p>';
+            return;
+        }
+        const maxAbs = Math.max(...weights.map(w => Math.abs(w.value)), 0.01);
+        this.query('#tr-weights').innerHTML = weights.map(w => {
+            const width = (Math.abs(w.value) / maxAbs) * 50;
+            const side  = w.value >= 0 ? `left: 50%` : `right: 50%`;
+            return `
+                <div class="weightRow" title="${w.label} : ${w.value.toFixed(2)}">
+                    <span class="weightLabel">${w.label}</span>
+                    <span class="weightTrack"><span class="weightBar ${w.value >= 0 ? 'weightPositive' : 'weightNegative'}" style="${side}; width: ${width.toFixed(1)}%"></span></span>
+                    <span class="weightValue">${w.value >= 0 ? '+' : ''}${w.value.toFixed(2)}</span>
+                </div>`;
+        }).join('');
     }
 
     // Courbe : taux de victoire (évaluation) en fonction des parties jouées, + référence en pointillés

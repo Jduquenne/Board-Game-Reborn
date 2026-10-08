@@ -13,6 +13,20 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Phase 7.3: movement learned by a genetic algorithm
+
+- **Done**:
+  - `src/AI/MoveFeatures.js` (9 features from visible information only, weighted movement agent), `src/AI/Genetic.js` (generic GA), `src/AI/MoveTrainer.js`, `training/train-move.mjs`; `Arena.gameSteps` (step-by-step game for demos).
+  - Training page: lessons `FightLesson` / `MoveLesson` behind one interface, `TrainingSession` made generic; lesson selector, "générations" tile, champion weights bars, champion demo games, per-lesson save.
+  - `ModelStorage.save/load(kind)`; "IA Entraînée" = evolved movement + Q-learning fights, Normal's rule for any missing model.
+  - `tools/ui-check.mjs`: new screen "training-move". Docs: D-013, architecture, spec-gameplay, ui-design, development, roadmap; learning notes for 7.3.
+- **Numbers**: 88/88 tests (10 new). CLI, seed 1: 47.5 % → 71.8 % against Normal in 25 generations (45,000 games, 13.3 s). Unseen games (seed 4242, 1,000 games): 65.6 % (seed 2), 66.8 % (seed 3); against random 95.1 % (Normal: 84.2 %), against easy 92.4 % (Normal: 81.3 %). Evolved movement + Q fights: 65.6 % (same as with Normal's fight rule). Browser: ~10 generations / 18,000 games in 2.5 s at "Max". Champion weights (seed 1): duel advantage +1.72, weapon gain +1.70, danger if he attacks −2.15, move bonus −1.82.
+- **Problems**: a first version of a trained-mode test passed even if the model was ignored (Normal would make the same move); rewritten so only the evolved movement passes it.
+- **Still open**:
+  - Owner's check of the "Déplacement" lesson and of "IA Entraînée" with both models.
+  - The negative weight on move bonuses is unexplained (noise or real effect?) — a good exercise.
+  - Phase 7.4 (neural network) and 7.5 (generic recipe).
+
 ## 2026-10-08 — Training page labels; reliable syntax check; ui-check catches broken pages
 
 - **Done**: owner asked why "IA Facile" showed a higher percentage than "IA Normal" on the training page: the figures are win rates **against** the chosen opponent (beating a weak opponent gives a high %), but the labels did not say so. Labels now name the opponent ("l'élève bat IA Facile", "l'IA Normal bat IA Facile (référence)").

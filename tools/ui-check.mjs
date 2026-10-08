@@ -75,6 +75,15 @@ const SCREENS = [
         document.querySelector('[data-speed="max"]').click();
         document.querySelector('#tr-toggle').click();
     })()`],
+    ['training-move',  '#training', `(async () => {
+        const lesson = document.querySelector('#tr-lesson');
+        lesson.value = 'move';
+        lesson.dispatchEvent(new Event('change'));
+        await new Promise(r => setTimeout(r, 1000));
+        document.querySelector('[data-speed="max"]').click();
+        document.querySelector('#tr-toggle').click();
+        await new Promise(r => setTimeout(r, 2500));
+    })()`],
 ].filter(([name]) => name.includes(SCREEN_FILTER));
 
 // Mesures exécutées dans la page

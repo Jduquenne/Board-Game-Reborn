@@ -1,18 +1,19 @@
-import { FightTrainer } from './FightTrainer.js';
-import { describeFightKey } from './FightPolicy.js';
-import { SCRIPTED_AGENTS } from './ScriptedAgents.js';
-import { runMatch } from './Arena.js';
+import { FightLesson } from './FightLesson.js';
+import { MoveLesson } from './MoveLesson.js';
 
 /*
  * Session d'entraînement pilotée par la page « Entraînement de l'IA » (via le Web Worker).
- * Gère la vitesse, les évaluations régulières et les messages envoyés à la page.
+ * Gère la vitesse et les messages ; l'apprentissage lui-même est délégué à une « leçon »
+ * (FightLesson : combat par Q-learning, MoveLesson : déplacement par algorithme génétique).
  * Aucun DOM : `post` est la fonction d'envoi (self.postMessage dans le worker, une fonction en test).
  *
  * Messages envoyés :
- *   { type: 'stats', ... }  progression (parties, exploration, courbe, stratégie apprise)
- *   { type: 'frame', ... }  état de la partie en cours, pour la regarder (vitesses avec plateau)
- *   { type: 'model', model } table Q exportée (pour l'utiliser dans le jeu)
+ *   { type: 'stats', ... }  progression (voir lesson.stats()) + état de la session
+ *   { type: 'frame', ... }  état de la partie regardée (vitesses avec plateau)
+ *   { type: 'model', lesson, model, gamesPlayed }  modèle exporté (pour l'utiliser dans le jeu)
  */
+
+export const LESSONS = Object.freeze({ fight: FightLesson, move: MoveLesson });
 
 // Vitesses : delay = pause entre deux « tics » (ms) ; frames = plateau affiché ; budget = durée de calcul par tic
 export const SPEEDS = Object.freeze({
@@ -22,44 +23,35 @@ export const SPEEDS = Object.freeze({
     max:   { delay: 0,   frames: false, budget: 200 },// calcul en continu, la page est mise à jour 5 fois/s
 });
 
-const EVAL_GAMES = 400;
-const EVAL_SEED  = 777; // mêmes parties que FightTrainer.evaluate()
-
 export class TrainingSession {
     #post;
-    #trainer;
+    #lesson;
+    #lessonName   = 'fight';
     #opponentName = 'normal';
+    #seed         = 1;
     #speed        = 'watch';
     #running      = false;
     #timer        = null;
     #game         = null;
-    #nextEval     = 0;
-    #history      = [];
-    #reference    = null;
 
-    constructor(post, { opponent = 'normal', seed = 1 } = {}) {
+    constructor(post, { lesson = 'fight', opponent = 'normal', seed = 1 } = {}) {
         this.#post = post;
-        this.reset(opponent, seed);
+        this.#seed = seed;
+        this.reset(opponent, lesson);
     }
 
     get running() { return this.#running; }
     get speed()   { return this.#speed; }
-    get trainer() { return this.#trainer; }
+    get lesson()  { return this.#lesson; }
+    get trainer() { return this.#lesson.trainer; }
 
-    // Repart de zéro (table Q vierge) contre l'adversaire choisi
-    reset(opponentName = this.#opponentName, seed = 1) {
+    // Repart de zéro avec l'adversaire et la leçon choisis
+    reset(opponentName = this.#opponentName, lessonName = this.#lessonName) {
         this.pause();
         this.#opponentName = opponentName;
-        this.#trainer  = new FightTrainer({ opponent: SCRIPTED_AGENTS[opponentName], seed });
-        this.#game     = null;
-        this.#history  = [];
-        this.#nextEval = 0;
-
-        // Référence : l'IA « normale » (combat écrit à la main) sur les mêmes parties d'évaluation
-        const ref = runMatch(SCRIPTED_AGENTS.normal, SCRIPTED_AGENTS[opponentName], { games: EVAL_GAMES, seed: EVAL_SEED });
-        this.#reference = ref.winsA / EVAL_GAMES;
-
-        this.#evaluateIfDue();
+        this.#lessonName   = LESSONS[lessonName] ? lessonName : 'fight';
+        this.#lesson = new LESSONS[this.#lessonName]({ opponentName, seed: this.#seed });
+        this.#game   = null;
         this.#postStats();
     }
 
@@ -74,7 +66,7 @@ export class TrainingSession {
         this.#running = false;
         clearTimeout(this.#timer);
         this.#timer = null;
-        if (this.#trainer) this.#postStats();
+        if (this.#lesson) this.#postStats();
     }
 
     setSpeed(speed) {
@@ -88,7 +80,12 @@ export class TrainingSession {
     }
 
     exportModel() {
-        this.#post({ type: 'model', model: this.#trainer.qtable.toJSON(), gamesPlayed: this.#trainer.gamesPlayed });
+        this.#post({
+            type: 'model',
+            lesson: this.#lessonName,
+            model: this.#lesson.model(),
+            gamesPlayed: this.#lesson.stats().gamesPlayed,
+        });
     }
 
     // ─── Private ──────────────────────────────────────────────────────────────
@@ -102,28 +99,24 @@ export class TrainingSession {
         const speed = SPEEDS[this.#speed];
 
         if (speed.frames) {
-            // Une action de la partie en cours, envoyée à la page pour l'afficher
-            this.#game ??= this.#trainer.trainingGame();
+            // Une action de la partie regardée, envoyée à la page pour l'afficher
+            this.#game ??= this.#lesson.frames();
             const step = this.#game.next();
             if (step.done) {
                 this.#game = null;
-                this.#evaluateIfDue();
+                this.#lesson.afterWatchedGame();
                 this.#postStats();
             } else {
-                this.#post({ type: 'frame', ...step.value, gamesPlayed: this.#trainer.gamesPlayed });
+                this.#post({ type: 'frame', ...step.value, gamesPlayed: this.#lesson.stats().gamesPlayed });
             }
         } else {
-            // Termine la partie regardée s'il y en a une, puis enchaîne les parties sans affichage
+            // Termine la partie regardée s'il y en a une, puis apprend sans affichage
             if (this.#game) {
                 while (!this.#game.next().done) { /* fin de partie */ }
                 this.#game = null;
-                this.#evaluateIfDue();
+                this.#lesson.afterWatchedGame();
             }
-            const end = performance.now() + speed.budget;
-            do {
-                this.#trainer.playGame();
-                this.#evaluateIfDue();
-            } while (performance.now() < end);
+            this.#lesson.runBatch(performance.now() + speed.budget);
             this.#postStats();
         }
 
@@ -131,32 +124,14 @@ export class TrainingSession {
         if (this.#running) this.#schedule();
     }
 
-    // Évaluation régulière : très souvent au début (c'est là que la courbe bouge), plus espacée ensuite
-    #evaluateIfDue() {
-        const games = this.#trainer.gamesPlayed;
-        if (games < this.#nextEval) return;
-
-        const e = this.#trainer.evaluate(EVAL_GAMES);
-        this.#history.push({ games, winRate: e.winRate, drawRate: e.drawRate });
-        this.#nextEval = games + (games < 1000 ? 100 : games < 5000 ? 500 : 2500);
-    }
-
     #postStats() {
-        const { gamesPlayed, results, qtable } = this.#trainer;
         this.#post({
             type: 'stats',
             running: this.#running,
             speed: this.#speed,
             opponent: this.#opponentName,
-            gamesPlayed,
-            results: { ...results },
-            epsilon: qtable.epsilon,
-            states: qtable.size,
-            reference: this.#reference,
-            history: this.#history,
-            policy: qtable.entries().map(({ key, values }) => ({
-                key, values, best: qtable.best(key), ...describeFightKey(key),
-            })),
+            lesson: this.#lessonName,
+            ...this.#lesson.stats(),
         });
     }
 }

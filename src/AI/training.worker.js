@@ -9,7 +9,7 @@ self.addEventListener('message', ({ data }) => {
         case 'start':  session.start(); break;
         case 'pause':  session.pause(); break;
         case 'speed':  session.setSpeed(data.speed); break;
-        case 'reset':  session.reset(data.opponent); break;
+        case 'reset':  session.reset(data.opponent, data.lesson); break;
         case 'export': session.exportModel(); break;
     }
 });

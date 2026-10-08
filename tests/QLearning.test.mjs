@@ -184,6 +184,7 @@ test('the session exports its model', () => {
 });
 
 test('model storage fails safely without a browser', () => {
-    assert.equal(ModelStorage.saveFightModel({}), false);
-    assert.equal(ModelStorage.loadFightModel(), null);
+    assert.equal(ModelStorage.save('fight', {}), false);
+    assert.equal(ModelStorage.load('fight'), null);
+    assert.equal(ModelStorage.load('move'), null);
 });

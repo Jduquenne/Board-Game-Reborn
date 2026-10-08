@@ -57,3 +57,24 @@ export function chooseAction(agent, state, rng) {
     const move = agent.chooseMove(state, rng);
     return move ? { type: 'move', row: move.row, col: move.col } : { type: 'pass' };
 }
+
+/**
+ * Partie pas à pas (générateur) entre deux agents, pour la regarder : rend l'état après chaque action.
+ * La valeur de retour finale est { winner, turns }, comme playGame.
+ */
+export function* gameSteps(agents, { config = DEFAULT_CONFIG, rng = Math.random, maxTurns = 300 } = {}) {
+    const env = new GameEnv({ config, rng, maxTurns });
+    env.reset();
+    yield { state: env.state };
+
+    while (!env.done) {
+        const actor  = env.currentPlayerIndex;
+        const action = chooseAction(agents[actor], env.state, rng);
+        if (!env.step(action).accepted) {
+            throw new Error(`Agent "${agents[actor].name}" chose an illegal action: ${JSON.stringify(action)}`);
+        }
+        yield { state: env.state, actor, action };
+    }
+
+    return { winner: env.winnerIndex, turns: env.turns };
+}

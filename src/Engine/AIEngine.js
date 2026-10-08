@@ -4,6 +4,7 @@ import { gameEngine } from './GameEngine.js';
 import { fightEngine } from './FightEngine.js';
 import { SCRIPTED_AGENTS, normalAgent } from '../AI/ScriptedAgents.js';
 import { createQFightAgent } from '../AI/FightPolicy.js';
+import { createWeightedMoveAgent } from '../AI/MoveFeatures.js';
 import { QTable } from '../AI/QLearning.js';
 import { ModelStorage } from '../core/ModelStorage.js';
 
@@ -23,9 +24,9 @@ class AIEngine {
 
     // Démarre l'écoute des événements — appelé par GameView au montage
     start() {
-        // IA Entraînée : modèle enregistré depuis la page d'entraînement ; sans modèle, elle combat comme l'IA Normal
-        const model = ModelStorage.loadFightModel();
-        this.#trainedAgent = model ? createQFightAgent(QTable.fromJSON(model)) : normalAgent;
+        // IA Entraînée : modèles enregistrés depuis la page d'entraînement (combat et/ou déplacement) ;
+        // pour chaque partie manquante, elle joue comme l'IA Normal
+        this.#trainedAgent = this.#loadTrainedAgent();
 
         this.#unsubs = [
             eventBus.on('turn:changed', ({ activePlayerIndex }) => {
@@ -53,6 +54,16 @@ class AIEngine {
     }
 
     // ─── Private ──────────────────────────────────────────────────────────────
+
+    #loadTrainedAgent() {
+        const fightModel = ModelStorage.load('fight');
+        const moveModel  = ModelStorage.load('move');
+        const fightAgent = fightModel?.table ? createQFightAgent(QTable.fromJSON(fightModel)) : normalAgent;
+
+        return Array.isArray(moveModel?.weights)
+            ? createWeightedMoveAgent(moveModel.weights, { fightAgent, name: 'trained' })
+            : { ...fightAgent, name: 'trained', chooseMove: normalAgent.chooseMove };
+    }
 
     // Agent correspondant au mode de jeu choisi dans les options (null en mode 2 joueurs)
     #agent() {

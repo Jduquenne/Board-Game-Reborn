@@ -72,14 +72,17 @@ When the AI is the attacker (fight start or new round), it acts 1500 ms later; t
   1. Attack if the hit kills the enemy (damage halved if the enemy is defending).
   2. Otherwise defend if the enemy's next hit can kill the AI and the AI is not already defending.
   3. Otherwise attack.
-- **Trained** ("IA Entraînée"): moves like Normal; in fights, plays the best action of the Q-table saved from the training page ("Utiliser dans le jeu", stored in the browser). Without a saved model it fights like Normal.
+- **Trained** ("IA Entraînée"): uses the models saved from the training page ("Utiliser dans le jeu", stored in the browser): the evolved movement (weighted score of each reachable cell) and the Q-learning fight table. For each missing model it plays like Normal.
 
 ### Training page (`#training`, menu "Entraîner l'IA")
 
-- The learner moves like Normal and learns attack / defend by Q-learning against a chosen opponent (Aléatoire, IA Facile, IA Normal), starting from a blank (random) table.
+- Two lessons:
+  - **Combat (Q-learning)**: the learner moves like Normal and learns attack / defend against the chosen opponent (Aléatoire, IA Facile, IA Normal), starting from a blank (random) table.
+  - **Déplacement (génétique)**: a population of 30 movement weight sets plays against the opponent (fights with Normal's rule); the best are kept, crossed and mutated each generation. Watching speeds show a demonstration game of the current champion.
+- Movement features only use what a player can see on screen (hidden traps are never used).
 - Speeds: Regarder (one action every 0.5 s, board shown), Rapide (every 50 ms, board shown), Turbo and Max (no board, many games per update).
-- Shown: games played, exploration rate, win rate of the last evaluation (400 fixed games, no exploration) and the Normal AI's win rate on the same games (reference), learning curve, map of the learned strategy.
-- "Recommencer" and a change of opponent reset the learning; "Utiliser dans le jeu" saves the current table for the "IA Entraînée" mode.
+- Shown: games played, exploration rate (Combat) or generations (Déplacement), win rate of the last evaluation against the opponent (400 fixed games, no exploration) and the Normal AI's win rate on the same games (reference), learning curve, and what was learned: map of the fight strategy or weights of the movement champion.
+- "Recommencer", a change of lesson or of opponent reset the learning; "Utiliser dans le jeu" saves the model of the current lesson for the "IA Entraînée" mode.
 
 ## Content
 

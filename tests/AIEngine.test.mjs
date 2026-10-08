@@ -225,7 +225,7 @@ test('stop() cancels a pending action', () => {
 test('trained mode: the AI fights with the model saved by the training page', () => {
     // Modèle qui préfère toujours se défendre, stocké comme le fait la page d'entraînement
     const model = { actions: ['attack', 'defend'], table: { '10|10|0|0': [0, 1] } };
-    globalThis.localStorage = { getItem: () => JSON.stringify(model), setItem: () => {} };
+    globalThis.localStorage = { getItem: key => (key === 'bgr.fightModel' ? JSON.stringify(model) : null), setItem: () => {} };
     aiEngine.stop();
     aiEngine.start(); // recharge le modèle
 
@@ -242,4 +242,22 @@ test('trained mode without a saved model: the AI fights like the normal AI', () 
     aiFight({ aiMode: 'trained', human: { health: 100, weapon: weapon(20) }, ai: { health: 100, weapon: weapon(20) } });
     mock.timers.tick(FIGHT_THINK_DELAY);
     assert.deepEqual(fightActions(), ['fight:attack']);
+});
+
+test('trained mode: the AI moves with the evolved movement model', () => {
+    // Modèle qui cherche à S'ÉLOIGNER de l'ennemi : l'IA Normal, elle, se rapprocherait (en (3,6))
+    const weights = ['duel', 'duelAdvantage', 'weaponGain', 'lifeBonus', 'moveBonus', 'distance', 'exposed', 'exposedDanger', 'betterWeaponDist']
+        .map(key => (key === 'distance' ? 1 : 0));
+    globalThis.localStorage = { getItem: key => (key === 'bgr.moveModel' ? JSON.stringify({ weights }) : null), setItem: () => {} };
+    aiEngine.stop();
+    aiEngine.start(); // recharge les modèles
+
+    try {
+        aiTurn({ aiMode: 'trained' });
+        mock.timers.tick(THINK_DELAY);
+        // Cases les plus loin de l'ennemi (0,0) : (5,6) et (6,5), à 11 cases ; (5,6) vient en premier
+        assert.deepEqual(aiPosition(), { row: 5, col: 6 });
+    } finally {
+        delete globalThis.localStorage;
+    }
 });
