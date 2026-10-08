@@ -54,8 +54,8 @@ Scope decided by the owner on 2026-10-08:
 - **Isometric view kept**, improved where needed.
 
 Delivered in three batches, each checked in a browser by the owner:
-- 🟡 **Batch A — quick fixes**: U-03 colour variables, U-04 focus / accessible close button / image `alt`, U-05 spelling, U-06 inline styles, U-52 duplicated banner CSS. Done on 2026-10-08; awaiting the owner's browser check.
-- ⬜ **Batch B — playability**: U-34 visible fight cells, U-35 active player on the board, U-36 weapon spin, U-37 confirm before leaving, U-41/U-42 complete rules and closing, U-51 health in the fight banner, U-53 end-of-game choice.
+- ✅ **Batch A — quick fixes**: U-03 colour variables, U-04 focus / accessible close button / image `alt`, U-05 spelling, U-06 inline styles, U-52 duplicated banner CSS. Done on 2026-10-08; owner moved on to Batch B.
+- 🟡 **Batch B — playability**: U-34 visible fight cells, U-35 active player on the board, U-36 weapon spin, U-37 confirm before leaving, U-41/U-42 complete rules and closing, U-51 health in the fight banner, U-53 end-of-game choice. Done on 2026-10-08; awaiting the owner's browser check.
 - ⬜ **Batch C — responsive layout**: U-01, U-02, U-07?, U-10, U-20, U-21, U-30, U-31, U-32, U-33, U-40, U-50 (closes the last Phase 3 item). Keyboard play on the board (rest of U-04) to be decided.
 
 Done when: the three batches are done and the owner has checked every screen on a phone, a tablet and a desktop without scroll or overflow.

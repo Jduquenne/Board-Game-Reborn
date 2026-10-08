@@ -13,6 +13,20 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Phase 5 Batch B (playability)
+
+- **Done**: Batch A taken as validated (owner said "next"). Batch B:
+  - Board (`BoardView`): reachable cells next to the enemy get a red ring and a "Duel !" tooltip (U-34); the active player's cell pulses (U-35, disabled with `prefers-reduced-motion`); tooltips on characters, weapons (name, damage), bonuses, triggered traps; weapon hover spin removed (U-36).
+  - Game screen (`GameView`): "Menu" asks "Quitter la partie ?" before leaving (U-37); rules rewritten to cover movement points, weapon swap, bonuses, traps, duel cells, attack/defend and AI mode (U-41); dialogs close with Escape and outside click, focus moves to their button (U-42).
+  - Fight banner (`BattleBanner`): health of both players shown when choosing an action, target health after a hit (U-51); winner and "Nouvelle partie" / "Quitter" shown together, no 1.5 s wait (U-53).
+  - CSS: remaining cell / ring colours moved to variables.
+  - Docs: ui-design (board and dialog cues), conventions (document listeners cleanup), roadmap.
+- **Numbers**: `node --check` 26/26, 44/44 tests (no Engine change), golden-rule greps OK; CSS braces balanced, every variable defined and used, every new class used.
+- **Problems**: no browser available to the agent; visual result not checked. `sed -i` turned `css/style.css` to LF line endings; restored to CRLF.
+- **Still open**:
+  - Owner's browser check of Batch B.
+  - Batch C (responsive layout); keyboard play on the board (rest of U-04) to be decided.
+
 ## 2026-10-08 — Phase 5 scoped, Batch A (UI quick fixes)
 
 - **Done**: UI/UX audit written in `docs/ui-design.md` (U-01 … U-53, from code). Owner scope recorded in the roadmap: fully responsive on every screen, keep the current style, keep and improve the isometric view, three batches (A quick fixes, B playability, C responsive). Batch A: colour variables in `:root` (U-03); `:focus-visible` on buttons, rules close button is a real `<button>` with `aria-label`, character / weapon names as image `alt` (U-04, partly); spelling "Règles", "Paramètres", "Dégâts" (U-05); no more inline `style` toggles — `.hidden` class and `.game` CSS (U-06); battle and trap modal/banner CSS merged (U-52).

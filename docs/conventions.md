@@ -17,6 +17,7 @@
 - Repositories export a class with `static findAll()` and a module-level `XXX_DATA` array.
 - Views are classes extending `Component`, named `XxxView`, `XxxBanner`, `XxxSidebar`.
 - Private helpers use `#private` methods, grouped after a `// ─── Private ───` separator.
+- A View that listens on `document` or `window` stores the handler in a private field and removes it in `onUnmount()` (`Component.unmount()` only cleans EventBus subscriptions).
 
 ## Layer rules
 

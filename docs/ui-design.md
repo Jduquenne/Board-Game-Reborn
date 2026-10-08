@@ -20,16 +20,25 @@ The size is not recomputed on window resize.
 
 ## Visual identity
 
-- Colours: CSS variables in `:root` (`css/style.css`) — `--primary` (#424242, background), `--secondary` (#E73535, accents), `--third` (#344973, cards / hover), `--text-light`, `--spinner-text`, `--danger`, `--bonus-border`, `--focus-ring`, `--overlay`, `--banner-gradient`. New colours go there, never hard-coded in a rule (cell outlines `white` / `black` / `blue` / `gray` still are, to be revisited in Batch B).
+- Colours: CSS variables in `:root` (`css/style.css`) — `--primary` (#424242, background), `--secondary` (#E73535, accents), `--third` (#344973, cards / hover), `--text-light`, `--spinner-text`, `--danger`, `--bonus-border`, `--focus-ring`, `--overlay`, `--banner-gradient`. New colours go there, never hard-coded in a rule.
 - Buttons show the same highlight on hover and on keyboard focus (`:focus-visible`).
 - Visibility is toggled with the `.hidden` class only, never with inline `style.display`.
+
+## Board and dialog cues
+
+- Reachable cells: thin dark outline (`.cellToMove`). Reachable cells next to the enemy, where stopping starts a duel: red ring (`.fightZone`), tinted on hover, tooltip "Duel !".
+- Active player: light pulsing ring on their cell (`.activePlayer`); no animation with `prefers-reduced-motion`.
+- Tooltips (`title`) on characters, weapons (name and damage), bonuses and triggered traps.
+- Fight banner shows both players' health (`.bannerHp`) when choosing an action and the target's health after a hit; at the end, the winner and the "Nouvelle partie" / "Quitter" buttons appear together.
+- Dialogs (`.modalRules`: rules, quit confirmation) close with their button, the Escape key or a click outside; focus moves to their main button when opened.
+- "Menu" during a game asks for confirmation ("Quitter la partie ?").
 - Font: VT323 (Google Fonts, imported in `css/style.css`).
 - Board can switch between top view and an isometric view (`#board.isometric`).
 - UI text is in French.
 
 ## UI/UX audit (2026-10-08)
 
-Inventory for [roadmap Phase 5](roadmap.md#-phase-5--uiux-overhaul). Derived from reading `css/style.css` and `src/Views/`; **not observed in a browser**. IDs (U-xx) are referenced by the roadmap, which tracks their status (Batch A: U-03, U-04 partly, U-05, U-06, U-52 fixed on 2026-10-08).
+Inventory for [roadmap Phase 5](roadmap.md#-phase-5--uiux-overhaul). Derived from reading `css/style.css` and `src/Views/`; **not observed in a browser**. IDs (U-xx) are referenced by the roadmap, which tracks their status (Batch A: U-03, U-04 partly, U-05, U-06, U-52 fixed on 2026-10-08; Batch B: U-34, U-35, U-36, U-37, U-41, U-42, U-51, U-53 fixed on 2026-10-08).
 
 ### Global
 

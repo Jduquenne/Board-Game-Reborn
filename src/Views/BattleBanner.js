@@ -11,7 +11,7 @@ export class BattleBanner extends Component {
         this.listen('fight:start', ({ attacker, target }) => {
             this.#showModal();
             this.#setBannerFightStart(attacker, target);
-            setTimeout(() => this.#setBannerActionChoice(attacker), 1000);
+            setTimeout(() => this.#setBannerActionChoice(attacker, target), 1000);
         });
 
         this.listen('fight:attack', ({ attacker, target, damage }) => {
@@ -52,25 +52,24 @@ export class BattleBanner extends Component {
         `;
     }
 
-    #setBannerActionChoice(attacker) {
+    #setBannerActionChoice(attacker, target) {
         // Tour de l'IA : pas de boutons, AIEngine choisit l'action
-        if (attacker.player.isAI) {
-            this.root.innerHTML = `
-                <h2 class="battleInfosText">
-                    <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="${attacker.player.name}">
-                    ${attacker.player.name} réfléchit…
-                </h2>
-            `;
-            return;
-        }
+        const actions = attacker.player.isAI
+            ? `${attacker.player.name} réfléchit…`
+            : `<button class="btn" id="btn-attack">Attaquer</button>
+               <button class="btn" id="btn-defend">Se défendre</button>`;
 
         this.root.innerHTML = `
             <h2 class="battleInfosText">
                 <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="${attacker.player.name}">
-                <button class="btn" id="btn-attack">Attaquer</button>
-                <button class="btn" id="btn-defend">Se défendre</button>
+                ${this.#hp(attacker)}
+                ${actions}
+                ${this.#hp(target)}
+                <img class="targetImg" src="${AssetManager.player(target.player)}" alt="${target.player.name}">
             </h2>
         `;
+        if (attacker.player.isAI) return;
+
         this.root.querySelector('#btn-attack').addEventListener('click', () => fightEngine.attack());
         this.root.querySelector('#btn-defend').addEventListener('click', () => fightEngine.defend());
     }
@@ -82,6 +81,7 @@ export class BattleBanner extends Component {
                 ${attacker.player.name} inflige
                 <span class="bannerDmg">${damage}</span>
                 dégâts à ${target.player.name} !
+                ${this.#hp(target)}
                 <img class="targetImg" src="${AssetManager.player(target.player)}" alt="${target.player.name}">
             </h2>
         `;
@@ -96,19 +96,12 @@ export class BattleBanner extends Component {
         `;
     }
 
+    // Message de victoire et choix de la suite affichés ensemble
     #setBannerWin(winner) {
         this.root.innerHTML = `
             <h2 class="battleInfosText">
                 <img class="attackerImg" src="${AssetManager.player(winner.player)}" alt="${winner.player.name}">
-                ${winner.player.name} remporte le duel ! Félicitations !
-            </h2>
-        `;
-        setTimeout(() => this.#setBannerNewGame(), 1500);
-    }
-
-    #setBannerNewGame() {
-        this.root.innerHTML = `
-            <h2 class="battleInfosText">
+                ${winner.player.name} remporte le duel !
                 <button class="btn" id="btn-new-game">Nouvelle partie</button>
                 <button class="btn" id="btn-exit">Quitter</button>
             </h2>
@@ -122,5 +115,10 @@ export class BattleBanner extends Component {
             this.#hideModal();
             router.navigate('menu');
         });
+    }
+
+    // Points de vie affichés pendant le combat
+    #hp(playerInfo) {
+        return `<span class="bannerHp">${playerInfo.player.health} PV</span>`;
     }
 }
