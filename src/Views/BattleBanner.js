@@ -1,5 +1,7 @@
 import { Component } from '../core/Component.js';
 import { fightEngine } from '../Engine/FightEngine.js';
+import { gameEngine } from '../Engine/GameEngine.js';
+import { store } from '../core/Store.js';
 import { AssetManager } from '../AssetManager.js';
 import { router } from '../core/Router.js';
 
@@ -111,7 +113,11 @@ export class BattleBanner extends Component {
                 <button class="btn" id="btn-exit">Quitter</button>
             </h2>
         `;
-        this.root.querySelector('#btn-new-game').addEventListener('click', () => location.reload());
+        // Relance une partie en place avec les paramètres de la partie précédente
+        this.root.querySelector('#btn-new-game').addEventListener('click', () => {
+            this.#hideModal();
+            gameEngine.startGame(store.state.config);
+        });
         this.root.querySelector('#btn-exit').addEventListener('click', () => {
             this.#hideModal();
             router.navigate('menu');

@@ -45,7 +45,7 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
    - **Attack**: deals the weapon's damage to the target; halved (rounded down) if the target is defending. Defense flags of both players reset.
    - **Defend**: the attacker enters defense; the next hit they receive is halved.
 3. After each action (500 ms), if the target's health is 0 the attacker wins (`gameover`); otherwise roles swap.
-4. At the end: "Nouvelle partie" reloads the page, "Quitter" returns to the menu.
+4. At the end: "Nouvelle partie" starts a new game in place with the same configuration (board size, item counts, game mode); characters and placements are drawn again. "Quitter" returns to the menu (configuration reset to defaults).
 
 ## AI
 

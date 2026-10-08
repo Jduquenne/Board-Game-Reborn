@@ -36,6 +36,7 @@ Done when: `easy` and `normal` modes can be selected in options and the AI plays
 Confirmed by the owner on 2026-10-08.
 
 - 🟡 The AI plays its own fight actions (Attack / Defend). Done when: in an AI game, a fight runs to the end without the human clicking for the AI. Implemented and checked by a Node simulation on 2026-10-08; awaiting an in-browser check by the owner.
+- 🟡 "Nouvelle partie" keeps the previous game's settings (it used to reload the page and reset them). Done when: after a game played with custom options, "Nouvelle partie" starts with the same options. Checked by a Node simulation on 2026-10-08; awaiting an in-browser check by the owner.
 - ⬜ No internal scroll in `#menu` (game sidebar) and `.modalRules`. Done when: both use `overflow: hidden` and their content fits, verified in a browser at small and large viewport sizes.
 
 ### ⬜ Phase 4 — Automated tests

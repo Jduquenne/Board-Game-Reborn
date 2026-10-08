@@ -13,6 +13,15 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — "Nouvelle partie" keeps the settings
+
+- **Done**: the "Nouvelle partie" button in `BattleBanner` no longer calls `location.reload()` (which reset the Store config to defaults); it hides the battle modal and calls `gameEngine.startGame(store.state.config)`. Spec and roadmap updated.
+- **Numbers**: `node --check` OK; golden-rule greps OK. Node simulation: custom config (8×12, 15 obstacles, 5 weapons, 1 bonus, 4 traps, AI easy) → game played to `gameover` → restart: same config, `phase` `playing`, `fight` null, players at full health, AI flag on player 1, item counts match.
+- **Problems**: none.
+- **Still open**:
+  - In-browser check by the owner (modal closes, board, sidebar and AI behave normally after restart).
+  - New characters are drawn at each new game; tell if they should be kept too.
+
 ## 2026-10-08 — AI plays its own fight actions
 
 - **Done**: `AIEngine` now listens to `fight:start` / `fight:round-end` and, when the AI is the attacker, calls `fightEngine.attack()` or `defend()` after 1500 ms. Easy: 70 % attack. Normal: finish the enemy if possible, defend if the next enemy hit is lethal, otherwise attack. `BattleBanner` shows "<name> réfléchit…" instead of the buttons on the AI's turn. Docs updated (spec-gameplay, architecture, D-006, roadmap).
