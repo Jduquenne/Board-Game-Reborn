@@ -6,7 +6,7 @@ BoardGame Reborn is an architectural rewrite of BoardGame: same game, same gamep
 
 - **Stack**: vanilla JS ES2022, native ES modules, HTML + one CSS file. Runs in the browser from a static HTTP server.
 - **Non-negotiable**: zero dependencies (no npm, no bundler, no framework); strict layer separation; the game always fits the viewport without scrolling.
-- **Languages**: the agent talks to the owner in **French**; everything written in the repository docs is in **English**; code comments and UI text stay in **French**.
+- **Languages**: the agent talks to the owner in **French**; everything written in the repository docs is in **English**; code comments and UI text stay in **French**. Exception: the owner's personal learning notes in `docs/learning/` are in **French** and git-ignored ([D-011](docs/decisions.md#d-011--personal-learning-notes-in-french-git-ignored)).
 
 Read this file first, then the relevant file in `docs/`.
 
@@ -42,6 +42,7 @@ Read this file first, then the relevant file in `docs/`.
 | [`docs/decisions.md`](docs/decisions.md) | Architecture decisions (ADR) |
 | [`log/devlog.md`](log/devlog.md) | What was done in each session, what is still open |
 | [`ATTRIBUTION.md`](ATTRIBUTION.md) | Third-party fonts and images |
+| `docs/learning/` (local only, git-ignored) | Owner's AI-training learning notes, in French, for a beginner. Update them whenever a task introduces a new AI / machine-learning concept |
 
 ## Project map
 
@@ -53,11 +54,13 @@ src/
 ├── app.js          ← entry point, routes: menu, options, game
 ├── AssetManager.js ← the only place that builds image paths
 ├── core/           ← EventBus, Store, Component, Router
-├── Engine/         ← GameEngine, FightEngine, AIEngine, MovementSystem (no DOM)
+├── Engine/         ← Rules (pure game rules), GameEngine, FightEngine, AIEngine, MovementSystem (no DOM)
+├── AI/             ← agents, GameEnv simulator, Arena (no DOM; shared by the game and training)
 ├── Models/         ← createCell/Player/Weapon/Bonus/Trap factories
 ├── Repository/     ← static game content (PLAYER_DATA, WEAPON_DATA…)
 └── Views/          ← Menu, Options, Game + Board, PlayersSidebar, BattleBanner, TrapBanner
-tests/              ← node:test suites for src/Engine/ (see D-008)
+training/           ← Node scripts to evaluate / train AI agents (see D-010)
+tests/              ← node:test suites for src/Engine/ and src/AI/ (see D-008)
 tools/ui-check.mjs  ← responsive UI check in headless Chrome (see D-009)
 docs/               ← project documentation (archive/ = original context files)
 log/devlog.md       ← session journal
@@ -67,7 +70,7 @@ Details: [`docs/architecture.md`](docs/architecture.md#directory-structure).
 
 ## Golden rules
 
-1. Never reference `document`, `window` or any DOM API in `src/Engine/`, `src/Models/` or `src/Repository/`.
+1. Never reference `document`, `window` or any DOM API in `src/Engine/`, `src/AI/`, `src/Models/` or `src/Repository/`.
 2. Only `GameView`, `BoardView` and `BattleBanner` may import from `src/Engine/`, only to dispatch user actions.
 3. Never put game rules in Views: they render state and forward user actions.
 4. Models are pure factory functions — no methods, no classes.
@@ -81,7 +84,7 @@ Details: [`docs/architecture.md`](docs/architecture.md#directory-structure).
 Verification for rules 1–2:
 
 ```bash
-grep -rnE "document|window" src/Engine src/Models src/Repository   # must print nothing
+grep -rnE "document|window" src/Engine src/AI src/Models src/Repository   # must print nothing
 grep -rln "Engine/" src/Views                                       # only GameView, BoardView, BattleBanner
 ```
 

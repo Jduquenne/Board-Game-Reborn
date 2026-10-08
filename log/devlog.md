@@ -13,6 +13,22 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Phase 7.1: environment for AI training
+
+- **Done**: owner's goal recorded (train the game AI, learn how to do it; beginner; French git-ignored notes; training page with speed control). Phase 7 rewritten as 7.1–7.5. Implemented 7.1:
+  - `src/Engine/Rules.js`: game rules as pure functions (`createGame`, `applyMove`, `applyPass`, `applyAttack`, `applyDefend`, `resolveRound`, `refreshMarkings`) returning `{ state, events }`; seeded placement (`rng` parameter).
+  - `GameEngine` / `FightEngine` reduced to applying the rules to the Store and emitting the events (500 ms round delay kept). `BoardView` also renders in the `fighting` phase.
+  - `src/core/Random.js` (`createRng(seed)`, mulberry32).
+  - `src/AI/ScriptedAgents.js` (random, easy, normal behind one agent interface), `AIEngine` now plugs an agent into the game.
+  - `src/AI/GameEnv.js` (reset / step simulator with `pass`, immediate fight rounds, turn limit) and `src/AI/Arena.js` (`playGame`, `runMatch`, alternated seats, illegal action → error); `training/arena.mjs` CLI.
+  - Docs: D-010, D-011, architecture, conventions, development (arena), AGENTS (map, golden rule 1, learning notes), roadmap. `.gitignore`: `docs/learning/`. Learning notes started in `docs/learning/notes.md` (French, local only).
+- **Numbers**: 56/56 tests (44 engine tests unchanged and passing after the refactor + 12 for GameEnv / Arena). Arena, 1,000 games per pairing, seed 1: normal beats random 86.0 %, normal beats easy 80.8 %, easy beats random 59.7 %; ~5,700 games/s; identical output for identical seeds. UI check (`tools/ui-check.mjs`): 72/72, exit code 0.
+- **Problems**: found a game bug: a player with no reachable cell cannot pass (game stuck); not fixed, owner decision pending. `createGame` now only marks player 1 as AI when `aiMode` is set and not `'none'` (before: also when `aiMode` was missing; the Store always sets it).
+- **Still open**:
+  - Owner's check that the game still plays normally (moves, pickups, traps, fights, AI modes).
+  - Decision on the blocked-player bug.
+  - Phase 7.2: training page + Q-learning for fights.
+
 ## 2026-10-08 — Phase 6: automated UI checks
 
 - **Done**: roadmap updated with the owner's new priorities (Phase 6 UI checks, Phase 7 smarter AI, Phase 8 game feel and content; keyboard play rejected). Added `tools/ui-check.mjs` (zero dependency: `node:http` server + headless Chrome via the DevTools protocol and Node's `WebSocket`), `tools/output/` in `.gitignore`, decision D-009, docs (development, architecture), `AGENTS.md` checklist step 4 for UI changes and project map.

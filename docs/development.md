@@ -64,6 +64,22 @@ node tools/ui-check.mjs --viewport phone --screen game    # filters (substring m
 - Screenshots and `report.json` go to `tools/output/` (git-ignored): look at the ones related to your change.
 - To check a new screen or dialog, add it to the `SCREENS` array in the script. Rationale: [D-009](decisions.md#d-009--automated-ui-checks-with-headless-chrome).
 
+## AI arena
+
+```bash
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/arena.mjs --games 1000 --seed 1
+```
+
+✅ Verified 2026-10-08: plays every pair of scripted agents (random, easy, normal) with alternated seats; same seed → same results; ~5,700 games/s on the owner's machine.
+
+| A | B | A wins | B wins | draws |
+|---|---|---|---|---|
+| random | easy | 40.1 % | 59.7 % | 0.2 % |
+| random | normal | 13.8 % | 86.0 % | 0.2 % |
+| easy | normal | 18.9 % | 80.8 % | 0.3 % |
+
+(1,000 games per pairing, seed 1, 2026-10-08.)
+
 ## Build, lint, format
 
 None exist.

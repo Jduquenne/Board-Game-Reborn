@@ -37,7 +37,7 @@ grep -rln "Engine/" src/Views                                       # only GameV
 
 ## Error handling
 
-Only one explicit error today: `GameEngine.#randomEmptyCell` throws when no empty cell is left. Engines otherwise guard with early `return` (e.g. wrong `phase`, non-movable cell). TODO(owner): no further error-handling policy documented.
+Explicit errors: `randomEmptyCell` in `Rules.js` throws when no empty cell is left; `playGame` (`src/AI/Arena.js`) throws when an agent chooses an illegal action. Engines otherwise guard with early `return` (e.g. wrong `phase`, non-movable cell). TODO(owner): no further error-handling policy documented.
 
 ## Testing
 
@@ -50,6 +50,8 @@ Approach: [D-008](decisions.md#d-008--tests-with-nodes-built-in-test-runner). Co
 - Control time with `mock.timers.enable({ apis: ['setTimeout'] })` + `mock.timers.tick(ms)`, and randomness with `mock.method(Math, 'random', () => x)`; reset both in `afterEach` (`mock.timers.reset()`, `mock.restoreAll()`).
 - Unsubscribe every EventBus listener and call `aiEngine.stop()` in `afterEach` (engines and Store are singletons shared by the tests of a file; each file runs in its own process).
 - Every change to a game rule in `src/Engine/` comes with a test, and the matching rule in [`spec-gameplay.md`](spec-gameplay.md) is updated.
+- Game rules live only in `src/Engine/Rules.js` (pure functions returning `{ state, events }`); the game and the AI simulator both use them, so a rule changed there changes both.
+- AI code (`src/AI/`, `training/`) is tested with seeded randomness (`createRng(seed)`) so results are reproducible.
 
 ## Commit messages
 
@@ -73,7 +75,7 @@ Approach: [D-008](decisions.md#d-008--tests-with-nodes-built-in-test-runner). Co
 
 1. Add an entry to `BONUS_DATA` in `src/Repository/BonusRepository.js` (`type`: `'move'` or `'life'`, `amount`, `image`).
 2. If the image is new, add it to `assets/dungeon/bonus/`.
-3. A new `type` also requires handling in `GameEngine.movePlayer` (bonus pickup).
+3. A new `type` also requires handling in `applyMove` in `src/Engine/Rules.js` (bonus pickup), with a test.
 
 ### Add a view / page
 
@@ -85,12 +87,12 @@ Approach: [D-008](decisions.md#d-008--tests-with-nodes-built-in-test-runner). Co
 
 1. Add an entry to the `OPTIONS` array in `src/Views/OptionsView.js` (`key`, `label`, `min`, `max`, `default`) — rendering is automatic.
 2. Add the same key with its default value to `config` in `createInitialState()` (`src/core/Store.js`); otherwise the key is missing from the game config until the player clicks +/-.
-3. Use the key in `GameEngine` (and document it in [`architecture.md`](architecture.md#state-shape)).
+3. Use the key in `src/Engine/Rules.js` (and document it in [`architecture.md`](architecture.md#state-shape)). Simulations use `DEFAULT_CONFIG` in `src/AI/GameEnv.js`: add the key there too.
 
 ### Add a cell type
 
 1. Add the value to `DECOR` in `src/Models/Cell.js`.
-2. Handle it in `src/Engine/GameEngine.js` (placement, effects).
+2. Handle it in `src/Engine/Rules.js` (placement, effects).
 3. Handle it in `src/Engine/MovementSystem.js` if it blocks or alters movement.
 4. Render it in `src/Views/BoardView.js` (`#cellTemplate`) and add its image path to `src/AssetManager.js`.
 

@@ -10,9 +10,9 @@ export class BoardView extends Component {
         // Rendu initial au démarrage du jeu
         this.listen('game:started', () => this.#render(store.state));
 
-        // Mise à jour du plateau pendant la phase de jeu
+        // Mise à jour du plateau pendant la partie (y compris le déplacement qui lance un duel)
         this.listen('state:changed', (state) => {
-            if (state.phase === 'playing') this.#render(state);
+            if (state.phase === 'playing' || state.phase === 'fighting') this.#render(state);
         });
 
         // Event delegation — un seul listener pour toutes les cellules

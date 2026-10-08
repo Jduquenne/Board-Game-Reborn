@@ -1,6 +1,6 @@
 # Gameplay specification
 
-> Derived from code on 2026-10-08 (`GameEngine.js`, `FightEngine.js`, `AIEngine.js`, `MovementSystem.js`, repositories, `OptionsView.js`). This describes current behaviour, not a target. Changes to the rules must update this file.
+> Derived from code on 2026-10-08 (`Rules.js`, `MovementSystem.js`, `ScriptedAgents.js`, repositories, `OptionsView.js`). This describes current behaviour, not a target. Changes to the rules must update this file.
 
 BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick up weapons and bonuses, avoid traps, and fight when they meet. The last player standing wins.
 

@@ -58,6 +58,28 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Alternatives considered**: not documented.
 - **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
 
+## D-011 — Personal learning notes in French, git-ignored
+
+- **Date**: 2026-10-08
+- **Status**: accepted
+- **Context**: the owner wants to learn AI training through this game (beginner level) and keep the notes for personal use only.
+- **Decision**: learning notes live in `docs/learning/`, written in French for a beginner, ignored by git (`.gitignore`). The agent updates them whenever a task introduces a new AI / machine-learning concept.
+- **Alternatives considered**: English notes in the repository (rejected by the owner).
+- **Consequences**: exception to the "repository docs in English" rule; the notes exist only on the owner's machine and are not part of the project documentation (nothing in `docs/` may depend on them).
+
+## D-010 — Pure game rules, simulator and agents for AI training
+
+- **Date**: 2026-10-08
+- **Status**: accepted (Phase 7.1)
+- **Context**: the owner's main goal is to train an AI for the game and learn how to do it for other games. Training needs thousands of games per second; the engines were tied to the Store, the EventBus and display delays.
+- **Decision**:
+  - Game rules are extracted into pure functions in `src/Engine/Rules.js` (`state → { state, events }`); `GameEngine` / `FightEngine` only apply them to the Store, emit the events and keep the display delays.
+  - `src/AI/` holds what the game and training share, with no DOM, Store or EventBus: agents (`chooseMove`, `chooseFightAction`), `GameEnv` (reset / step simulator, the usual "environment" interface of reinforcement learning) and `Arena` (agent vs agent, seeded with `core/Random.js`).
+  - `AIEngine` plugs an agent into the running game; `training/` holds Node scripts (arena now, training later).
+  - Everything is written by hand, without libraries (D-001), so every algorithm can be read and understood.
+- **Alternatives considered**: keep the engines and mock timers in simulations (too slow, couples training to the UI); a JS ML library such as TensorFlow.js (rejected by D-001 and by the learning goal).
+- **Consequences**: one source of truth for the rules (a rule change applies to both the game and the simulator); engine tests still cover the game behaviour, `tests/GameEnv.test.mjs` covers the simulator. `BoardView` also renders during the `fighting` phase (a move that starts a duel is now a single state update).
+
 ## D-009 — Automated UI checks with headless Chrome
 
 - **Date**: 2026-10-08

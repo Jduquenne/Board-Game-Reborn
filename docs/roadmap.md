@@ -7,7 +7,7 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⏸ waiting for a dec
 Owner priorities set on 2026-10-08, in the order below (order proposed by the agent, to be confirmed):
 
 1. ✅ Phase 6 — automated UI checks.
-2. Phase 7 — smarter AI.
+2. 🟡 Phase 7 — trainable AI (owner's main goal: learn how to train a game AI).
 3. Phase 8 — game feel and content.
 
 ## Honest status (2026-10-08)
@@ -68,9 +68,17 @@ Done when: the three batches are done and the owner has checked every screen on 
 
 Owner agreement on 2026-10-08. Bring the headless-Chrome check used for Phase 5 (8 screen sizes × every screen: no page scroll, nothing outside the viewport, no scrollable or clipped area, screenshots) into the repository as a zero-dependency dev tool. Done when: the tool is in the repo, documented in `docs/development.md`, recorded as a decision, and part of the end-of-task checklist for UI changes. Done on 2026-10-08: `tools/ui-check.mjs` ([D-009](decisions.md#d-009--automated-ui-checks-with-headless-chrome)), 72/72.
 
-### ⬜ Phase 7 — Smarter AI (proposed)
+### 🟡 Phase 7 — Trainable AI
 
-Owner request on 2026-10-08. Done when: TODO(owner) — scope to validate (candidates: no endless back-and-forth between two cells, a "Difficile" mode).
+Owner request on 2026-10-08: train the game's AI and learn how to do it for other games (beginner). Everything hand-written, no library ([D-010](decisions.md#d-010--pure-game-rules-simulator-and-agents-for-ai-training)). Personal learning notes in French in `docs/learning/` ([D-011](decisions.md#d-011--personal-learning-notes-in-french-git-ignored)). A new "IA Entraînée" game mode will use the trained model. The hand-written "Difficile" mode is dropped (replaced by the trained AI).
+
+- ✅ **7.1 Environment** (2026-10-08): pure rules (`Rules.js`), simulator `GameEnv` (reset / step, no delays), agents interface (`ScriptedAgents.js`: random, easy, normal), seeded `Arena` + `training/arena.mjs` (~5,700 games/s). Done when: the game behaves as before (all engine tests pass), agents can play full games in the simulator, results are reproducible with a seed. Awaiting the owner's check that the game still plays normally in the browser.
+- ⬜ **7.2 Training page + first learning (fights)**: browser page with live learning curves and a speed control (from watching a game at normal speed to "max" in a Web Worker); tabular Q-learning for the attack / defend decision. Done when: the trained fight policy beats the "normal" fight rule in the arena, the page shows the curve, and the "IA Entraînée" mode uses it.
+- ⬜ **7.3 Movement**: score function for cells whose weights are tuned by a genetic algorithm. Done when: TODO — defined at the start of the step.
+- ⬜ **7.4 Neural network**: hand-written network + deep reinforcement learning on the whole game. Done when: TODO — defined at the start of the step.
+- ⬜ **7.5 Generic recipe**: learning notes summarised as a step-by-step recipe to apply to other games. Done when: TODO.
+
+Known bug found during 7.1 (not fixed, in the game only): a player with no reachable cell cannot pass, so the game is stuck (rare: player surrounded by obstacles, the board edge and the other player). The simulator handles it with a `pass` action. ⏸ Fix in the game (automatic pass?) to be decided by the owner.
 
 ### ⬜ Phase 8 — Game feel and content (proposed)
 

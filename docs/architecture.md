@@ -6,7 +6,8 @@ Structure of the code **as it is today** (verified against `src/` on 2026-10-08)
 
 ```text
 core/        ← reusable infrastructure (EventBus, Store, Component, Router)
-Engine/      ← pure game logic, ZERO DOM
+Engine/      ← game logic, ZERO DOM: Rules.js (pure rules) + engines applying them to the Store
+AI/          ← agents (ways of playing), GameEnv (fast simulator), Arena (agent vs agent), ZERO DOM
 Models/      ← pure factory functions (plain objects, no methods)
 Repository/  ← static data, fresh instances on every call
 Views/       ← DOM rendering, ZERO business logic
@@ -15,7 +16,8 @@ Views/       ← DOM rendering, ZERO business logic
 | Layer | May import | Must never |
 |---|---|---|
 | `core/` | other `core/` modules | contain game logic |
-| `Engine/` | `core/`, `Models/`, `Repository/`, other `Engine/` modules | touch the DOM (`document`, `querySelector`, …) |
+| `Engine/` | `core/`, `Models/`, `Repository/`, other `Engine/` modules; `AIEngine` may import `AI/` agents | touch the DOM (`document`, `querySelector`, …); `Rules.js` must not use the Store, EventBus or timers |
+| `AI/` | `core/Random.js`, `Engine/Rules.js`, `Models/`, `Repository/`, other `AI/` modules | touch the DOM; use the Store, EventBus or game engines (it must run in Node and Web Workers) |
 | `Models/` | other `Models/` | have methods or side effects |
 | `Repository/` | `Models/` | return shared references |
 | `Views/` | `core/`, `AssetManager`, other `Views/`, `Models/` constants (`DECOR`), `Repository/` (read-only display data) | contain business rules; import `Engine/` (exceptions below) |
@@ -37,14 +39,20 @@ src/
 ├── AssetManager.js                ← resolves every image path
 ├── core/
 │   ├── EventBus.js                ← pub/sub, on() returns an unsubscribe function
+│   ├── Random.js                  ← createRng(seed): seeded random generator (reproducible games)
 │   ├── Store.js                   ← centralised state, emits 'state:changed'
 │   ├── Component.js               ← base class: render/mount/unmount/listen/query/queryAll
 │   └── Router.js                  ← hash-based: register/navigate/start
 ├── Engine/
-│   ├── GameEngine.js              ← game logic (singleton gameEngine)
-│   ├── FightEngine.js             ← fight logic (singleton fightEngine)
-│   ├── AIEngine.js                ← computer opponent (singleton aiEngine)
+│   ├── Rules.js                   ← pure game rules: createGame, applyMove/Pass/Attack/Defend, resolveRound → { state, events }
+│   ├── GameEngine.js              ← applies Rules to the Store + emits events (singleton gameEngine)
+│   ├── FightEngine.js             ← same for fights, with the 500 ms round delay (singleton fightEngine)
+│   ├── AIEngine.js                ← plugs an AI agent into the running game (singleton aiEngine)
 │   └── MovementSystem.js          ← pure functions: getMovableCells, getAdjacentPositions
+├── AI/
+│   ├── ScriptedAgents.js          ← hand-written agents: random, easy, normal (SCRIPTED_AGENTS)
+│   ├── GameEnv.js                 ← simulator: reset() / step(action), no delays (training, arena)
+│   └── Arena.js                   ← playGame / runMatch between two agents, seeded
 ├── Models/
 │   ├── Cell.js                    ← createCell() + DECOR constant
 │   ├── Player.js                  ← createPlayer()
@@ -64,6 +72,8 @@ src/
     ├── PlayersSidebar.js
     ├── BattleBanner.js            ← fight UI, calls fightEngine.attack()/defend(), restarts a game
     └── TrapBanner.js
+training/
+└── arena.mjs                      ← CLI: scripted agents against each other (win rates, games/s)
 tools/
 └── ui-check.mjs                   ← responsive UI check with headless Chrome (D-009); output in tools/output/ (git-ignored)
 tests/
@@ -121,6 +131,8 @@ Hash-based (`#menu`, `#options`, `#game`); default route is `menu`; listens to `
 | `fight:round-end` | FightEngine | `{ nextAttacker, nextTarget }` |
 | `fight:end` | FightEngine | `{ winner, loser }` |
 | `state:changed` | Store | full `state` |
+
+Events are produced by the pure rules (`Rules.js`) and emitted by `GameEngine` / `FightEngine` after the Store is updated.
 
 Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` (`game:started`, `state:changed`), `BattleBanner` (`fight:*`), `TrapBanner` (`trap:triggered`), `AIEngine` (`turn:changed`, `fight:start`, `fight:round-end`).
 
