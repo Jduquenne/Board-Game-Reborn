@@ -19,7 +19,6 @@ Entry format:
 - **Numbers**: `node --check` OK; golden-rule greps OK. Node simulation: custom config (8×12, 15 obstacles, 5 weapons, 1 bonus, 4 traps, AI easy) → game played to `gameover` → restart: same config, `phase` `playing`, `fight` null, players at full health, AI flag on player 1, item counts match.
 - **Problems**: none.
 - **Still open**:
-  - In-browser check by the owner (modal closes, board, sidebar and AI behave normally after restart).
   - New characters are drawn at each new game; tell if they should be kept too.
 
 ## 2026-10-08 — AI plays its own fight actions
@@ -28,7 +27,6 @@ Entry format:
 - **Numbers**: `node --check` 26/26; golden-rule greps OK. Node simulation, AI vs AI, time accelerated ×50, 30 games per mode: every fight that started ended with `fight:end` and the loser at 0 HP (easy 30/30, normal 27/27; 474 attacks / 192 defends in easy).
 - **Problems**: in the simulation, 3/30 normal-vs-normal games never reached a fight: both AIs oscillate between two cells forever (existing movement strategy). Only possible with two AIs, which the game does not offer; not fixed.
 - **Still open**:
-  - In-browser check by the owner of a human-vs-AI fight (easy and normal).
   - Remaining Phase 3 item: internal scroll in `#menu` and `.modalRules`.
 
 ## 2026-10-08 — Migrate agent context to AGENTS.md, docs/ and devlog
@@ -37,9 +35,8 @@ Entry format:
 - **Numbers**: 28 blocks migrated (1 merged). `node --check` passes on 26/26 files; `python -m http.server` serves `index.html` and `src/app.js` (200).
 - **Problems**: the agent is not allowed to modify its own configuration (`CLAUDE.md`, `.claude/`); the owner archived the original `CLAUDE.md`, installed the new one and `.claude/settings.json` by hand. `.gitignore` no longer ignores `CLAUDE.md` (owner decision). `MIGRATION_PROMPT.md` deleted at the end (owner decision).
 - **Still open**:
-  - Manual in-browser play-through not done.
   - `npx serve .` not verified.
-  - Bugs to fix (roadmap Phase 3): AI does not act during fights; internal scroll in `#menu` and `.modalRules`.
+  - Bugs to fix (roadmap Phase 3): internal scroll in `#menu` and `.modalRules` (AI fight bug fixed, see above).
   - Automated tests to set up (Phase 4); UI/UX overhaul to scope (Phase 5).
   - Roadmap "Current focus" and "Ideas / later" left for the owner.
   - Image sources unknown (`ATTRIBUTION.md`).
