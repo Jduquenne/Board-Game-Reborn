@@ -22,6 +22,7 @@ const PLAYER_DATA = [
 export class PlayersRepository {
     // Retourne des instances fraîches à chaque appel (pas de partage de références)
     static findAll() {
-        return PLAYER_DATA.map(d => createPlayer(d.name, d.health, d.image, d.maxMove));
+        // Stats de combat facultatives (strength, agility, intelligence, luck) : 0 si absentes
+        return PLAYER_DATA.map(d => createPlayer(d.name, d.health, d.image, d.maxMove, d));
     }
 }

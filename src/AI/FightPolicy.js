@@ -1,4 +1,5 @@
 import { normalAgent } from './ScriptedAgents.js';
+import { weaponDamage } from '../Engine/Rules.js';
 
 /*
  * Ce que l'IA « voit » d'un combat pour décider entre attaquer et se défendre.
@@ -11,7 +12,7 @@ import { normalAgent } from './ScriptedAgents.js';
  *   - combien de coups il lui faut pour me tuer ;
  *   - suis-je en défense ? est-il en défense ?
  *
- * Les coups sont comptés avec les dégâts normaux (sans tenir compte de la défense en cours,
+ * Les coups sont comptés avec les dégâts réels de l'arme, Force comprise (sans la défense en cours,
  * qui est donnée à part). 10 × 10 × 2 × 2 = 400 situations possibles au maximum.
  */
 
@@ -28,8 +29,8 @@ export function fightStateKey(state) {
     const enemy = players[fight.targetIndex].player;
 
     return [
-        hitsToKill(enemy.health, me.weapon.damage),
-        hitsToKill(me.health, enemy.weapon.damage),
+        hitsToKill(enemy.health, weaponDamage(me)),
+        hitsToKill(me.health, weaponDamage(enemy)),
         me.defense ? 1 : 0,
         enemy.defense ? 1 : 0,
     ].join('|');

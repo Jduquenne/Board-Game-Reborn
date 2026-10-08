@@ -1,5 +1,6 @@
 import { DECOR } from '../Models/Cell.js';
 import { normalAgent } from './ScriptedAgents.js';
+import { weaponDamage } from '../Engine/Rules.js';
 
 /*
  * Déplacement par réseau de neurones : le réseau note chaque case accessible, l'agent va sur
@@ -39,7 +40,7 @@ export function moveInputs(state, cell) {
             } else {
                 const isEnemy = row === enemy.position.row && col === enemy.position.col;
                 input[k]     = c.decor === DECOR.OBSTACLE ? 1 : 0;
-                input[k + 1] = c.weapon ? c.weapon.damage / 40 : 0;
+                input[k + 1] = c.weapon ? weaponDamage(me.player, c.weapon) / 40 : 0; // dégâts pour MOI (Force comprise)
                 input[k + 2] = c.bonus?.type === 'life' ? c.bonus.amount / 100 : 0;
                 input[k + 3] = c.bonus?.type === 'move' ? c.bonus.amount / 3 : 0;
                 input[k + 4] = isEnemy ? 1 : 0;
@@ -51,8 +52,8 @@ export function moveInputs(state, cell) {
 
     input[k++] = me.player.health / 300;
     input[k++] = enemy.player.health / 300;
-    input[k++] = me.player.weapon.damage / 40;
-    input[k++] = enemy.player.weapon.damage / 40;
+    input[k++] = weaponDamage(me.player) / 40;
+    input[k++] = weaponDamage(enemy.player) / 40;
     input[k++] = me.player.maxMove / 6;
     input[k++] = enemy.player.maxMove / 6;
     input[k++] = cell.isSecurityZone ? 1 : 0;

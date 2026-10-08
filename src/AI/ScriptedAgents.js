@@ -11,6 +11,8 @@
  * rng : fonction aléatoire compatible Math.random (graine possible, voir core/Random.js).
  */
 
+import { weaponDamage } from '../Engine/Rules.js';
+
 // Mode facile : probabilité d'attaquer plutôt que de se défendre
 const EASY_ATTACK_CHANCE = 0.7;
 
@@ -55,7 +57,7 @@ export const normalAgent = {
         const fightCells = cells.filter(c => c.isSecurityZone);
         if (fightCells.length > 0) {
             const weHaveEdge =
-                me.player.weapon.damage >= enemy.player.weapon.damage ||
+                weaponDamage(me.player) >= weaponDamage(enemy.player) ||
                 me.player.health > enemy.player.health;
 
             if (weHaveEdge) return closestTo(fightCells, enemy.position);
@@ -63,7 +65,7 @@ export const normalAgent = {
 
         // Priorité 2 : ramasser une arme meilleure que celle qu'on porte
         // (parmi elles, celle qui nous rapproche le plus de l'ennemi)
-        const weaponCells = cells.filter(c => c.weapon && c.weapon.damage > me.player.weapon.damage);
+        const weaponCells = cells.filter(c => c.weapon && weaponDamage(me.player, c.weapon) > weaponDamage(me.player));
         if (weaponCells.length > 0) return closestTo(weaponCells, enemy.position);
 
         // Priorité 3 : ramasser un bonus (vie ou PM)
@@ -80,12 +82,12 @@ export const normalAgent = {
         const enemy = players[fight.targetIndex].player;
 
         // Priorité 1 : achever l'adversaire si notre coup suffit (sa défense divise par 2)
-        const myDamage = enemy.defense ? Math.floor(me.weapon.damage / 2) : me.weapon.damage;
+        const myDamage = enemy.defense ? Math.floor(weaponDamage(me) / 2) : weaponDamage(me);
         if (myDamage >= enemy.health) return 'attack';
 
         // Priorité 2 : se défendre si le prochain coup adverse peut nous tuer
         // (inutile si on est déjà en défense — le bonus ne se cumule pas)
-        if (!me.defense && enemy.weapon.damage >= me.health) return 'defend';
+        if (!me.defense && weaponDamage(enemy) >= me.health) return 'defend';
 
         // Priorité 3 : attaquer
         return 'attack';

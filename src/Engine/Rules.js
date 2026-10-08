@@ -17,6 +17,18 @@ import { TrapRepository } from '../Repository/TrapRepository.js';
 
 export const TRAP_DAMAGE = 20;
 
+// Force : chaque point augmente les dégâts de l'arme de 5 % (docs/spec-game-design.md §3)
+export const STRENGTH_BONUS = 0.05;
+
+/**
+ * Dégâts d'une arme entre les mains d'un joueur (avant défense) :
+ *   arrondi( dégâts de l'arme × (1 + Force × 5 %) )
+ * Utilisée par les règles ET par les IA, pour qu'elles raisonnent sur les vrais dégâts.
+ */
+export function weaponDamage(player, weapon = player.weapon) {
+    return Math.round(weapon.damage * (1 + (player.strength ?? 0) * STRENGTH_BONUS));
+}
+
 const unchanged = state => ({ state, events: [] });
 
 // ─── Création d'une partie ────────────────────────────────────────────────────
@@ -128,7 +140,7 @@ export function skipIfBlocked(state) {
     return passTurn({ ...state, activePlayerIndex: nextIndex(state.activePlayerIndex, state.players) }, [], true);
 }
 
-// Attaque : dégâts de l'arme, divisés par 2 si la cible se défend ; les défenses sont consommées
+// Attaque : dégâts de l'arme (avec la Force), divisés par 2 si la cible se défend ; les défenses sont consommées
 export function applyAttack(state) {
     const { fight, players, phase } = state;
     if (!fight || phase !== 'fighting') return unchanged(state);
@@ -137,7 +149,7 @@ export function applyAttack(state) {
     const attacker = players[attackerIndex];
     const target   = players[targetIndex];
 
-    let damage = attacker.player.weapon.damage;
+    let damage = weaponDamage(attacker.player);
     if (target.player.defense) damage = Math.floor(damage / 2);
 
     const newHealth = Math.max(0, target.player.health - damage);

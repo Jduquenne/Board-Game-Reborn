@@ -39,6 +39,7 @@ Read this file first, then the relevant file in `docs/`.
 | [`docs/conventions.md`](docs/conventions.md) | Code style, naming, layer rules in detail, commit format, "Add a …" checklists |
 | [`docs/ui-design.md`](docs/ui-design.md) | Viewport / no-scroll rules, adaptive board, visual identity, known deviations |
 | [`docs/spec-gameplay.md`](docs/spec-gameplay.md) | Game rules: setup, movement, pickups, traps, fights, AI |
+| [`docs/spec-game-design.md`](docs/spec-game-design.md) | Game-design draft (stats, combat with flee, weapon types, classes) — proposals, not implemented |
 | [`docs/roadmap.md`](docs/roadmap.md) | Current focus, honest status, phases, ideas |
 | [`docs/decisions.md`](docs/decisions.md) | Architecture decisions (ADR) |
 | [`log/devlog.md`](log/devlog.md) | What was done in each session, what is still open |

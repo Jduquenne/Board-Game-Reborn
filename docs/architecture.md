@@ -204,7 +204,7 @@ Game start: `OptionsView` writes `config` to the Store → `router.navigate('gam
 | Model | Factory | Fields |
 |---|---|---|
 | Cell | `createCell(row, col)` | `id` (`"row-col"`), `row`, `col`, `decor` (`DECOR.FLOOR` / `DECOR.OBSTACLE`), `weapon`, `bonus`, `player`, `trap` (`null` or `{ name, image, triggered }`), `isMovable`, `isSecurityZone` |
-| Player | `createPlayer(name, health, image, maxMove)` | `name`, `health`, `maxHealth`, `defense`, `weapon` (default "Épée de boisaille", 10 dmg), `image`, `maxMove`, `isAI` |
+| Player | `createPlayer(name, health, image, maxMove, { strength, agility, intelligence, luck })` | `name`, `health`, `maxHealth`, `defense`, `weapon` (default "Épée de boisaille", 10 dmg), `image`, `maxMove`, `strength`, `agility`, `intelligence`, `luck` (combat stats, 0 by default), `isAI` |
 | Weapon | `createWeapon(name, damage, image)` | `name`, `damage`, `image` |
 | Bonus | `createBonus(name, type, amount, image)` | `type`: `'move'` or `'life'` |
 | Trap | `createTrap(name, image)` | `name`, `image`, `triggered: false` |

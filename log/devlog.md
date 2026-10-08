@@ -13,10 +13,27 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Game design batch 1: stats model and Strength
+
+- **Done**: `createPlayer` gets `strength`, `agility`, `intelligence`, `luck` (0 by default); `PLAYER_DATA` entries may set them. `Rules.js`: `STRENGTH_BONUS` (5 %) and `weaponDamage(player, weapon)` = round(weapon damage × (1 + STR × 5 %)), used by attacks **and** by every AI (normal agent's edge / weapon / lethal checks, fight observation, movement features, neural inputs) so they reason on real damage. Balance analysis and lab: Strength column (editable, copied with the stats); other stats will be added with the batches that give them an effect. Sidebar: line "FOR · AGI · INT · CHA". Docs: architecture (data model), spec-gameplay (stats, attack formula), spec-game-design (batch 1 ✅), conventions (add a character), roadmap.
+- **Numbers**: 116/116 tests (7 new: model defaults, repository stats, damage formula, attack with strength + defense, normal AI lethal check with strength, fight observation, balance effect — strength 10 vs 0: > 65 %). Balance analysis unchanged to the decimal with all stats at 0 (Xena 86.9 %, first player 56.6 %). UI check: balance screens 24/24 after a fix; full run 131/136 before the fix (long names clipped in the lab on phones).
+- **Problems**: in the lab on small screens, hiding the avatar shifted every cell of the grid row (bars disappeared) — the automatic check passed, the screenshot showed it; fixed with a dedicated grid for small screens.
+- **Still open**: owner's check of batch 1; batch 2 (Agility criticals, Luck dodge).
+
+## 2026-10-08 — Game design specification draft
+
+- **Done**: owner concluded that health and PM alone cannot balance characters, and wants to start with a game-design spec; key idea: being able to **flee a fight** with PM (possibly driven by Luck). Wrote `docs/spec-game-design.md` v0.1 (draft): goals, 6 stats (HP, STR, AGI, ARM, LCK, PM), fight actions attack / defend / flee with proposed formulas, weapon types with stat scaling, 4 classes with counters, first-player and stalemate rules, impact on the project, delivery in 7 batches, 6 open questions. Linked from AGENTS orientation and the roadmap. No code changed.
+- **Numbers**: none (design work).
+- **Problems**: none.
+- **Update (v0.2)**: owner decided the stats — Health, Strength (weapon damage power), Agility (critical hits and tackle), Intelligence (mana for future heal / hinder spells), Luck (dodge and fleeing, against the enemy's tackle); Armour removed. Spec updated with proposed formulas (flee chance = (LCK + 2) / (LCK + enemy AGI + 4), clamped 10–90 %), classes revised (Brute, Jailer, Rogue, Duellist, Mage later), batches updated.
+- **Update (v0.3)**: flee formula accepted for a first version, failure = free enemy attack, no extra cost; classes Brute, Ent (roots grab victims, ex-Jailer), Thief / Voleur (ex-Rogue), Duellist, Mage later; characters assigned at random (seed 2026); Initiative proposed for the first-player advantage (derived A or own stat B).
+- **Update**: batch order (spec §10) accepted by the owner.
+- **Still open**: spec §11 questions 4 (starting formulas) and 6 (initiative A/B, anti-stalemate — needed only for batch 6); go for batch 1.
+
 ## 2026-10-08 — Balance lab
 
 - **Done**: owner chose option A (edited stats stay in the lab). Shared analysis module `src/AI/Balance.js` (step-by-step generator, `runBalance`, `playMatch`); `training/balance.mjs` now uses it; `src/AI/balance.worker.js`; page `#balance` (`BalanceView`, button "Équilibrage" on the training page): editable health / movement points per character (modified rows highlighted, results dimmed when stale), "Lancer l'analyse" / "Arrêter" with progress bar, IA Normal or champion, games per duel, summary (draws, first-player advantage, spread), win-rate bars (red / green / blue), 15 × 15 duel matrix with tooltips, portrait tabs, "Copier les stats" (PLAYER_DATA format). New colour variable `--balance-ok`. `ui-check`: 3 balance screens. Docs: D-015, architecture, AGENTS map, spec-gameplay, ui-design, development, roadmap.
-- **Numbers**: refactored CLI gives exactly the previous results (Xena 86.9 %, first player 56.6 %). 109/109 tests (5 new). Balance screens 24/24 in headless Chrome; 5,250 games (50 per duel) analysed in the browser in under 4 s; with Björn set to 200 HP he rises to 80 %. Full UI check: see below.
+- **Numbers**: refactored CLI gives exactly the previous results (Xena 86.9 %, first player 56.6 %). 109/109 tests (5 new). Balance screens 24/24 in headless Chrome; 5,250 games (50 per duel) analysed in the browser in under 4 s; with Björn set to 200 HP he rises to 80 %. Full UI check: 136/136 (8 sizes × 17 screens), exit code 0, outputs on E:.
 - **Problems**: none.
 - **Still open**: owner's check; rebalancing decisions; Phase 8 game design (new stats, weapon affinities).
 

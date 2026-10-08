@@ -19,7 +19,7 @@ import { createRng } from '../core/Random.js';
  * puis retourne le résultat complet.
  *
  * @param {object} options
- * @param {{ name, health, maxMove, image }[]} options.characters  personnages à comparer (stats libres)
+ * @param {{ name, health, maxMove, image, strength? }[]} options.characters  personnages à comparer (stats libres)
  * @param {object} options.agent           IA utilisée des deux côtés
  * @param {number} [options.gamesPerPair=100]
  * @param {number} [options.seed=1]
@@ -68,7 +68,7 @@ export function* balanceSteps({ characters, agent, gamesPerPair = 100, seed = 1,
                 .filter(v => v.rate !== null)
                 .sort((a, b) => b.rate - a.rate);
             return {
-                name: c.name, health: c.health, maxMove: c.maxMove,
+                name: c.name, health: c.health, maxMove: c.maxMove, strength: c.strength ?? 0,
                 winRate: rates.reduce((a, b) => a + b, 0) / Math.max(1, rates.length),
                 best: vs[0] ?? null,
                 worst: vs.at(-1) ?? null,
@@ -93,7 +93,7 @@ export function playMatch([charA, charB], agent, { rng, config = DEFAULT_CONFIG,
     const env = new GameEnv({ config, rng, maxTurns });
     env.reset();
 
-    const chosen  = [charA, charB].map(c => createPlayer(c.name, c.health, c.image, c.maxMove));
+    const chosen  = [charA, charB].map(c => createPlayer(c.name, c.health, c.image, c.maxMove, c)); // + stats de combat
     const cells   = env.state.cells.map(row => row.map(cell => ({ ...cell })));
     const players = env.state.players.map((info, i) => {
         cells[info.position.row][info.position.col].player = chosen[i];

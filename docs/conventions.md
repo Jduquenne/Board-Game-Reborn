@@ -63,7 +63,7 @@ Approach: [D-008](decisions.md#d-008--tests-with-nodes-built-in-test-runner). Co
 
 ### Add a character
 
-1. Add an entry to `PLAYER_DATA` in `src/Repository/PlayersRepository.js` (`name`, `health`, `image`, `maxMove`).
+1. Add an entry to `PLAYER_DATA` in `src/Repository/PlayersRepository.js` (`name`, `health`, `image`, `maxMove`, and optionally `strength`, `agility`, `intelligence`, `luck` — 0 if absent). Check its balance in the Balance lab.
 2. Add the image to `assets/dungeon/characters/` with the exact `image` filename.
 
 ### Add a weapon

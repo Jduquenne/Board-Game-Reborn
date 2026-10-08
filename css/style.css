@@ -471,6 +471,7 @@ body {
 .playerName      { font-size: clamp(15px, 3.2vmin, 26px); color: var(--text-light); }
 .playerHealth    { font-size: var(--font-small); color: var(--text-light); }
 .playerMaxMove   { font-size: var(--font-small); color: var(--text-light); }
+.playerStats     { font-size: clamp(10px, 1.8vmin, 16px); color: var(--spinner-text); }
 
 .playerWeapon {
     display: flex;
@@ -974,7 +975,7 @@ body {
     flex: 1 1 0;
     min-height: 0;
     display: grid;
-    grid-template-columns: auto minmax(0, 1.3fr) auto auto minmax(0, 1.4fr) 2.6em;
+    grid-template-columns: auto minmax(0, 1.3fr) auto auto auto minmax(0, 1.4fr) 2.6em;
     align-items: center;
     gap: clamp(3px, 0.8vmin, 10px);
     padding: 0 4px;
@@ -1050,6 +1051,14 @@ body {
 .matrixWin   { background-color: var(--secondary); }
 .matrixLoss  { background-color: var(--player-outline); }
 .matrixEmpty { background-color: var(--panel-shade); }
+
+/* Petits écrans : champs plus étroits pour laisser la place aux noms */
+@media (max-width: 700px) {
+    .balanceStat input { width: 2.6em; }
+    .balanceStat       { gap: 1px; }
+    .balanceRow        { gap: 3px; padding: 0 2px; grid-template-columns: minmax(0, 1.3fr) auto auto auto minmax(0, 1fr) 2.4em; }
+    .balanceAvatar     { display: none; }
+}
 
 /* Portrait : un seul panneau à la fois, choisi par les onglets */
 @media (orientation: portrait) {

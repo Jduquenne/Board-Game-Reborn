@@ -3,8 +3,13 @@ import { router } from '../core/Router.js';
 import { AssetManager } from '../AssetManager.js';
 import { PlayersRepository } from '../Repository/PlayersRepository.js';
 
-// Bornes des stats modifiables dans le labo
-const LIMITS = Object.freeze({ health: { min: 10, max: 500, step: 5 }, maxMove: { min: 1, max: 8, step: 1 } });
+// Stats modifiables dans le labo (Agilité, Chance… arriveront avec les lots qui leur donnent un effet)
+const LIMITS = Object.freeze({
+    health:   { min: 10, max: 500, step: 5 },
+    maxMove:  { min: 1,  max: 8,   step: 1 },
+    strength: { min: 0,  max: 10,  step: 1 },
+});
+const STATS = Object.keys(LIMITS);
 
 // Seuils de couleur des barres : en dessous / au-dessus = trop faible / trop fort
 const LOW = 0.4, HIGH = 0.6;
@@ -15,7 +20,7 @@ const pct = x => `${Math.round(x * 100)} %`;
 // leur équilibre. Aucune logique d'IA ici : l'analyse tourne dans src/AI/balance.worker.js.
 export class BalanceView extends Component {
     #worker     = null;
-    #original   = PlayersRepository.findAll().map(p => ({ name: p.name, health: p.health, maxMove: p.maxMove, image: p.image }));
+    #original   = PlayersRepository.findAll().map(p => ({ name: p.name, health: p.health, maxMove: p.maxMove, strength: p.strength, image: p.image }));
     #characters = this.#original.map(c => ({ ...c }));
     #result     = null;   // dernier résultat d'analyse
     #analyzed   = null;   // stats utilisées pour ce résultat (pour savoir si elles ont changé depuis)
@@ -169,8 +174,7 @@ export class BalanceView extends Component {
 
     // Les stats ont-elles changé depuis la dernière analyse ?
     #isStale() {
-        return !this.#analyzed || this.#characters.some((c, i) =>
-            c.health !== this.#analyzed[i].health || c.maxMove !== this.#analyzed[i].maxMove);
+        return !this.#analyzed || this.#characters.some((c, i) => STATS.some(s => c[s] !== this.#analyzed[i][s]));
     }
 
     #renderSummary() {
@@ -188,7 +192,7 @@ export class BalanceView extends Component {
         const stale = this.#result && this.#isStale();
         const rows = this.#characters.map((c, i) => {
             const origin   = this.#original[i];
-            const modified = c.health !== origin.health || c.maxMove !== origin.maxMove;
+            const modified = STATS.some(s => c[s] !== origin[s]);
             const res      = this.#result?.characters[i];
             const level    = !res ? '' : res.winRate > HIGH ? 'balanceHigh' : res.winRate < LOW ? 'balanceLow' : 'balanceOk';
             const title    = res
@@ -206,6 +210,10 @@ export class BalanceView extends Component {
                     <label class="balanceStat">PM
                         <input type="number" data-index="${i}" data-stat="maxMove" value="${c.maxMove}"
                             min="${LIMITS.maxMove.min}" max="${LIMITS.maxMove.max}" step="${LIMITS.maxMove.step}" aria-label="Points de mouvement de ${c.name}">
+                    </label>
+                    <label class="balanceStat" title="Force : +5 % de dégâts par point">FOR
+                        <input type="number" data-index="${i}" data-stat="strength" value="${c.strength}"
+                            min="${LIMITS.strength.min}" max="${LIMITS.strength.max}" step="${LIMITS.strength.step}" aria-label="Force de ${c.name}">
                     </label>
                     <span class="balanceBarTrack ${stale ? 'balanceStale' : ''}">
                         ${res ? `<span class="balanceBar ${level}" style="width: ${(res.winRate * 100).toFixed(1)}%"></span>` : ''}
@@ -249,7 +257,7 @@ export class BalanceView extends Component {
     // Stats actuelles, au format de PLAYER_DATA (src/Repository/PlayersRepository.js), dans le presse-papiers
     async #copy() {
         const lines = this.#characters.map(c =>
-            `    { name: '${c.name.replace(/'/g, "\\'")}', health: ${c.health}, image: '${c.image}', maxMove: ${c.maxMove} },`);
+            `    { name: '${c.name.replace(/'/g, "\\'")}', health: ${c.health}, image: '${c.image}', maxMove: ${c.maxMove}, strength: ${c.strength} },`);
         const text = lines.join('\n');
         try {
             await navigator.clipboard.writeText(text);

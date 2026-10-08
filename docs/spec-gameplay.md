@@ -43,7 +43,7 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
 
 1. The player who moved into the security zone attacks first.
 2. Each round, the attacker chooses **Attack** or **Defend**:
-   - **Attack**: deals the weapon's damage to the target; halved (rounded down) if the target is defending. Defense flags of both players reset.
+   - **Attack**: deals the weapon's damage × (1 + Strength × 5 %), rounded (`weaponDamage` in `Rules.js`), to the target; halved (rounded down) if the target is defending. Defense flags of both players reset.
    - **Defend**: the attacker enters defense; the next hit they receive is halved.
 3. After each action (500 ms), if the target's health is 0 the attacker wins (`gameover`); otherwise roles swap.
 4. At the end: "Nouvelle partie" starts a new game in place with the same configuration (board size, item counts, game mode); characters and placements are drawn again. "Quitter" returns to the menu (configuration reset to defaults).
@@ -85,6 +85,10 @@ When the AI is the attacker (fight start or new round), it acts 1500 ms later; t
 - Shown: games played, exploration rate (Combat) or generations (Déplacement), win rate of the last evaluation against the opponent (400 fixed games, no exploration) and the Normal AI's win rate on the same games (reference), learning curve, and what was learned: map of the fight strategy or weights of the movement champion.
 - Button "Équilibrage" opens the **Balance lab** (`#balance`): every character's health and movement points can be edited **in the lab only** (the game data is not changed); "Lancer l'analyse" makes every character fight every other one with the same AI on both sides (IA Normal, or the cautious genetic champion) and shows each one's win rate (red > 60 %, green 40–60 %, blue < 40 %), the duel matrix, the draw rate and the first-player advantage. "Copier les stats" copies the edited stats in the `PLAYER_DATA` format, to be written into the game by the owner's decision.
 - "Recommencer", a change of lesson or of opponent reset the learning; "Utiliser dans le jeu" saves the model of the current lesson for the "IA Entraînée" mode.
+
+## Character stats
+
+Every character has Health, PM and four combat stats (Strength, Agility, Intelligence, Luck — see [`spec-game-design.md`](spec-game-design.md)). Implemented so far (batch 1): **Strength** multiplies weapon damage by (1 + 5 % per point). Agility, Intelligence and Luck exist but have no effect yet. All current characters have 0 in every combat stat, so the game plays exactly as before. The sidebar shows the four stats (FOR · AGI · INT · CHA).
 
 ## Content
 

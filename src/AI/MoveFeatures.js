@@ -1,5 +1,6 @@
 import { getMovableCells } from '../Engine/MovementSystem.js';
 import { normalAgent } from './ScriptedAgents.js';
+import { weaponDamage } from '../Engine/Rules.js';
 
 /*
  * Déplacement par « fonction de score » : pour chaque case accessible, on calcule quelques
@@ -38,11 +39,11 @@ export function moveFeatures(state, cell, context = moveContext(state)) {
     const { me, enemy, enemyReach, betterWeapons, norm } = context;
 
     // Moi après le déplacement : arme et vie éventuellement ramassées (les pièges sont invisibles)
-    const myDamage = cell.weapon ? cell.weapon.damage : me.player.weapon.damage;
+    const myDamage = weaponDamage(me.player, cell.weapon ?? me.player.weapon); // Force comprise
     const myHealth = me.player.health + (cell.bonus?.type === 'life' ? cell.bonus.amount : 0);
 
     const myHits    = hitsToKill(enemy.player.health, myDamage);    // coups pour le tuer
-    const enemyHits = hitsToKill(myHealth, enemy.player.weapon.damage); // coups pour me tuer
+    const enemyHits = hitsToKill(myHealth, weaponDamage(enemy.player)); // coups pour me tuer
 
     // Duel lancé par moi : j'attaque en premier → je gagne si myHits ≤ enemyHits
     const duel = cell.isSecurityZone ? 1 : 0;
@@ -53,7 +54,7 @@ export function moveFeatures(state, cell, context = moveContext(state)) {
     const exposedDanger = exposed * clamp((myHits - enemyHits + 1) / 5, -1, 1);
 
     // Meilleure arme encore au sol (plus forte que celle que j'aurai), la plus proche
-    const targets = betterWeapons.filter(w => w.weapon.damage > myDamage && (w.row !== cell.row || w.col !== cell.col));
+    const targets = betterWeapons.filter(w => weaponDamage(me.player, w.weapon) > myDamage && (w.row !== cell.row || w.col !== cell.col));
     const betterWeaponDist = targets.length
         ? Math.min(...targets.map(w => manhattan(w, cell))) / norm
         : 1;
@@ -61,7 +62,7 @@ export function moveFeatures(state, cell, context = moveContext(state)) {
     return [
         duel,
         duelAdvantage,
-        cell.weapon ? (cell.weapon.damage - me.player.weapon.damage) / 40 : 0,
+        cell.weapon ? (myDamage - weaponDamage(me.player)) / 40 : 0,
         cell.bonus?.type === 'life' ? cell.bonus.amount / 100 : 0,
         cell.bonus?.type === 'move' ? cell.bonus.amount / 3 : 0,
         manhattan(cell, enemy.position) / norm,
