@@ -2,11 +2,11 @@
 //
 // Usage :   node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-fight.mjs [--games 50000] [--seed 1] [--opponent normal]
 // Sortie :  courbe de progression (évaluation régulière) + politique apprise + modèle dans
-//           <dossier temporaire du système>/boardgame-reborn/training/fight-model.json
+//           ../BoardGameReborn-output/training/fight-model.json (à côté du projet)
 
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { FightTrainer } from '../src/AI/FightTrainer.js';
 import { describeFightKey } from '../src/AI/FightPolicy.js';
 import { SCRIPTED_AGENTS } from '../src/AI/ScriptedAgents.js';
@@ -53,8 +53,8 @@ for (const { key, values } of trainer.qtable.entries().sort((a, b) => a.key.loca
     console.log(`  ${best.padEnd(7)} ${values.map(v => v.toFixed(2).padStart(6)).join(' ')}   ${describeFightKey(key).text}`);
 }
 
-// Hors du projet : un serveur avec rechargement automatique (Live Server) rechargerait la page
-const OUT_DIR = join(tmpdir(), 'boardgame-reborn', 'training');
+// À côté du projet (pas dedans : Live Server rechargerait la page ; jamais sur le disque C:)
+const OUT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'BoardGameReborn-output', 'training');
 mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(join(OUT_DIR, 'fight-model.json'), JSON.stringify(trainer.qtable.toJSON(), null, 1));
 console.log(`\nModel saved to ${join(OUT_DIR, 'fight-model.json')}`);

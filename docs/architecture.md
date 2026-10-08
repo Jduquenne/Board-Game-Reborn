@@ -60,8 +60,13 @@ src/
 │   ├── Genetic.js                 ← generic genetic algorithm (GeneticAlgorithm), reusable for other games
 │   ├── MoveFeatures.js            ← movement features (visible information only) + weighted movement agent
 │   ├── MoveTrainer.js             ← genetic evolution of the movement weights (fitness = win rate)
+│   ├── NeuralNetwork.js           ← generic multilayer perceptron written by hand (forward, backprop, SGD / Adam)
+│   ├── NeuralMovePolicy.js        ← raw network inputs per reachable cell (5 × 5 view + 9 globals) + neural movement agent
+│   ├── ImitationTrainer.js        ← supervised imitation of the genetic champion (distillation, train / test split)
+│   ├── DefaultModels.js           ← reference models shipped with the game (genetic champion weights)
 │   ├── FightLesson.js             ← training-page lesson "Combat" (wraps FightTrainer)
 │   ├── MoveLesson.js              ← training-page lesson "Déplacement" (wraps MoveTrainer, champion demos)
+│   ├── NeuralLesson.js            ← training-page lesson "Réseau de neurones" (wraps ImitationTrainer, loss curves)
 │   ├── TrainingSession.js         ← speeds and messages for the training page; delegates to a lesson
 │   └── training.worker.js         ← Web Worker running a TrainingSession
 ├── Models/
@@ -89,9 +94,10 @@ training/
 ├── arena.mjs                      ← CLI: scripted agents against each other (win rates, games/s)
 ├── train-fight.mjs                ← CLI: Q-learning of fight decisions, progress table, learned policy
 ├── train-move.mjs                 ← CLI: genetic evolution of the movement, progress table, champion weights
-                                     (the CLIs write their models to the system temp directory)
+├── train-imitation.mjs            ← CLI: neural network imitating the champion, loss / accuracy / win rate per epoch
+                                     (the CLIs write their models to ../BoardGameReborn-output/training/)
 tools/
-└── ui-check.mjs                   ← responsive UI check with headless Chrome (D-009); screenshots in the system temp directory
+└── ui-check.mjs                   ← responsive UI check with headless Chrome (D-009); screenshots in ../BoardGameReborn-output/ui-check/
 tests/
 ├── helpers.mjs                    ← builds controlled game states, records events
 └── *.test.mjs                     ← one file per engine (node:test), see D-008
@@ -185,7 +191,7 @@ flowchart LR
     GameEngine -->|trap:triggered| TrapBanner
 ```
 
-AI training page: `TrainingView` ⇄ messages ⇄ `training.worker.js` → `TrainingSession` → `FightTrainer` → `GameEnv` → `Rules.js` (no Store, no EventBus). "Utiliser dans le jeu" saves the Q-table with `ModelStorage`; `AIEngine.start()` loads the saved models for the `trained` mode (evolved movement and/or Q-learning fights, Normal's rule for whatever is missing).
+AI training page: `TrainingView` ⇄ messages ⇄ `training.worker.js` → `TrainingSession` → `FightTrainer` → `GameEnv` → `Rules.js` (no Store, no EventBus). "Utiliser dans le jeu" saves the Q-table with `ModelStorage`; `AIEngine.start()` loads the saved models for the `trained` mode: fight table and one movement model (evolved weights or neural network, the last one saved), Normal's rule for whatever is missing.
 
 Game start: `OptionsView` writes `config` to the Store → `router.navigate('game')` → `GameView.onMount()` mounts sub-components, calls `aiEngine.start()`, then `gameEngine.startGame(config)`, then computes `--cell-size`.
 

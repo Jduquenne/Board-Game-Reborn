@@ -26,6 +26,7 @@ Read this file first, then the relevant file in `docs/`.
 - Architecture decisions are proposed, validated by the owner, then recorded in [`docs/decisions.md`](docs/decisions.md).
 - Never move to the next roadmap phase without the owner's agreement.
 - Never add a dependency, `package.json` or bundler ([D-001](docs/decisions.md#d-001--zero-dependencies)); never invent a version number.
+- **Never write anything on drive C:** (the owner's most sensitive disk): no temporary files, scripts, outputs or browser profiles there — not even in the system temp directory. Work files go to `../BoardGameReborn-output/` (next to the project, on the same disk, outside the project so that Live Server does not reload). Edit project files directly instead of generating helper scripts.
 - No out-of-scope work: do what was asked, propose the rest.
 - Be honest about status: say what was not verified (e.g. no in-browser test).
 
@@ -101,7 +102,7 @@ Details: [`docs/conventions.md`](docs/conventions.md#layer-rules) and [`docs/ui-
 1. Syntax check: `for f in $(find src tools training tests -name "*.js" -o -name "*.mjs" | grep -v output); do node --input-type=module --check < "$f" || echo "FAIL $f"; done` (no `FAIL` line = OK). Do not use plain `node --check file.js`: with Node 22 it does not report syntax errors in our ES module files.
 2. Tests: `node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning` (must end with `# fail 0`).
 3. Golden-rule greps (rules 1–2 above).
-4. If the change touches the UI (`css/`, `src/Views/`, `index.html`): `node tools/ui-check.mjs` (must end with exit code 0) and look at the screenshots of the affected screens (folder printed at the end, in the system temp directory).
+4. If the change touches the UI (`css/`, `src/Views/`, `index.html`): `node tools/ui-check.mjs` (must end with exit code 0) and look at the screenshots of the affected screens (folder printed at the end: `../BoardGameReborn-output/ui-check/`).
 5. Run `python -m http.server 8080` and check the affected screens at <http://localhost:8080>; if you could not test in a browser, say so.
 6. Add an entry to [`log/devlog.md`](log/devlog.md).
 7. Update [`docs/roadmap.md`](docs/roadmap.md) (and `docs/` if architecture, rules or conventions changed).

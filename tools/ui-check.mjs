@@ -8,14 +8,14 @@
 // Usage :   node tools/ui-check.mjs [--viewport <filtre>] [--screen <filtre>] [--out <dossier>]
 // Exemple : node tools/ui-check.mjs --viewport phone --screen game
 // Chrome :  détecté automatiquement, ou variable d'environnement CHROME_PATH.
-// Sortie :  code 0 si aucun problème, 1 sinon. Captures et report.json dans le dossier temporaire du
-//           système (hors du projet : un serveur avec rechargement automatique, comme Live Server,
-//           rechargerait la page à chaque capture), sauf si --out est donné.
+// Sortie :  code 0 si aucun problème, 1 sinon. Captures et report.json dans
+//           ../BoardGameReborn-output/ui-check (à côté du projet, sur le même disque), sauf si --out est donné.
+//           Hors du projet : un serveur avec rechargement automatique (Live Server) rechargerait la page
+//           à chaque capture. Jamais dans le dossier temporaire du système (disque C: à ne pas utiliser).
 
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { dirname, extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,7 +30,9 @@ const arg  = (name, fallback) => {
 };
 const VIEWPORT_FILTER = arg('viewport', '');
 const SCREEN_FILTER   = arg('screen', '');
-const OUT             = resolve(ROOT, arg('out', join(tmpdir(), 'boardgame-reborn', 'ui-check')));
+// Dossier de travail à côté du projet : sorties et profils Chrome temporaires
+const WORK_DIR        = resolve(ROOT, '..', 'BoardGameReborn-output');
+const OUT             = resolve(ROOT, arg('out', join(WORK_DIR, 'ui-check')));
 
 // ─── Cas testés ───────────────────────────────────────────────────────────────
 
@@ -76,6 +78,15 @@ const SCREENS = [
     ['training-max',   '#training', `(() => {
         document.querySelector('[data-speed="max"]').click();
         document.querySelector('#tr-toggle').click();
+    })()`],
+    ['training-neural', '#training', `(async () => {
+        const lesson = document.querySelector('#tr-lesson');
+        lesson.value = 'neural';
+        lesson.dispatchEvent(new Event('change'));
+        await new Promise(r => setTimeout(r, 2500));
+        document.querySelector('[data-speed="max"]').click();
+        document.querySelector('#tr-toggle').click();
+        await new Promise(r => setTimeout(r, 4000));
     })()`],
     ['training-move',  '#training', `(async () => {
         const lesson = document.querySelector('#tr-lesson');
@@ -218,7 +229,8 @@ if (!chromePath) {
 }
 
 mkdirSync(OUT, { recursive: true });
-const profileDir = mkdtempSync(join(tmpdir(), 'bgr-ui-check-'));
+mkdirSync(WORK_DIR, { recursive: true });
+const profileDir = mkdtempSync(join(WORK_DIR, 'chrome-profile-'));
 const server     = await startServer();
 const base       = `http://127.0.0.1:${server.address().port}/index.html`;
 const browser    = await connectChrome(chromePath, profileDir);

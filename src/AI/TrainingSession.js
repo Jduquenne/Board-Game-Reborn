@@ -1,10 +1,12 @@
 import { FightLesson } from './FightLesson.js';
 import { MoveLesson } from './MoveLesson.js';
+import { NeuralLesson } from './NeuralLesson.js';
 
 /*
  * Session d'entraînement pilotée par la page « Entraînement de l'IA » (via le Web Worker).
  * Gère la vitesse et les messages ; l'apprentissage lui-même est délégué à une « leçon »
- * (FightLesson : combat par Q-learning, MoveLesson : déplacement par algorithme génétique).
+ * (FightLesson : combat par Q-learning, MoveLesson : déplacement par algorithme génétique,
+ * NeuralLesson : déplacement par réseau de neurones qui imite le champion génétique).
  * Aucun DOM : `post` est la fonction d'envoi (self.postMessage dans le worker, une fonction en test).
  *
  * Messages envoyés :
@@ -13,7 +15,7 @@ import { MoveLesson } from './MoveLesson.js';
  *   { type: 'model', lesson, model, gamesPlayed }  modèle exporté (pour l'utiliser dans le jeu)
  */
 
-export const LESSONS = Object.freeze({ fight: FightLesson, move: MoveLesson });
+export const LESSONS = Object.freeze({ fight: FightLesson, move: MoveLesson, neural: NeuralLesson });
 
 // Vitesses : delay = pause entre deux « tics » (ms) ; frames = plateau affiché ; budget = durée de calcul par tic
 export const SPEEDS = Object.freeze({

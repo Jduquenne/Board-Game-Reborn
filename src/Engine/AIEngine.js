@@ -5,6 +5,8 @@ import { fightEngine } from './FightEngine.js';
 import { SCRIPTED_AGENTS, normalAgent } from '../AI/ScriptedAgents.js';
 import { createQFightAgent } from '../AI/FightPolicy.js';
 import { createWeightedMoveAgent } from '../AI/MoveFeatures.js';
+import { createNeuralMoveAgent } from '../AI/NeuralMovePolicy.js';
+import { NeuralNetwork } from '../AI/NeuralNetwork.js';
 import { QTable } from '../AI/QLearning.js';
 import { ModelStorage } from '../core/ModelStorage.js';
 
@@ -60,6 +62,10 @@ class AIEngine {
         const moveModel  = ModelStorage.load('move');
         const fightAgent = fightModel?.table ? createQFightAgent(QTable.fromJSON(fightModel)) : normalAgent;
 
+        // Déplacement : réseau de neurones (leçon Réseau) ou poids évolués (leçon Déplacement)
+        if (moveModel?.network) {
+            return createNeuralMoveAgent(NeuralNetwork.fromJSON(moveModel.network), { fightAgent, name: 'trained' });
+        }
         return Array.isArray(moveModel?.weights)
             ? createWeightedMoveAgent(moveModel.weights, { fightAgent, name: 'trained' })
             : { ...fightAgent, name: 'trained', chooseMove: normalAgent.chooseMove };

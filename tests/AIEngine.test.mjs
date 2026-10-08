@@ -261,3 +261,23 @@ test('trained mode: the AI moves with the evolved movement model', () => {
         delete globalThis.localStorage;
     }
 });
+
+test('trained mode: the AI can move with a neural network model', async () => {
+    const { NeuralNetwork } = await import('../src/AI/NeuralNetwork.js');
+    const { MOVE_INPUT_SIZE } = await import('../src/AI/NeuralMovePolicy.js');
+    const { createRng } = await import('../src/core/Random.js');
+    const network = new NeuralNetwork({ sizes: [MOVE_INPUT_SIZE, 4, 1], rng: createRng(1) }).toJSON();
+    globalThis.localStorage = { getItem: key => (key === 'bgr.moveModel' ? JSON.stringify({ kind: 'network', network }) : null), setItem: () => {} };
+    aiEngine.stop();
+    aiEngine.start(); // recharge les modèles
+
+    try {
+        aiTurn({ aiMode: 'trained' });
+        const reachable = store.state.cells.flat().filter(c => c.isMovable).map(c => `${c.row},${c.col}`);
+        mock.timers.tick(THINK_DELAY);
+        const { row, col } = aiPosition();
+        assert.ok(reachable.includes(`${row},${col}`), 'the network moved the AI to a reachable cell');
+    } finally {
+        delete globalThis.localStorage;
+    }
+});

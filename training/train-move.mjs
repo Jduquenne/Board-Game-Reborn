@@ -2,11 +2,11 @@
 //
 // Usage :   node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-move.mjs [--generations 30] [--seed 1] [--opponent normal]
 // Sortie :  progression par génération, poids du champion, modèle dans
-//           <dossier temporaire du système>/boardgame-reborn/training/move-model.json
+//           ../BoardGameReborn-output/training/move-model.json (à côté du projet)
 
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { MoveTrainer } from '../src/AI/MoveTrainer.js';
 import { MOVE_FEATURES } from '../src/AI/MoveFeatures.js';
 import { SCRIPTED_AGENTS } from '../src/AI/ScriptedAgents.js';
@@ -40,8 +40,8 @@ console.log(`\n${GENERATIONS} generations in ${((performance.now() - start) / 10
 console.log('\nChampion weights:');
 MOVE_FEATURES.forEach((f, i) => console.log(`  ${trainer.bestGenome[i].toFixed(2).padStart(6)}  ${f.label}`));
 
-// Hors du projet : un serveur avec rechargement automatique (Live Server) rechargerait la page
-const OUT_DIR = join(tmpdir(), 'boardgame-reborn', 'training');
+// À côté du projet (pas dedans : Live Server rechargerait la page ; jamais sur le disque C:)
+const OUT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'BoardGameReborn-output', 'training');
 mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(join(OUT_DIR, 'move-model.json'), JSON.stringify({ features: MOVE_FEATURES.map(f => f.key), weights: trainer.bestGenome }, null, 1));
 console.log(`\nModel saved to ${join(OUT_DIR, 'move-model.json')}`);

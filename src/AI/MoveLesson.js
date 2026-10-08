@@ -70,6 +70,6 @@ export class MoveLesson {
     }
 
     model() {
-        return { features: MOVE_FEATURES.map(f => f.key), weights: this.#trainer.bestGenome };
+        return { kind: 'weights', features: MOVE_FEATURES.map(f => f.key), weights: this.#trainer.bestGenome };
     }
 }

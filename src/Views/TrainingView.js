@@ -19,6 +19,7 @@ const OPPONENTS = [
 const LESSONS_LABELS = [
     { key: 'fight', label: 'Combat (Q-learning)' },
     { key: 'move',  label: 'Déplacement (génétique)' },
+    { key: 'neural', label: 'Réseau de neurones (imitation)' },
 ];
 
 const ACTION_TEXT = { move: 'se déplace', pass: 'passe son tour', attack: 'attaque', defend: 'se défend' };
@@ -90,6 +91,18 @@ export class TrainingView extends Component {
                             <div class="trainingWeightList" id="tr-weights"></div>
                         </div>
 
+                        <div class="trainingNeural hidden" id="tr-neural-wrap">
+                            <p class="trainingCaption" id="tr-neural-caption">Erreur du réseau par époque</p>
+                            <div class="trainingChart" id="tr-loss-wrap">
+                                <canvas id="tr-loss" aria-label="Erreur d'apprentissage et de test par époque"></canvas>
+                            </div>
+                            <p class="trainingLegend">
+                                <span class="legendDefend">● apprentissage</span>
+                                <span class="legendAttack">● test (situations jamais vues)</span>
+                                · si le test remonte pendant que l'apprentissage baisse : sur-apprentissage
+                            </p>
+                        </div>
+
                         <div class="trainingPolicy" id="tr-policy-wrap">
                             <p class="trainingCaption">Stratégie apprise (personne en défense)</p>
                             <div class="trainingPolicyGrid" id="tr-policy"></div>
@@ -132,10 +145,12 @@ export class TrainingView extends Component {
         // Redessine la courbe et le plateau quand la place disponible change
         this.#resizeObserver = new ResizeObserver(() => {
             this.#drawChart();
+            this.#drawLossChart();
             this.#sizeBoard();
         });
         this.#resizeObserver.observe(this.query('#tr-chart-wrap'));
         this.#resizeObserver.observe(this.query('#tr-board-area'));
+        this.#resizeObserver.observe(this.query('#tr-loss-wrap'));
     }
 
     onUnmount() {
@@ -153,8 +168,9 @@ export class TrainingView extends Component {
                 this.#notice('Lance au moins une génération avant d\'enregistrer le déplacement.');
                 return;
             }
-            const saved = ModelStorage.save(data.lesson, { ...data.model, gamesPlayed: data.gamesPlayed });
-            const what  = data.lesson === 'move' ? 'Déplacement' : 'Combat';
+            // Les leçons Déplacement et Réseau produisent toutes deux un modèle de déplacement : le dernier enregistré est utilisé
+            const saved = ModelStorage.save(data.lesson === 'fight' ? 'fight' : 'move', { ...data.model, gamesPlayed: data.gamesPlayed });
+            const what  = { fight: 'Combat', move: 'Déplacement (génétique)', neural: 'Déplacement (réseau de neurones)' }[data.lesson];
             this.#notice(saved
                 ? `${what} enregistré (${data.gamesPlayed.toLocaleString('fr-FR')} parties d'entraînement). Choisis « IA Entraînée » dans les Paramètres pour l'affronter.`
                 : 'Impossible d\'enregistrer le modèle dans ce navigateur (stockage indisponible).');
@@ -195,10 +211,18 @@ export class TrainingView extends Component {
         this.query('#tr-board-wrap').classList.toggle('hidden', !showBoard);
         this.query('#tr-policy-wrap').classList.toggle('hidden', showBoard || stats.lesson !== 'fight');
         this.query('#tr-weights-wrap').classList.toggle('hidden', showBoard || stats.lesson !== 'move');
+        this.query('#tr-neural-wrap').classList.toggle('hidden', showBoard || stats.lesson !== 'neural');
+        if (stats.network) {
+            const n = stats.network;
+            this.query('#tr-neural-caption').textContent =
+                `Erreur par époque — réseau ${n.sizes.join(' → ')} (${n.parameters.toLocaleString('fr-FR')} paramètres), ` +
+                `${n.train.toLocaleString('fr-FR')} exemples d'apprentissage, ${n.test.toLocaleString('fr-FR')} de test`;
+        }
 
         if (stats.policy)  this.#renderPolicy(stats.policy);
         if (stats.weights) this.#renderWeights(stats.weights);
         this.#drawChart();
+        this.#drawLossChart();
     }
 
     #renderFrame(frame) {
@@ -274,12 +298,46 @@ export class TrainingView extends Component {
         }).join('');
     }
 
-    // Courbe : taux de victoire (évaluation) en fonction des parties jouées, + référence en pointillés
+    // Courbe principale : taux de victoire en fonction des parties (ou époques) + référence en pointillés
     #drawChart() {
-        const canvas = this.query('#tr-chart');
-        const wrap   = this.query('#tr-chart-wrap');
-        if (!canvas || !wrap || !this.#lastStats) return;
+        if (!this.#lastStats) return;
+        const { history, reference, gamesPlayed, xLabel = 'parties' } = this.#lastStats;
+        const epochs = xLabel === 'époques';
+        this.#plot(this.query('#tr-chart'), this.query('#tr-chart-wrap'), {
+            xMax: epochs ? Math.max(10, history.at(-1)?.games ?? 0) : Math.max(1000, gamesPlayed, history.at(-1)?.games ?? 0),
+            xLabel,
+            yMax: 1,
+            yFormat: v => `${Math.round(v * 100)}%`,
+            series: [
+                ...(reference !== null ? [{ points: [{ x: 0, y: reference }, { x: Infinity, y: reference }], color: '--spinner-text', dashed: true }] : []),
+                { points: history.map(p => ({ x: p.games, y: p.winRate })), color: '--secondary', dots: true },
+            ],
+        });
+    }
 
+    // Erreur d'apprentissage (train) et de test, par époque (leçon Réseau de neurones)
+    #drawLossChart() {
+        const losses = this.#lastStats?.losses;
+        if (!losses?.length) return;
+        const values = losses.flatMap(l => [l.train, l.test]);
+        // Axe resserré autour des valeurs : les variations de l'erreur sont petites
+        const yMin = Math.min(...values) * 0.9, yMax = Math.max(...values) * 1.05;
+        this.#plot(this.query('#tr-loss'), this.query('#tr-loss-wrap'), {
+            xMax: Math.max(10, losses.at(-1).epoch),
+            xLabel: 'époques',
+            yMin,
+            yMax,
+            yFormat: v => v.toFixed(1),
+            series: [
+                { points: losses.map(l => ({ x: l.epoch, y: l.train })), color: '--spinner-text', dots: true },
+                { points: losses.map(l => ({ x: l.epoch, y: l.test })),  color: '--secondary', dots: true },
+            ],
+        });
+    }
+
+    // Dessine des courbes sur un canvas qui prend la taille de son conteneur
+    #plot(canvas, wrap, { xMax, xLabel, yMin = 0, yMax, yFormat, series }) {
+        if (!canvas || !wrap) return;
         const dpr = window.devicePixelRatio || 1;
         const w = wrap.clientWidth, h = wrap.clientHeight;
         if (w === 0 || h === 0) return;
@@ -295,44 +353,36 @@ export class TrainingView extends Component {
         const css   = getComputedStyle(document.documentElement);
         const color = name => css.getPropertyValue(name).trim();
         const fontSize = Math.max(10, Math.round(h / 14));
-        const font  = `${fontSize}px VT323, monospace`;
+        ctx.font = `${fontSize}px VT323, monospace`;
 
         const pad = { left: 36, right: 10, top: fontSize, bottom: fontSize + 8 };
         const plotW = w - pad.left - pad.right, plotH = h - pad.top - pad.bottom;
-        const { history, reference, gamesPlayed } = this.#lastStats;
-        const maxGames = Math.max(1000, gamesPlayed, history.at(-1)?.games ?? 0);
-        const x = games => pad.left + (games / maxGames) * plotW;
-        const y = rate  => pad.top + (1 - rate) * plotH;
+        const x = v => pad.left + (Math.min(v, xMax) / xMax) * plotW;
+        const y = v => pad.top + (1 - (v - yMin) / (yMax - yMin)) * plotH;
 
-        // Axes et graduations (0, 50, 100 %)
-        ctx.font = font;
+        // Graduations (min, milieu, max)
         ctx.fillStyle = color('--text-light');
         ctx.strokeStyle = color('--third');
         ctx.lineWidth = 1;
-        for (const rate of [0, 0.5, 1]) {
-            ctx.beginPath(); ctx.moveTo(pad.left, y(rate)); ctx.lineTo(w - pad.right, y(rate)); ctx.stroke();
-            ctx.fillText(`${rate * 100}%`, 2, y(rate) + 4);
+        for (const v of [yMin, (yMin + yMax) / 2, yMax]) {
+            ctx.beginPath(); ctx.moveTo(pad.left, y(v)); ctx.lineTo(w - pad.right, y(v)); ctx.stroke();
+            ctx.fillText(yFormat(v), 2, y(v) + 4);
         }
-        ctx.fillText(`${maxGames.toLocaleString('fr-FR')} parties`, w - pad.right - ctx.measureText(`${maxGames.toLocaleString('fr-FR')} parties`).width, h - 4);
+        const right = `${xMax.toLocaleString('fr-FR')} ${xLabel}`;
+        ctx.fillText(right, w - pad.right - ctx.measureText(right).width, h - 4);
         ctx.fillText('0', pad.left, h - 4);
 
-        // Référence (IA Normal) en pointillés
-        if (reference !== null) {
-            ctx.setLineDash([6, 4]);
-            ctx.strokeStyle = color('--spinner-text');
-            ctx.beginPath(); ctx.moveTo(pad.left, y(reference)); ctx.lineTo(w - pad.right, y(reference)); ctx.stroke();
-            ctx.setLineDash([]);
-        }
-
-        // Courbe de l'élève
-        if (history.length) {
-            ctx.strokeStyle = color('--secondary');
-            ctx.lineWidth = 2;
+        for (const s of series) {
+            if (!s.points.length) continue;
+            ctx.strokeStyle = color(s.color);
+            ctx.fillStyle   = color(s.color);
+            ctx.lineWidth   = s.dashed ? 1 : 2;
+            ctx.setLineDash(s.dashed ? [6, 4] : []);
             ctx.beginPath();
-            history.forEach((p, i) => (i === 0 ? ctx.moveTo(x(p.games), y(p.winRate)) : ctx.lineTo(x(p.games), y(p.winRate))));
+            s.points.forEach((p, i) => (i === 0 ? ctx.moveTo(x(p.x), y(p.y)) : ctx.lineTo(x(p.x), y(p.y))));
             ctx.stroke();
-            ctx.fillStyle = color('--secondary');
-            for (const p of history) { ctx.beginPath(); ctx.arc(x(p.games), y(p.winRate), 2.5, 0, Math.PI * 2); ctx.fill(); }
+            ctx.setLineDash([]);
+            if (s.dots) for (const p of s.points) { ctx.beginPath(); ctx.arc(x(p.x), y(p.y), 2.5, 0, Math.PI * 2); ctx.fill(); }
         }
     }
 

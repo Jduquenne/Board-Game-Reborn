@@ -58,6 +58,20 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Alternatives considered**: not documented.
 - **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
 
+## D-014 — Hand-written neural network; movement first learned by imitating the champion
+
+- **Date**: 2026-10-08
+- **Status**: accepted (Phase 7.4a–b)
+- **Context**: the genetic movement (D-013) is limited by the 9 hand-chosen features; a neural network can build its own from raw inputs. The owner is a beginner: the path must be understandable step by step.
+- **Decision**:
+  - `src/AI/NeuralNetwork.js`: generic multilayer perceptron written by hand (He initialisation, ReLU / tanh, linear output, backpropagation, SGD and Adam), verified by a numerical gradient check and XOR.
+  - Network inputs per reachable cell (`NeuralMovePolicy.js`): a 5 × 5 view (blocked, weapon, life / move bonus, enemy, triggered trap) + 9 globals = 159 numbers, only visible information. Network 159 → 32 → 16 → 1 (5,665 parameters); the agent moves to the best-scored cell.
+  - First training = supervised imitation of the genetic champion (`ImitationTrainer.js`, behavioural cloning): 80 / 20 train / test split by game, softmax cross-entropy, **distillation** targets (softmax of the champion's scores, temperature 0.25) instead of hard labels, Adam (lr 0.003, batches of 32). The champion's weights are shipped in `DefaultModels.js`.
+  - Training page lesson "Réseau de neurones (imitation)" with training / test loss curves; a saved network becomes the "IA Entraînée" movement model.
+  - Reinforcement learning on top of the imitating network is the next step (7.4c).
+- **Alternatives considered**: hard labels (overfit: ties are broken arbitrarily by the champion, 87 % train vs ~38 % test accuracy); plain SGD (too slow with distillation); a 7 × 7 view (no better, twice as slow); start directly with deep reinforcement learning (unstable, hard to debug for a first network).
+- **Consequences**: the network beats Normal (54–57 %) without hand-made features but stays well below its teacher (70.5 %): it cannot rebuild from local pixels the key "can the enemy reach me next turn?" reasoning that the champion receives ready-made. Evaluating a network is slower (~0.4 s for 200 games in Node), so the lesson evaluates on 200 games.
+
 ## D-013 — Movement learned by a genetic algorithm on a weighted score of cells
 
 - **Date**: 2026-10-08
@@ -109,7 +123,7 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Date**: 2026-10-08
 - **Status**: accepted
 - **Context**: the responsive layout (Phase 5) was verified with a throw-away script driving headless Chrome; the owner agreed to keep it (Phase 6) so every UI change can be checked on all screen sizes.
-- **Decision**: `tools/ui-check.mjs`, a zero-dependency Node script: it serves the project with `node:http`, starts the locally installed Chrome / Chromium / Edge in headless mode and drives it through the DevTools protocol with Node's built-in `WebSocket`. It opens every screen at 8 screen sizes, fails when it finds a page scroll, an element outside the viewport, a scrollable area or clipped content, and saves a screenshot per case in the system temp directory (`<temp>/boardgame-reborn/ui-check/`). First written to `tools/output/`, moved out of the project on 2026-10-08: files written there made the owner's auto-reloading dev server (Live Server) reload the game every few seconds.
+- **Decision**: `tools/ui-check.mjs`, a zero-dependency Node script: it serves the project with `node:http`, starts the locally installed Chrome / Chromium / Edge in headless mode and drives it through the DevTools protocol with Node's built-in `WebSocket`. It opens every screen at 8 screen sizes, fails when it finds a page scroll, an element outside the viewport, a scrollable area or clipped content, and saves a screenshot per case in `../BoardGameReborn-output/ui-check/`, next to the project (temporary Chrome profiles in the same folder). History, 2026-10-08: first written to `tools/output/` inside the project, which made the owner's auto-reloading dev server (Live Server) reload the game every few seconds; then to the system temp directory, which is on drive C: — forbidden by the owner; now next to the project on the same disk.
 - **Alternatives considered**: Playwright / Puppeteer (rejected by D-001); manual checks only (too slow for 72 cases).
 - **Consequences**: requires a Chromium-based browser on the machine (`CHROME_PATH` if not found) and Node with a global `WebSocket` (verified with v22.14.0). It checks layout, not visual taste: screenshots still need a look. Since 2026-10-08 it also fails on JavaScript errors in the page and on an empty `#app` (a page that does not load would otherwise pass every layout check). It drives the game through ES module imports in the page (`store`, `eventBus`), so renaming those modules or events requires updating the script.
 

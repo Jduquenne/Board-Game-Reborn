@@ -13,6 +13,25 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Nothing written on drive C: any more
+
+- **Done**: the owner asked why I wrote helper scripts to `C:\Users\…\AppData\Local\Temp\bgr-scripts\` and set a rule: drive C: (the owner's most sensitive disk) must not be used. Listed and, with the owner's approval, deleted everything I had written there (`bgr-scripts` 36 KB, `boardgame-reborn` 15 MB of screenshots / models, the previous session's scratchpad 400 MB with Chrome profiles, two leftover `bgr-ui-check-*` Chrome profiles); stopped a UI check that was writing there. `tools/ui-check.mjs` (screenshots and temporary Chrome profiles) and `training/train-*.mjs` now write to `../BoardGameReborn-output/` (next to the project on E:, outside it for Live Server). No more helper scripts: project files are edited directly. Rule added to `AGENTS.md` (absolute rules); D-009, development, architecture updated.
+- **Numbers**: UI check 112/112 with outputs on E:; `train-fight.mjs` writes `E:\Développement\Jason\BoardGameReborn-output\training\fight-model.json`; nothing left under `C:\…\Temp` from this project's tools.
+- **Problems**: Claude Code itself stores background-command outputs under `C:\…\Temp\claude\…` — not controllable from the project.
+- **Still open**: none for this point.
+
+## 2026-10-08 — Phase 7.4a–b: neural network written by hand, imitation of the champion
+
+- **Done**:
+  - 7.4a: `src/AI/NeuralNetwork.js` (multilayer perceptron, He init, ReLU / tanh, backprop, SGD and Adam, JSON); `tests/NeuralNetwork.test.mjs` (shape, numerical gradient check for tanh and ReLU, XOR, Adam vs SGD, step averaging, JSON).
+  - 7.4b: `NeuralMovePolicy.js` (159 raw inputs: 5 × 5 view + globals, visible information only; neural agent), `DefaultModels.js` (genetic champion weights, seed 1), `ImitationTrainer.js` (recording, train / test split, distillation, batch-by-batch training), `NeuralLesson.js` + lesson in the training page (error curves, network size), `training/train-imitation.mjs`; "IA Entraînée" can use a saved network; `ModelStorage` keeps one movement model (weights or network). `TrainingView`: generic chart drawing (`#plot`) for the win-rate and loss charts. `ui-check`: screen "training-neural".
+  - Docs: D-014, architecture, spec-gameplay, ui-design, development, roadmap; learning notes for 7.4.
+- **Numbers**: 104/104 tests (16 new). CLI (seed 1): hard labels, 500 games → 87 % train accuracy but test loss rising from epoch 2 (overfitting), 50 % wins; distillation + SGD → no overfitting but very slow (loss 1.91 → 1.84 in 8 epochs, 38 % wins); distillation + Adam, 1,500 games → 54–57 % wins from epoch 1 (teacher 70.5 %, Normal 51.5 %); 7 × 7 view → same plateau, twice as slow. Browser: ~1 s to record 800 games, ~1 s per epoch, 200-game evaluation ~0.4 s (Node). UI check: 112/112 (8 sizes × 14 screens), exit code 0.
+- **Problems**: a shell command of mine contained a stray `cat` waiting on stdin and hung until the owner backgrounded it; stopped. The network cannot learn the champion's "enemy reach" reasoning from local inputs — honest ceiling of this approach.
+- **Still open**:
+  - Owner's check of the "Réseau de neurones" lesson.
+  - 7.4c (reinforcement on top of imitation), 7.5 (generic recipe).
+
 ## 2026-10-08 — Tool outputs moved out of the project (Live Server reload loop)
 
 - **Done**: the owner's app reloaded every second: VS Code Live Server (port 5500) reloads on any file change in the project, and a background `ui-check` run (left over from the previous session) was writing a screenshot to `tools/output/` every 2–3 s. Stopped it (and the unused Python server on port 8090). Owner chose option 1: `tools/ui-check.mjs` now writes to `<system temp>/boardgame-reborn/ui-check/` (`--out` to override) and `training/train-*.mjs` to `<system temp>/boardgame-reborn/training/`. Docs: D-009, development, architecture, AGENTS step 4.
@@ -20,7 +39,7 @@ Entry format:
 - **Problems**: the interrupted run means the Phase 7.3 full UI check had not completed before this fix (training screens alone: 32/32).
 - **Still open**:
   - `tools/output/` and `training/output/` may still contain old generated files (git-ignored); they can be deleted by the owner.
-  - Owner's check of Phase 7.3.
+  - Phase 7.1–7.3 checked by the owner ("C'est good"); next step to agree: 7.4 (neural network).
 
 ## 2026-10-08 — Phase 7.3: movement learned by a genetic algorithm
 
