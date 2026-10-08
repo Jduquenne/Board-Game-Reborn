@@ -48,8 +48,9 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
      2. otherwise **critical hit**: chance of the attacker's Agility × 3 % (max 40 %) → damage × 1.5;
      3. damage = weapon damage × (1 + Strength × 5 %), rounded (`weaponDamage`), × 1.5 on a critical, halved (rounded down) if the target is defending.
      Defense flags of both players reset. No random draw is made when both chances are 0. The fight banner shows "Coup critique !" or "… esquive l'attaque".
-   - **Flee** (batch 3, `applyFlee`): possible only if an escape cell exists — the reachable cell (normal movement rules, current PM) farthest from the enemy and not next to it. Chance = (Luck + 2) / (Luck + enemy Agility + 4), clamped 10–90 %, shown on the "Fuir (xx %)" button.
-     - Success: the fight ends (both defenses reset), the fleer moves to the escape cell (pickups and traps apply), then it is the enemy's turn.
+   - **Flee** (batch 3, `applyFlee`): possible only if an escape cell exists — any cell reachable with the normal movement rules (current PM) that is not next to the enemy (`fleeOptions`). Chance = (Luck + 2) / (Luck + enemy Agility + 4), clamped 10–90 %, shown on the "Fuir (xx %)" button.
+     - **The player chooses the escape cell** (owner's request): "Fuir" marks the escape cells in green on the board, the banner moves to the top ("Choisis ta case de repli", button "Annuler"; clicks go through the banner to the board), a click on a green cell attempts the flee towards it. AIs flee to the cell farthest from the enemy (`fleeDestination`).
+     - Success: the fight ends (both defenses reset), the fleer moves to the chosen escape cell (pickups and traps apply), then it is the enemy's turn.
      - Failure: the action is lost and the fight continues — the enemy plays next.
      - No other cost (owner's decision). A fight now ends with a death **or** a successful flee.
    - **Defend**: the attacker enters defense; the next hit they receive is halved.

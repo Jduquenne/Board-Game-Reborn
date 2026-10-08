@@ -13,6 +13,13 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Flee: the player chooses the escape cell
+
+- **Done**: owner's feedback: the flee went to an automatic cell (the farthest one), the owner wants to choose it. `Rules.js`: `fleeOptions` (all reachable cells not next to the enemy — diagonal counts as not next to it), `fleeDestination` = farthest option (AIs), `markEscapeCells` / `clearEscapeCells` (new cell flag `isEscape`), `applyFlee(state, rng, target)` validates the chosen cell and clears the markings after a failure. `FightEngine.flee(target)`, `startFleeSelection()`, `cancelFleeSelection()`. Board: escape cells in green (`.fleeTarget`), click → flee there. Fight banner: "Fuir" opens the choice — banner at the top, semi-transparent, clicks go through to the board except on "Annuler". `ui-check`: screen "flee-choice".
+- **Numbers**: 141/141 tests (5 new: options incl. diagonals, chosen cell, invalid cell refused, marking / clearing, full in-game choice). UI check 144/144 (8 sizes × 18 screens).
+- **Problems**: one new test had a wrong expectation (diagonal cells counted as next to the enemy) — fixed the test, the rule was right. The top banner covered the board's first row; made it click-through.
+- **Still open**: owner's check of the flee choice; batch 4 (weapon types).
+
 ## 2026-10-08 — Game design batch 3: flee
 
 - **Done**:
@@ -22,7 +29,7 @@ Entry format:
   - Q-learning: 3rd action `flee`; observation gets the flee chance in tenths or `x` when impossible (key `myHits|enemyHits|myDef|enemyDef|flee`); `QTable.best/choose` take the allowed actions; strategy map shows "fuir" in green. Fight models saved before this change must be retrained.
   - Fight banner: "Fuir (xx %)" button (only when an escape cell exists), messages "X s'enfuit !" / "X tente de fuir… mais Y le retient !".
   - Docs: spec-gameplay, architecture (event), spec-game-design (batch 3 ✅), roadmap.
-- **Numbers**: 136/136 tests (11 new in `tests/Flee.test.mjs`, AI fight tests updated: flee when an escape exists, defend / attack when cornered). Balance (IA Normal, 400 games per pair): 41.8–55.9 %, movement points now matter — 1-PM characters 42–45 %, 4–5-PM characters 54–56 %. Fight learning with flee: 6 % → ~45 % after 5,000 games, plateau 40–47 % against Normal's rule (51 %) — the fight-learning test now checks clear progress (< 15 % → > 30 %). UI check: see below.
+- **Numbers**: 136/136 tests (11 new in `tests/Flee.test.mjs`, AI fight tests updated: flee when an escape exists, defend / attack when cornered). Balance (IA Normal, 400 games per pair): 41.8–55.9 %, movement points now matter — 1-PM characters 42–45 %, 4–5-PM characters 54–56 %. Fight learning with flee: 6 % → ~45 % after 5,000 games, plateau 40–47 % against Normal's rule (51 %) — the fight-learning test now checks clear progress (< 15 % → > 30 %). UI check: superseded by the next entry (run interrupted, state changed).
 - **Problems**: the learned fight policy no longer reaches the scripted rule (delayed consequences of fleeing) — for batch 7.
 - **Still open**: owner's check; re-run the health auto-tuning with flee (batch 5); batch 4 (weapon types).
 

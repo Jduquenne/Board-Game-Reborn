@@ -1,6 +1,6 @@
 import { store } from '../core/Store.js';
 import { eventBus } from '../core/EventBus.js';
-import { applyAttack, applyDefend, applyFlee, resolveRound } from './Rules.js';
+import { applyAttack, applyDefend, applyFlee, resolveRound, markEscapeCells, clearEscapeCells } from './Rules.js';
 
 // Délai en ms entre une action et la fin du round (laisse le temps d'afficher l'action)
 const ROUND_DELAY = 500;
@@ -16,8 +16,18 @@ class FightEngine {
         this.#act(applyDefend);
     }
 
-    flee() {
-        this.#act(applyFlee);
+    // Fuite vers la case choisie { row, col } (joueur), ou vers la plus éloignée sans argument (IA)
+    flee(target = null) {
+        this.#act(state => applyFlee(state, Math.random, target));
+    }
+
+    // Choix de la fuite (joueur humain) : affiche les cases de repli sur le plateau / les retire
+    startFleeSelection() {
+        return this.#commit(markEscapeCells(store.state));
+    }
+
+    cancelFleeSelection() {
+        this.#commit(clearEscapeCells(store.state));
     }
 
     // ─── Private ──────────────────────────────────────────────────────────────

@@ -19,7 +19,10 @@ export class BattleBanner extends Component {
             this.#setBannerDamage(attacker, target, damage, { critical, dodged });
         });
 
-        this.listen('fight:flee', ({ fleer, enemy, success }) => this.#setBannerFlee(fleer, enemy, success));
+        this.listen('fight:flee', ({ fleer, enemy, success }) => {
+            this.#setFleeSelecting(false);
+            this.#setBannerFlee(fleer, enemy, success);
+        });
 
         this.listen('fight:defend', ({ attacker, target }) => {
             this.#setBannerDefend(attacker, target);
@@ -42,7 +45,31 @@ export class BattleBanner extends Component {
 
     #hideModal() {
         document.querySelector('#battle-modal').classList.add('hidden');
+        this.#setFleeSelecting(false);
         this.root.innerHTML = '';
+    }
+
+    // Choix de la fuite : la bannière se range en haut et le plateau redevient cliquable
+    #setFleeSelecting(on) {
+        document.querySelector('#battle-modal')?.classList.toggle('fleeSelecting', on);
+    }
+
+    #setBannerFleeChoice(attacker, target) {
+        if (!fightEngine.startFleeSelection()) return; // aucune case de repli
+        this.#setFleeSelecting(true);
+
+        const chance = Math.round(fleeChance(attacker.player, target.player) * 100);
+        this.root.innerHTML = `
+            <h2 class="battleInfosText">
+                Choisis ta case de repli (cases vertes) — ${chance} % de chances de fuir
+                <span class="battleActions"><button class="btn" id="btn-flee-cancel">Annuler</button></span>
+            </h2>
+        `;
+        this.root.querySelector('#btn-flee-cancel').addEventListener('click', () => {
+            fightEngine.cancelFleeSelection();
+            this.#setFleeSelecting(false);
+            this.#setBannerActionChoice(attacker, target);
+        });
     }
 
     #setBannerFightStart(attacker, target) {
@@ -79,7 +106,7 @@ export class BattleBanner extends Component {
 
         this.root.querySelector('#btn-attack').addEventListener('click', () => fightEngine.attack());
         this.root.querySelector('#btn-defend').addEventListener('click', () => fightEngine.defend());
-        this.root.querySelector('#btn-flee')?.addEventListener('click', () => fightEngine.flee());
+        this.root.querySelector('#btn-flee')?.addEventListener('click', () => this.#setBannerFleeChoice(attacker, target));
     }
 
     // Résultat d'une tentative de fuite ; réussie, le combat est fini et la bannière se ferme

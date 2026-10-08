@@ -230,34 +230,60 @@ export function fleeChance(fleer, enemy) {
 }
 
 /**
- * Case de repli du combattant qui doit jouer : la case accessible (règles de déplacement normales)
- * la plus éloignée de l'adversaire, sans être collée à lui. null si aucune → fuite impossible.
+ * Cases de repli possibles du combattant qui doit jouer : les cases accessibles (règles de
+ * déplacement normales, ses PM) qui ne sont pas collées à l'adversaire. Vide → fuite impossible.
  */
-export function fleeDestination(state) {
+export function fleeOptions(state) {
     const { fight, players, cells, config } = state;
-    if (!fight) return null;
+    if (!fight) return [];
 
     const fleer = players[fight.attackerIndex], enemy = players[fight.targetIndex];
-    const distance = c => Math.abs(c.row - enemy.position.row) + Math.abs(c.col - enemy.position.col);
-    const options = getMovableCells(fleer.position, fleer.player.maxMove, cells, config).filter(c => distance(c) > 1);
+    return getMovableCells(fleer.position, fleer.player.maxMove, cells, config)
+        .filter(c => Math.abs(c.row - enemy.position.row) + Math.abs(c.col - enemy.position.col) > 1);
+}
+
+// Case de repli par défaut (choix des IA) : la plus éloignée de l'adversaire. null si aucune.
+export function fleeDestination(state) {
+    const options = fleeOptions(state);
     if (options.length === 0) return null;
 
+    const enemy = state.players[state.fight.targetIndex].position;
+    const distance = c => Math.abs(c.row - enemy.row) + Math.abs(c.col - enemy.col);
     return options.reduce((best, c) => (distance(c) > distance(best) ? c : best));
 }
 
+// Choix de la fuite (joueur humain) : marque les cases de repli sur le plateau, ou retire ce marquage
+export function markEscapeCells(state) {
+    const options = fleeOptions(state);
+    if (options.length === 0) return unchanged(state);
+    const cells = cloneCells(state.cells);
+    for (const c of options) cells[c.row][c.col].isEscape = true;
+    return { state: { ...state, cells }, events: [] };
+}
+
+export function clearEscapeCells(state) {
+    if (!state.cells.some(row => row.some(c => c.isEscape))) return unchanged(state);
+    const cells = state.cells.map(row => row.map(c => (c.isEscape ? { ...c, isEscape: false } : c)));
+    return { state: { ...state, cells }, events: [] };
+}
+
 /**
- * Tentative de fuite du combattant qui doit jouer (à la place d'une attaque).
+ * Tentative de fuite du combattant qui doit jouer (à la place d'une attaque), vers `target` (case de repli
+ * choisie par le joueur) ou, sans target, vers la case de repli la plus éloignée (choix des IA).
  *   - réussite : le combat s'arrête, le fuyard se déplace vers sa case de repli (ramassage et pièges
  *     comme un déplacement normal), puis c'est le tour de l'adversaire ;
  *   - échec : le tour est perdu, le combat continue (resolveRound donne la main à l'adversaire).
  * Refusée si aucune case de repli n'existe.
  * @param {() => number} rng  aléatoire (graine possible en simulation, Math.random en jeu)
  */
-export function applyFlee(state, rng = Math.random) {
+export function applyFlee(state, rng = Math.random, target = null) {
     const { fight, players, phase } = state;
     if (!fight || phase !== 'fighting') return unchanged(state);
 
-    const destination = fleeDestination(state);
+    // Case choisie par le joueur (doit être une case de repli valide), sinon la plus éloignée
+    const destination = target
+        ? fleeOptions(state).find(c => c.row === target.row && c.col === target.col)
+        : fleeDestination(state);
     if (!destination) return unchanged(state);
 
     const { attackerIndex, targetIndex } = fight;
@@ -269,7 +295,7 @@ export function applyFlee(state, rng = Math.random) {
     });
 
     if (!success) {
-        const next = { ...state }; // nouvel état : l'action est jouée, même ratée
+        const next = clearEscapeCells({ ...state }).state; // nouvel état : l'action est jouée, même ratée
         return { state: next, events: [fleeEvent(next)] };
     }
 
@@ -354,6 +380,7 @@ function clearMarkings(cells) {
         for (const cell of row) {
             cell.isMovable = false;
             cell.isSecurityZone = false;
+            cell.isEscape = false;
         }
     }
 }

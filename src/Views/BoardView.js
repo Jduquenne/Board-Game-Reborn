@@ -1,6 +1,7 @@
 import { Component } from '../core/Component.js';
 import { store } from '../core/Store.js';
 import { gameEngine } from '../Engine/GameEngine.js';
+import { fightEngine } from '../Engine/FightEngine.js';
 import { boardHtml } from './boardTemplate.js';
 
 export class BoardView extends Component {
@@ -20,6 +21,12 @@ export class BoardView extends Component {
             if (!cellEl) return;
             const row = parseInt(cellEl.dataset.row);
             const col = parseInt(cellEl.dataset.col);
+
+            // Pendant le choix de la fuite : clic sur une case de repli → tentative de fuite vers elle
+            if (cellEl.classList.contains('fleeTarget')) {
+                fightEngine.flee({ row, col });
+                return;
+            }
             gameEngine.movePlayer(row, col);
         });
     }

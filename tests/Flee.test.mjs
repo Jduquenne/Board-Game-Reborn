@@ -1,7 +1,7 @@
 import { test, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { store } from '../src/core/Store.js';
-import { fleeChance, fleeDestination, applyFlee } from '../src/Engine/Rules.js';
+import { fleeChance, fleeDestination, applyFlee, fleeOptions, markEscapeCells, clearEscapeCells } from '../src/Engine/Rules.js';
 import { fightEngine } from '../src/Engine/FightEngine.js';
 import { GameEnv } from '../src/AI/GameEnv.js';
 import { createRng } from '../src/core/Random.js';
@@ -125,4 +125,54 @@ test('the simulator accepts the flee action', () => {
     assert.ok(flee);
     if (flee.payload.success) assert.equal(env.state.phase, 'playing');
     else assert.deepEqual(env.state.fight, { attackerIndex: 1, targetIndex: 0 }, 'round resolved: roles swapped');
+});
+
+// ─── Choix de la case de repli (joueur humain) ────────────────────────────────
+
+
+const pos = c => `${c.row},${c.col}`;
+
+test('every reachable cell not next to the enemy is an escape option', () => {
+    // Joueur en (2,2) avec 2 PM, ennemi en (2,3) : cases accessibles (2,1) (2,0) (1,2) (0,2) (3,2) (4,2).
+    // (1,2) et (3,2) sont en DIAGONALE de l'ennemi : pas collées (un duel ne se lance qu'en ligne droite)
+    setBoard({ players: [{ row: 2, col: 2, maxMove: 2 }, { row: 2, col: 3 }] });
+    setFight(0, 1);
+    assert.deepEqual(fleeOptions(store.state).map(pos).sort(), ['0,2', '1,2', '2,0', '2,1', '3,2', '4,2']);
+
+    // Ennemi en (2,4) : (2,3) est accessible mais collée à l'ennemi → exclue
+    setBoard({ players: [{ row: 2, col: 2, maxMove: 2 }, { row: 2, col: 4 }] });
+    setFight(0, 1);
+    assert.ok(!fleeOptions(store.state).map(pos).includes('2,3'), 'a cell next to the enemy is excluded');
+});
+
+test('the player can flee to the cell of their choice', () => {
+    const { state } = applyFlee(fightState(), () => 0, { row: 1, col: 0 });
+    assert.deepEqual(state.players[0].position, { row: 1, col: 0 }, 'not the farthest cell (3,0): the chosen one');
+});
+
+test('fleeing to a cell that is not an escape option is refused', () => {
+    const before = fightState();
+    assert.equal(applyFlee(before, () => 0, { row: 0, col: 2 }).state, before, 'next to the enemy');
+    assert.equal(applyFlee(before, () => 0, { row: 4, col: 4 }).state, before, 'not reachable');
+});
+
+test('escape cells are marked for the choice, and cleared after a failed flee or a cancel', () => {
+    const marked = markEscapeCells(fightState()).state;
+    assert.deepEqual(marked.cells.flat().filter(c => c.isEscape).map(pos).sort(), ['1,0', '2,0', '3,0']);
+
+    assert.ok(!clearEscapeCells(marked).state.cells.flat().some(c => c.isEscape), 'cancel');
+    assert.ok(!applyFlee(marked, () => 0.99, { row: 2, col: 0 }).state.cells.flat().some(c => c.isEscape), 'failed flee');
+});
+
+test('in the game: choose "Fuir", click an escape cell, flee there', () => {
+    fightState();
+    assert.equal(fightEngine.startFleeSelection(), true);
+    assert.ok(store.state.cells[2][0].isEscape);
+
+    mock.method(Math, 'random', () => 0);
+    fightEngine.flee({ row: 2, col: 0 });
+    assert.deepEqual(store.state.players[0].position, { row: 2, col: 0 });
+    assert.equal(store.state.phase, 'playing');
+    assert.ok(!store.state.cells.flat().some(c => c.isEscape), 'markings gone after the flee');
+    mock.restoreAll();
 });

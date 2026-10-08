@@ -60,6 +60,12 @@ function cellHtml(cell, isActivePlayer) {
         title = title ? `${title} — duel !` : 'Duel !';
     }
 
+    // Case de repli proposée pendant le choix de la fuite
+    if (cell.isEscape) {
+        classes.push('fleeTarget');
+        title = title ? `${title} — fuir ici` : 'Fuir ici';
+    }
+
     return `
         <div
             class="${classes.join(' ')}"

@@ -66,6 +66,12 @@ const SCREENS = [
         eventBus.emit('fight:start', { attacker: a, target: t });
         await new Promise(r => setTimeout(r, 1300));
     })()`],
+    ['flee-choice', '#game', `(async () => {${fightSetup}
+        store.setState(() => ({ phase: 'fighting', fight: { attackerIndex: 0, targetIndex: 1 } }));
+        eventBus.emit('fight:start', { attacker: a, target: t });
+        await new Promise(r => setTimeout(r, 1300));
+        document.querySelector('#btn-flee')?.click();
+    })()`],
     ['win',     '#game',    `(async () => {${fightSetup}
         document.querySelector('#battle-modal').classList.remove('hidden');
         eventBus.emit('fight:end', { winner: a, loser: t });

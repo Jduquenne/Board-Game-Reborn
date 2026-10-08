@@ -14,4 +14,5 @@ export const createCell = (row, col) => ({
     trap: null,       // null | { name, image, triggered: bool }
     isMovable: false,
     isSecurityZone: false,
+    isEscape: false,  // case de repli proposée pendant le choix de fuite
 });
