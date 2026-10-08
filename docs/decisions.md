@@ -54,9 +54,9 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Date**: unknown, before migration (code added around 2026-04-12, commit "update: IA test")
 - **Status**: proposed
 - **Context**: the game offers single-player modes (`easy`, `normal`).
-- **Decision**: `AIEngine` listens to `turn:changed`; if the active player has `isAI`, it waits 900 ms then calls `gameEngine.movePlayer`. The player at index 1 is always the AI when an AI mode is selected. `GameView` starts/stops the AI on mount/unmount.
+- **Decision**: `AIEngine` listens to `turn:changed`; if the active player has `isAI`, it waits 900 ms then calls `gameEngine.movePlayer`. Since 2026-10-08 it also listens to `fight:start` and `fight:round-end`; if the attacker has `isAI`, it waits 1500 ms (longer than the `BattleBanner` display delays) then calls `fightEngine.attack()` or `defend()`. The player at index 1 is always the AI when an AI mode is selected. `GameView` starts/stops the AI on mount/unmount.
 - **Alternatives considered**: not documented.
-- **Consequences**: the AI uses the same public engine API as a human player.
+- **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
 
 ## D-007 — BattleBanner may import FightEngine
 

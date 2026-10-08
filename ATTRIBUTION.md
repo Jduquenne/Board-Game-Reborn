@@ -8,7 +8,7 @@ Third-party resources used by BoardGame Reborn.
 
 ## Images
 
-TODO(owner): source and licence of the images in `assets/` are not documented.
+Source and licence: **unknown** (the owner does not remember the origin, 2026-10-08). Must be clarified or the images replaced before any public release.
 
 - `assets/border.svg`
 - `assets/dungeon/` — floor, obstacle, grass, rock, wood textures

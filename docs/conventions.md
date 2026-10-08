@@ -40,7 +40,7 @@ Only one explicit error today: `GameEngine.#randomEmptyCell` throws when no empt
 
 ## Testing
 
-No tests exist. TODO(owner): see [roadmap](roadmap.md).
+No tests exist yet; they are planned ([roadmap Phase 4](roadmap.md#-phase-4--automated-tests)). Conventions (location, naming) will be written here once the approach is decided.
 
 ## Commit messages
 

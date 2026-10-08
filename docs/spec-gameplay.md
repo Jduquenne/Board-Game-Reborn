@@ -49,7 +49,11 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
 
 ## AI
 
-The AI plays player index 1 after a 900 ms delay on its turn (movement only).
+The AI plays player index 1.
+
+### Movement
+
+Played 900 ms after the AI's turn starts.
 
 - **Easy**: random reachable cell.
 - **Normal**, by priority:
@@ -58,7 +62,15 @@ The AI plays player index 1 after a 900 ms delay on its turn (movement only).
   3. Otherwise pick up a bonus (closest to the enemy).
   4. Otherwise move to the reachable cell closest to the enemy (Manhattan distance).
 
-TODO(owner): during fights the AI does not choose Attack/Defend automatically in the code read for this migration; confirm whether that is intended.
+### Fight
+
+When the AI is the attacker (fight start or new round), it acts 1500 ms later; the banner shows "<name> réfléchit…" instead of the Attack / Defend buttons, so the human cannot act for it.
+
+- **Easy**: attack with 70 % probability, otherwise defend.
+- **Normal**, by priority:
+  1. Attack if the hit kills the enemy (damage halved if the enemy is defending).
+  2. Otherwise defend if the enemy's next hit can kill the AI and the AI is not already defending.
+  3. Otherwise attack.
 
 ## Content
 

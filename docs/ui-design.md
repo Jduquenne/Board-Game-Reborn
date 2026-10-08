@@ -29,5 +29,5 @@ The size is not recomputed on window resize.
 
 Found during the migration on 2026-10-08, not yet checked in a browser:
 
-- TODO(owner): `#menu` (game sidebar) has `overflow-y: auto` and `.modalRules` has `overflow: auto`, so they can scroll internally. Decide whether this is an accepted exception to the no-scroll rule.
-- TODO(owner): `.h150px` (fixed 150px height) is used in `MenuView`; only `.options-view .h150px` is clamped. Check that the menu does not overflow on small screens.
+- **To fix** (owner decision, 2026-10-08): `#menu` (game sidebar) has `overflow-y: auto` and `.modalRules` has `overflow: auto`, so they can scroll internally. Not an accepted exception. Tracked in [roadmap Phase 3](roadmap.md#-phase-3--fix-known-bugs).
+- `.h150px` (fixed 150px height) is used in `MenuView`; only `.options-view .h150px` is clamped. Deferred to the site-wide UI/UX overhaul ([roadmap Phase 5](roadmap.md#-phase-5--uiux-overhaul)).

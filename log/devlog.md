@@ -13,6 +13,15 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — AI plays its own fight actions
+
+- **Done**: `AIEngine` now listens to `fight:start` / `fight:round-end` and, when the AI is the attacker, calls `fightEngine.attack()` or `defend()` after 1500 ms. Easy: 70 % attack. Normal: finish the enemy if possible, defend if the next enemy hit is lethal, otherwise attack. `BattleBanner` shows "<name> réfléchit…" instead of the buttons on the AI's turn. Docs updated (spec-gameplay, architecture, D-006, roadmap).
+- **Numbers**: `node --check` 26/26; golden-rule greps OK. Node simulation, AI vs AI, time accelerated ×50, 30 games per mode: every fight that started ended with `fight:end` and the loser at 0 HP (easy 30/30, normal 27/27; 474 attacks / 192 defends in easy).
+- **Problems**: in the simulation, 3/30 normal-vs-normal games never reached a fight: both AIs oscillate between two cells forever (existing movement strategy). Only possible with two AIs, which the game does not offer; not fixed.
+- **Still open**:
+  - In-browser check by the owner of a human-vs-AI fight (easy and normal).
+  - Remaining Phase 3 item: internal scroll in `#menu` and `.modalRules`.
+
 ## 2026-10-08 — Migrate agent context to AGENTS.md, docs/ and devlog
 
 - **Done**: split the former `CLAUDE.md` (28 information blocks) into `AGENTS.md`, `docs/` (architecture, development, conventions, ui-design, spec-gameplay, decisions, roadmap) and this devlog; added `ATTRIBUTION.md`; traceability map in `docs/archive/migration-map-2026-10-08.md`. Documentation aligned with the code (added `AIEngine`, `aiMode`, `isAI`, `Store.reset()`, completed "Add a …" checklists, widened the Engine-import rule to `BattleBanner` — D-007). No source code changed.
@@ -21,7 +30,10 @@ Entry format:
 - **Still open**:
   - Manual in-browser play-through not done.
   - `npx serve .` not verified.
-  - TODO(owner) items: roadmap "Current focus" and "Ideas / later", UI known deviations, AI behaviour during fights, asset sources in `ATTRIBUTION.md`, test strategy.
+  - Bugs to fix (roadmap Phase 3): AI does not act during fights; internal scroll in `#menu` and `.modalRules`.
+  - Automated tests to set up (Phase 4); UI/UX overhaul to scope (Phase 5).
+  - Roadmap "Current focus" and "Ideas / later" left for the owner.
+  - Image sources unknown (`ATTRIBUTION.md`).
 
 ## Before 2026-10-08 (migrated)
 

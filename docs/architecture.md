@@ -117,7 +117,7 @@ Hash-based (`#menu`, `#options`, `#game`); default route is `menu`; listens to `
 | `fight:end` | FightEngine | `{ winner, loser }` |
 | `state:changed` | Store | full `state` |
 
-Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` (`game:started`, `state:changed`), `BattleBanner` (`fight:*`), `TrapBanner` (`trap:triggered`), `AIEngine` (`turn:changed`).
+Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` (`game:started`, `state:changed`), `BattleBanner` (`fight:*`), `TrapBanner` (`trap:triggered`), `AIEngine` (`turn:changed`, `fight:start`, `fight:round-end`).
 
 ## State shape
 
@@ -144,7 +144,8 @@ flowchart LR
     Store -->|state:changed| BoardView & PlayersSidebar
     GameEngine -->|turn:changed| AIEngine
     AIEngine -->|gameEngine.movePlayer| GameEngine
-    GameEngine -->|fight:start| BattleBanner
+    GameEngine -->|fight:start| BattleBanner & AIEngine
+    AIEngine -->|attack / defend| FightEngine
     BattleBanner -->|attack / defend| FightEngine
     FightEngine -->|setState + fight:*| Store & BattleBanner
     GameEngine -->|trap:triggered| TrapBanner

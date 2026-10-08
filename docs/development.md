@@ -35,7 +35,7 @@ for f in $(find src -name "*.js"); do node --check "$f"; done
 
 ## Build, lint, format, tests
 
-None exist. TODO(owner): decide whether to add a test approach compatible with the zero-dependency rule (see [roadmap](roadmap.md)).
+None exist yet. Tests will be added (owner decision, 2026-10-08); the approach must respect the zero-dependency rule and will be recorded in [decisions](decisions.md). See [roadmap Phase 4](roadmap.md#-phase-4--automated-tests).
 
 ## Debugging
 
