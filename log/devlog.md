@@ -13,6 +13,16 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Training page labels; reliable syntax check; ui-check catches broken pages
+
+- **Done**: owner asked why "IA Facile" showed a higher percentage than "IA Normal" on the training page: the figures are win rates **against** the chosen opponent (beating a weak opponent gives a high %), but the labels did not say so. Labels now name the opponent ("l'élève bat IA Facile", "l'IA Normal bat IA Facile (référence)").
+  - While doing it, a syntax error (unescaped apostrophe) broke `TrainingView.js`, and **both safety nets missed it**: `node --check` exits 0 on ES module syntax errors with Node 22 (typeless `.js`), and `ui-check` passed the empty page. Fixed: syntax check is now `node --input-type=module --check < file` (AGENTS step 1, golden rule 9, development); `ui-check` fails on page JavaScript errors and on an empty `#app` (D-009 updated). Both verified on deliberately broken copies.
+- **Numbers**: measured against each opponent (10,000 training games, seed 1, evaluation seed 777): random — Normal 82.8 %, learner 47.8 % → 85.3 %; easy — Normal 82.3 %, learner 36.3 % → 76.0 %; normal — Normal 51.5 %, learner 11.8 % → 51.5 %. Syntax check: all files pass. 78/78 tests. UI check (with the new error / empty-page checks): 96/96, exit code 0.
+- **Problems**: see above (both safety-net gaps). The learner beats Normal's rule against the random opponent but stays below it against Easy (noisier fights).
+- **Still open**:
+  - Owner's check of the training page and the "IA Entraînée" mode.
+  - Phase 7.3 (movement).
+
 ## 2026-10-08 — Phase 7.2: training page and Q-learning of fights; automatic turn skip
 
 - **Done**:

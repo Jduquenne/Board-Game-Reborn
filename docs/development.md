@@ -28,10 +28,12 @@ Then open <http://localhost:8080>.
 ## Syntax check
 
 ```bash
-for f in $(find src -name "*.js"); do node --check "$f"; done
+for f in $(find src tools training tests -name "*.js" -o -name "*.mjs" | grep -v output); do node --input-type=module --check < "$f" || echo "FAIL $f"; done
 ```
 
-✅ Verified 2026-10-08: all 26 files pass with Node v22.14.0. Silent output = success.
+No `FAIL` line = success. ✅ Verified 2026-10-08 with Node v22.14.0: every file passes, and a file with a deliberate syntax error is reported.
+
+> ⚠️ Do not use `node --check file.js` on its own: the project has no `package.json`, so Node 22 guesses the module type of each `.js` file, and in that mode `--check` exits with 0 **even when an ES module has a syntax error** (found on 2026-10-08, after a broken `TrainingView.js` passed the check). Reading the file from stdin with `--input-type=module` forces ES module parsing and reports the error.
 
 ## Tests
 
@@ -60,7 +62,7 @@ node tools/ui-check.mjs --viewport phone --screen game    # filters (substring m
 - Starts its own local server: no need to run `python -m http.server` first.
 - Finds Chrome / Chromium / Edge in the usual install paths; otherwise set `CHROME_PATH`.
 - Screen sizes: 360×640, 640×360, 390×844, 844×390, 768×1024, 1024×768, 1366×768, 1920×1080. Screens: menu, options, game, isometric, rules, quit dialog, fight, end of game, trap.
-- Fails (exit code 1) on: page scroll, element outside the viewport, scrollable area, clipped content.
+- Fails (exit code 1) on: JavaScript error in the page, empty page (`#app` without content), page scroll, element outside the viewport, scrollable area, clipped content.
 - Screenshots and `report.json` go to `tools/output/` (git-ignored): look at the ones related to your change.
 - To check a new screen or dialog, add it to the `SCREENS` array in the script. Rationale: [D-009](decisions.md#d-009--automated-ui-checks-with-headless-chrome).
 

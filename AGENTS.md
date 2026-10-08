@@ -78,7 +78,7 @@ Details: [`docs/architecture.md`](docs/architecture.md#directory-structure).
 6. State changes only through `store.setState(updater)`.
 7. No page scroll: `html`, `body`, `#app` keep `overflow: hidden`; every view fits in 100vw × 100vh.
 8. Never add a dependency, `package.json` or bundler.
-9. Every JS file must pass `node --check`; every game-rule change in `src/Engine/` comes with a test and all tests pass.
+9. Every JS file must pass the syntax check (checklist step 1); every game-rule change in `src/Engine/` comes with a test and all tests pass.
 10. When adding an event or a state key, update [`docs/architecture.md`](docs/architecture.md) in the same task.
 
 Verification for rules 1–2:
@@ -98,7 +98,7 @@ Details: [`docs/conventions.md`](docs/conventions.md#layer-rules) and [`docs/ui-
 
 ## Before you finish a task
 
-1. Syntax check: `for f in $(find src -name "*.js"); do node --check "$f"; done` (silent = OK).
+1. Syntax check: `for f in $(find src tools training tests -name "*.js" -o -name "*.mjs" | grep -v output); do node --input-type=module --check < "$f" || echo "FAIL $f"; done` (no `FAIL` line = OK). Do not use plain `node --check file.js`: with Node 22 it does not report syntax errors in our ES module files.
 2. Tests: `node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning` (must end with `# fail 0`).
 3. Golden-rule greps (rules 1–2 above).
 4. If the change touches the UI (`css/`, `src/Views/`, `index.html`): `node tools/ui-check.mjs` (must end with exit code 0) and look at the screenshots of the affected screens in `tools/output/`.

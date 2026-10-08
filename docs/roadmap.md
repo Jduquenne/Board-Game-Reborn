@@ -17,7 +17,7 @@ Based on reading the code, plus the owner's in-browser checks of the Phase 3 fix
 - Menu, options (board size, item counts, game mode) and game screens exist and are routed.
 - Full game loop implemented: board generation, movement, weapons, bonuses, traps, fights, victory.
 - AI opponent with `easy` and `normal` modes.
-- All 26 JS files pass `node --check`.
+- All JS files pass the ES module syntax check (`docs/development.md` § Syntax check).
 - 44 automated tests on `src/Engine/` (Node built-in runner), all passing; no tests for Views; no lint.
 - AI plays both movement and fight actions.
 - "Nouvelle partie" keeps the previous game's settings.

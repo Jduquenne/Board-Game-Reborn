@@ -57,8 +57,8 @@ export class TrainingView extends Component {
                         <div class="trainingStats">
                             <div class="trainingStat"><span class="trainingStatValue" id="tr-games">0</span><span class="trainingStatLabel">parties jouées</span></div>
                             <div class="trainingStat"><span class="trainingStatValue" id="tr-epsilon">100 %</span><span class="trainingStatLabel">exploration</span></div>
-                            <div class="trainingStat"><span class="trainingStatValue trainingStatMain" id="tr-winrate">—</span><span class="trainingStatLabel">victoires (évaluation)</span></div>
-                            <div class="trainingStat"><span class="trainingStatValue" id="tr-reference">—</span><span class="trainingStatLabel">référence IA Normal</span></div>
+                            <div class="trainingStat"><span class="trainingStatValue trainingStatMain" id="tr-winrate">—</span><span class="trainingStatLabel" id="tr-winrate-label">l'élève bat l'adversaire</span></div>
+                            <div class="trainingStat"><span class="trainingStatValue" id="tr-reference">—</span><span class="trainingStatLabel" id="tr-reference-label">l'IA Normal bat l'adversaire</span></div>
                         </div>
 
                         <div class="trainingChart" id="tr-chart-wrap">
@@ -156,6 +156,11 @@ export class TrainingView extends Component {
         this.query('#tr-epsilon').textContent = pct(stats.epsilon);
         this.query('#tr-winrate').textContent = pct(last?.winRate);
         this.query('#tr-reference').textContent = pct(stats.reference);
+
+        // Les pourcentages = taux de victoire CONTRE l'adversaire choisi (pas le score de l'adversaire)
+        const opponent = OPPONENTS.find(o => o.key === stats.opponent)?.label ?? "l'adversaire";
+        this.query('#tr-winrate-label').textContent   = `l'élève bat ${opponent}`;
+        this.query('#tr-reference-label').textContent = `l'IA Normal bat ${opponent} (référence)`;
 
         this.queryAll('[data-speed]').forEach(btn => btn.classList.toggle('btn-active', btn.dataset.speed === stats.speed));
 

@@ -1,8 +1,9 @@
 // Vérification responsive de l'interface — outil de développement, zéro dépendance (voir D-009).
 //
 // Lance un serveur statique local + Chrome headless (protocole DevTools), ouvre chaque écran
-// du jeu à plusieurs tailles d'écran, puis vérifie : pas de scroll de page, aucun élément hors
-// de l'écran, aucune zone scrollable, aucun contenu coupé. Enregistre une capture par cas.
+// du jeu à plusieurs tailles d'écran, puis vérifie : page non vide et sans erreur JavaScript, pas de
+// scroll de page, aucun élément hors de l'écran, aucune zone scrollable, aucun contenu coupé.
+// Enregistre une capture par cas.
 //
 // Usage :   node tools/ui-check.mjs [--viewport <filtre>] [--screen <filtre>] [--out <dossier>]
 // Exemple : node tools/ui-check.mjs --viewport phone --screen game
@@ -101,6 +102,7 @@ const METRICS = `(() => {
         }
     }
     return {
+        emptyApp: !document.querySelector('#app')?.children.length,
         pageScroll: de.scrollWidth > W + 1 || de.scrollHeight > H + 1 ? de.scrollWidth + 'x' + de.scrollHeight : null,
         outside: [...new Set(outside)].slice(0, 6),
         scrollable,
@@ -165,10 +167,21 @@ async function connectChrome(chromePath, profileDir) {
 
     let id = 0;
     const pending = new Map();
+    let pageErrors = [];
     ws.addEventListener('message', e => {
         const msg = JSON.parse(e.data);
         if (msg.id && pending.has(msg.id)) { pending.get(msg.id)(msg); pending.delete(msg.id); }
+        // Erreurs JavaScript de la page (ex. erreur de syntaxe dans un module → page vide)
+        if (msg.method === 'Runtime.exceptionThrown') {
+            const d = msg.params.exceptionDetails;
+            pageErrors.push(d.exception?.description?.split('\n')[0] ?? d.text);
+        }
+        if (msg.method === 'Log.entryAdded' && msg.params.entry.level === 'error' && msg.params.entry.source === 'javascript') {
+            pageErrors.push(msg.params.entry.text);
+        }
     });
+    // Rend les erreurs survenues depuis le dernier appel, puis vide la liste
+    const takeErrors = () => { const errors = pageErrors; pageErrors = []; return errors; };
     const send = (method, params = {}) => new Promise(res => {
         const msgId = ++id;
         pending.set(msgId, res);
@@ -182,7 +195,7 @@ async function connectChrome(chromePath, profileDir) {
     };
     const close = () => { ws.close(); chrome.kill(); };
 
-    return { send, evaluate, close };
+    return { send, evaluate, close, takeErrors };
 }
 
 // ─── Exécution ────────────────────────────────────────────────────────────────
@@ -201,6 +214,7 @@ const browser    = await connectChrome(chromePath, profileDir);
 
 await browser.send('Page.enable');
 await browser.send('Runtime.enable');
+await browser.send('Log.enable');
 await browser.send('Network.enable');
 await browser.send('Network.setCacheDisabled', { cacheDisabled: true });
 
@@ -216,12 +230,16 @@ for (const [vName, width, height, mobile] of VIEWPORTS) {
         const key = `${vName}/${sName}`;
         const issues = [];
         try {
+            browser.takeErrors();
             await browser.send('Page.navigate', { url: `${base}${route}` });
             await sleep(900);
             if (action) { await browser.evaluate(action); await sleep(1700); }
 
             const m = await browser.evaluate(METRICS);
             report[key] = m;
+            const errors = browser.takeErrors();
+            if (errors.length)       issues.push(`page errors: ${[...new Set(errors)].join(' | ')}`);
+            if (m.emptyApp)          issues.push('empty page (#app has no content)');
             if (m.pageScroll)        issues.push(`page scroll ${m.pageScroll}`);
             if (m.outside.length)    issues.push(`outside viewport: ${m.outside.join(' | ')}`);
             if (m.scrollable.length) issues.push(`scrollable: ${m.scrollable.join(' | ')}`);
