@@ -59,7 +59,7 @@ src/
 ├── AI/             ← agents, GameEnv simulator, Arena (no DOM; shared by the game and training)
 ├── Models/         ← createCell/Player/Weapon/Bonus/Trap factories
 ├── Repository/     ← static game content (PLAYER_DATA, WEAPON_DATA…)
-└── Views/          ← Menu, Options, Game + Board, PlayersSidebar, BattleBanner, TrapBanner, Training (AI training page)
+└── Views/          ← Menu, Options, Game + Board, PlayersSidebar, BattleBanner, TrapBanner, Training (AI training page), Balance (balance lab)
 training/           ← Node scripts to evaluate / train AI agents (see D-010)
 tests/              ← node:test suites for src/Engine/ and src/AI/ (see D-008)
 tools/ui-check.mjs  ← responsive UI check in headless Chrome (see D-009)

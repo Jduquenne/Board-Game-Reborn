@@ -13,6 +13,22 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Balance lab
+
+- **Done**: owner chose option A (edited stats stay in the lab). Shared analysis module `src/AI/Balance.js` (step-by-step generator, `runBalance`, `playMatch`); `training/balance.mjs` now uses it; `src/AI/balance.worker.js`; page `#balance` (`BalanceView`, button "Équilibrage" on the training page): editable health / movement points per character (modified rows highlighted, results dimmed when stale), "Lancer l'analyse" / "Arrêter" with progress bar, IA Normal or champion, games per duel, summary (draws, first-player advantage, spread), win-rate bars (red / green / blue), 15 × 15 duel matrix with tooltips, portrait tabs, "Copier les stats" (PLAYER_DATA format). New colour variable `--balance-ok`. `ui-check`: 3 balance screens. Docs: D-015, architecture, AGENTS map, spec-gameplay, ui-design, development, roadmap.
+- **Numbers**: refactored CLI gives exactly the previous results (Xena 86.9 %, first player 56.6 %). 109/109 tests (5 new). Balance screens 24/24 in headless Chrome; 5,250 games (50 per duel) analysed in the browser in under 4 s; with Björn set to 200 HP he rises to 80 %. Full UI check: see below.
+- **Problems**: none.
+- **Still open**: owner's check; rebalancing decisions; Phase 8 game design (new stats, weapon affinities).
+
+## 2026-10-08 — Character balance analysis
+
+- **Done**: the owner observed that health, the weapon found and movement points decide whether the AI flees, and suspected unbalanced characters. Added `training/balance.mjs` (every pair of characters, same AI on both sides, CSV matrix next to the project). No game data changed: rebalancing is a game-design decision for the owner.
+- **Numbers** (400 games per pair, 42,000 games, seed 1):
+  - AI `normal` (engages): Xena (300 HP / 1 PM) 86.9 %, Bolvar (150 / 2) 72.4 %; the seven 100 / 3 characters 48–50 %; Kerhs (100 / 5) and Lancelot (100 / 4) 53.4 %; Thork (100 / 2) 45.3 %; Gunnar and Brutus (75 / 4) 28 %; Indiana (70 / 5) 22.4 %. Health dominates; movement points are worth only ±4 %. Draws 2 %; the first player wins 56.6 % of decided games.
+  - AI `champion` (cautious, avoids exposure): 58 % draws (two cautious AIs avoid each other until the 300-turn limit); movement points become decisive — Kerhs (5 PM) 29.1 % best, Thork (2 PM) 13.1 % and Xena (1 PM) 18.4 % worst; the first player wins 63 % of decided games.
+- **Problems**: none; the analysis with the champion takes ~3 min.
+- **Still open**: owner decisions on rebalancing (stats, character identities, anti-stalemate rule, first-player advantage); weapon luck not measured yet.
+
 ## 2026-10-08 — Nothing written on drive C: any more
 
 - **Done**: the owner asked why I wrote helper scripts to `C:\Users\…\AppData\Local\Temp\bgr-scripts\` and set a rule: drive C: (the owner's most sensitive disk) must not be used. Listed and, with the owner's approval, deleted everything I had written there (`bgr-scripts` 36 KB, `boardgame-reborn` 15 MB of screenshots / models, the previous session's scratchpad 400 MB with Chrome profiles, two leftover `bgr-ui-check-*` Chrome profiles); stopped a UI check that was writing there. `tools/ui-check.mjs` (screenshots and temporary Chrome profiles) and `training/train-*.mjs` now write to `../BoardGameReborn-output/` (next to the project on E:, outside it for Live Server). No more helper scripts: project files are edited directly. Rule added to `AGENTS.md` (absolute rules); D-009, development, architecture updated.

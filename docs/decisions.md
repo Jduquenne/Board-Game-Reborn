@@ -58,6 +58,15 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Alternatives considered**: not documented.
 - **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
 
+## D-015 — Balance lab: stats edited in the lab only
+
+- **Date**: 2026-10-08
+- **Status**: accepted
+- **Context**: the balance analysis (`training/balance.mjs`) showed strongly unbalanced characters; the owner wants to edit stats on the fly and see the effect visually.
+- **Decision**: page `#balance` (button "Équilibrage" on the training page) running the shared analysis `src/AI/Balance.js` in a Web Worker. Stats edited there are used **only by the lab** (option A chosen by the owner); "Copier les stats" gives them in the `PLAYER_DATA` format so that a change of the game's characters is a deliberate, recorded game-design decision.
+- **Alternatives considered**: option B — "Appliquer au jeu" storing edited stats in the browser and using them in the game (rejected for now: the game would change without any trace in the code).
+- **Consequences**: no risk of silently changing the game; one source of truth for the analysis (CLI and page). The lab will be the tool to balance future game-design changes (new stats, weapon affinities).
+
 ## D-014 — Hand-written neural network; movement first learned by imitating the champion
 
 - **Date**: 2026-10-08

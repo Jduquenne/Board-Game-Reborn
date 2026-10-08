@@ -40,7 +40,10 @@ export class TrainingView extends Component {
             <div class="training">
                 <header class="trainingHeader">
                     <h1 class="trainingTitle">Entraînement de l'IA</h1>
-                    <button class="btn" id="tr-back">Menu</button>
+                    <div class="balanceNav">
+                        <button class="btn" id="tr-balance">Équilibrage</button>
+                        <button class="btn" id="tr-back">Menu</button>
+                    </div>
                 </header>
 
                 <div class="trainingBody">
@@ -126,6 +129,7 @@ export class TrainingView extends Component {
         this.#worker.addEventListener('message', ({ data }) => this.#onMessage(data));
 
         this.query('#tr-back').addEventListener('click', () => router.navigate('menu'));
+        this.query('#tr-balance').addEventListener('click', () => router.navigate('balance'));
 
         this.query('#tr-toggle').addEventListener('click', () => {
             this.#worker.postMessage({ type: this.#lastStats?.running ? 'pause' : 'start' });

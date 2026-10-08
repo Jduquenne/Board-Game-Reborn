@@ -88,6 +88,20 @@ const SCREENS = [
         document.querySelector('#tr-toggle').click();
         await new Promise(r => setTimeout(r, 4000));
     })()`],
+    ['balance',        '#balance',  null],
+    ['balance-run',    '#balance',  `(async () => {
+        document.querySelector('#bl-games').value = '50';
+        document.querySelector('#bl-characters input[data-stat="health"]').value = '200';
+        document.querySelector('#bl-characters input[data-stat="health"]').dispatchEvent(new Event('change', { bubbles: true }));
+        document.querySelector('#bl-run').click();
+        await new Promise(r => setTimeout(r, 4000));
+    })()`],
+    ['balance-matrix', '#balance',  `(async () => {
+        document.querySelector('#bl-games').value = '50';
+        document.querySelector('#bl-run').click();
+        await new Promise(r => setTimeout(r, 4000));
+        document.querySelector('.balanceTabs [data-tab="matrix"]').click();
+    })()`],
     ['training-move',  '#training', `(async () => {
         const lesson = document.querySelector('#tr-lesson');
         lesson.value = 'move';

@@ -3,10 +3,12 @@ import { MenuView } from './Views/MenuView.js';
 import { OptionsView } from './Views/OptionsView.js';
 import { GameView } from './Views/GameView.js';
 import { TrainingView } from './Views/TrainingView.js';
+import { BalanceView } from './Views/BalanceView.js';
 
 router
     .register('menu',    () => new MenuView('#app'))
     .register('options', () => new OptionsView('#app'))
     .register('game',    () => new GameView('#app'))
     .register('training', () => new TrainingView('#app'))
+    .register('balance',  () => new BalanceView('#app'))
     .start();

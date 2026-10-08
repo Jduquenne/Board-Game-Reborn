@@ -64,6 +64,8 @@ src/
 │   ├── NeuralMovePolicy.js        ← raw network inputs per reachable cell (5 × 5 view + 9 globals) + neural movement agent
 │   ├── ImitationTrainer.js        ← supervised imitation of the genetic champion (distillation, train / test split)
 │   ├── DefaultModels.js           ← reference models shipped with the game (genetic champion weights)
+│   ├── Balance.js                 ← character balance analysis (every pair, same AI on both sides), step by step
+│   ├── balance.worker.js          ← Web Worker running the balance analysis for the Balance lab
 │   ├── FightLesson.js             ← training-page lesson "Combat" (wraps FightTrainer)
 │   ├── MoveLesson.js              ← training-page lesson "Déplacement" (wraps MoveTrainer, champion demos)
 │   ├── NeuralLesson.js            ← training-page lesson "Réseau de neurones" (wraps ImitationTrainer, loss curves)
@@ -89,12 +91,14 @@ src/
     ├── BattleBanner.js            ← fight UI, calls fightEngine.attack()/defend(), restarts a game
     ├── TrapBanner.js              ← trap and skipped-turn notices
     ├── TrainingView.js            ← AI training page (#training): drives the Web Worker, chart, policy map, live board
+    ├── BalanceView.js             ← Balance lab (#balance): editable character stats, win-rate bars, duel matrix
     └── boardTemplate.js           ← boardHtml(state): board HTML shared by BoardView and TrainingView
 training/
 ├── arena.mjs                      ← CLI: scripted agents against each other (win rates, games/s)
 ├── train-fight.mjs                ← CLI: Q-learning of fight decisions, progress table, learned policy
 ├── train-move.mjs                 ← CLI: genetic evolution of the movement, progress table, champion weights
 ├── train-imitation.mjs            ← CLI: neural network imitating the champion, loss / accuracy / win rate per epoch
+├── balance.mjs                    ← CLI: character balance analysis (uses src/AI/Balance.js, CSV matrix)
                                      (the CLIs write their models to ../BoardGameReborn-output/training/)
 tools/
 └── ui-check.mjs                   ← responsive UI check with headless Chrome (D-009); screenshots in ../BoardGameReborn-output/ui-check/
@@ -138,7 +142,7 @@ router.register('menu', () => new MenuView('#app')).start();
 router.navigate('game'); // unmounts the current view, mounts the new one
 ```
 
-Hash-based (`#menu`, `#options`, `#game`, `#training`); default route is `menu`; listens to `popstate`.
+Hash-based (`#menu`, `#options`, `#game`, `#training`, `#balance`); default route is `menu`; listens to `popstate`.
 
 ## Events
 

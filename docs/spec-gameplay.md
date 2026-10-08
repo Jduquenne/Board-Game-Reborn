@@ -83,6 +83,7 @@ When the AI is the attacker (fight start or new round), it acts 1500 ms later; t
 - Movement features and network inputs only use what a player can see on screen (hidden traps are never used).
 - Speeds: Regarder (one action every 0.5 s, board shown), Rapide (every 50 ms, board shown), Turbo and Max (no board, many games per update).
 - Shown: games played, exploration rate (Combat) or generations (Déplacement), win rate of the last evaluation against the opponent (400 fixed games, no exploration) and the Normal AI's win rate on the same games (reference), learning curve, and what was learned: map of the fight strategy or weights of the movement champion.
+- Button "Équilibrage" opens the **Balance lab** (`#balance`): every character's health and movement points can be edited **in the lab only** (the game data is not changed); "Lancer l'analyse" makes every character fight every other one with the same AI on both sides (IA Normal, or the cautious genetic champion) and shows each one's win rate (red > 60 %, green 40–60 %, blue < 40 %), the duel matrix, the draw rate and the first-player advantage. "Copier les stats" copies the edited stats in the `PLAYER_DATA` format, to be written into the game by the owner's decision.
 - "Recommencer", a change of lesson or of opponent reset the learning; "Utiliser dans le jeu" saves the model of the current lesson for the "IA Entraînée" mode.
 
 ## Content

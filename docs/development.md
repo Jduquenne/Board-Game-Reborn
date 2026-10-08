@@ -109,6 +109,14 @@ node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-imitation.mjs
 
 ✅ Verified 2026-10-08: prints training / test loss and accuracy and the win rate against Normal per epoch; writes `../BoardGameReborn-output/training/neural-move-model.json`. Result (seed 1, distillation, Adam): 30 % → 54–57 % against Normal in 8 epochs (~1 min); the teacher reaches 70.5 %. `--hard` (hard labels, no distillation) overfits: 87 % training accuracy, test loss rising.
 
+## Character balance analysis
+
+```bash
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/balance.mjs --games 400 --agent normal   # or --agent champion
+```
+
+Same analysis as the Balance lab page (both use `src/AI/Balance.js`). Every character plays every other one (`--games` per pair, seats alternated) with the **same AI on both sides**, so only the characters differ. Prints each character's average win rate, best / worst matchup, draws and first-player advantage; writes the full matrix to `../BoardGameReborn-output/training/balance-<agent>.csv`. ✅ Verified 2026-10-08: 42,000 games in 6 s with `normal`, ~3 min with `champion`. Sanity check: the 7 characters with identical stats (100 HP / 3 PM) all land at 48–50 % with `normal`.
+
 ## Build, lint, format
 
 None exist.

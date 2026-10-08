@@ -6,7 +6,7 @@
 - `html`, `body` and `#app` keep `overflow: hidden`.
 - **Fully responsive** (owner decision, 2026-10-08): phone portrait / landscape, tablet, desktop.
 - No fixed pixel heights or font sizes for layout: sizes are fluid with `clamp()` based on `vmin` (CSS variables `--gap`, `--font-base`, `--font-small`, `--font-title`, `--font-big-btn` in `:root`).
-- Checked on 2026-10-08 with headless Chrome at 360×640, 640×360, 390×844, 844×390, 768×1024, 1024×768, 1366×768 and 1920×1080 on every screen (menu, options, game, isometric, rules, quit dialog, fight, end of game, trap, AI training idle / watching / max speed / movement lesson / neural lesson): no page scroll, no element outside the viewport, no scrollable or clipped area (`tools/ui-check.mjs`).
+- Checked on 2026-10-08 with headless Chrome at 360×640, 640×360, 390×844, 844×390, 768×1024, 1024×768, 1366×768 and 1920×1080 on every screen (menu, options, game, isometric, rules, quit dialog, fight, end of game, trap, AI training idle / watching / max speed / movement lesson / neural lesson, balance lab idle / after a run / matrix tab): no page scroll, no element outside the viewport, no scrollable or clipped area (`tools/ui-check.mjs`).
 
 ## Layouts
 
@@ -17,6 +17,7 @@
 | Game | board area on the left, sidebar on the right (`clamp(180px, 30vw, 420px)`) | board area on top, sidebar below with the two player cards side by side; "Joueurs" title hidden |
 | Rules dialog | one column; **two columns** when landscape and ≤ 600px high | one column |
 | Fight banner | sprites, health, actions on one line | actions move to their own line under 600px wide (`.battleActions`) |
+| Balance lab | character table (editable stats, win-rate bars) + duel matrix side by side | tabs "Personnages" / "Matrice des duels", one panel at a time |
 | AI training | main column (controls, 4 stats, learning curve) + side column (live board at watching speeds; otherwise fight strategy map, movement weights bars, or training / test error curves) | columns stacked, stats on 2 × 2 |
 
 Phones in landscape (≤ 500px high) also hide the "Joueurs" title and tighten the player cards.

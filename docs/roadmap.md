@@ -87,6 +87,14 @@ Owner request on 2026-10-08: train the game's AI and learn how to do it for othe
 
 Owner request on 2026-10-08: more "realism" and content. Candidates, scope to validate: movement animation (and other animations), new bonuses, different weapons, character creation. Done when: TODO(owner).
 
+### ⏸ Character balance (found 2026-10-08)
+
+Measured with `training/balance.mjs` (see devlog 2026-10-08): health dominates when AIs engage (Xena 87 %, Indiana 22 %), movement points dominate when they are cautious (58 % draws), and the first player has a 57–63 % advantage. Waiting for the owner's decisions on what to change.
+
+Owner's wishes (2026-10-08):
+- 🟡 A visual **balance lab** in the AI training area (2026-10-08, [D-015](decisions.md#d-015--balance-lab-stats-edited-in-the-lab-only)): page `#balance`, editable health / movement points (lab only), win-rate bars, duel matrix, draws and first-player advantage, "Copier les stats". Awaiting the owner's check.
+- ⬜ Richer **game design** later: more character stats (strength, agility, intelligence, luck…), weapons suited to some stats, and the related rules. Large topic, to be scoped with the owner (fits Phase 8).
+
 ## Ideas / later
 
 TODO(owner): to be completed.

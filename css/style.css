@@ -21,6 +21,7 @@
     --fight-zone-tint:    rgba(231, 53, 53, 0.35);
     --panel-shade:        rgba(0, 0, 0, 0.15);
     --unknown-cell:       rgba(0, 0, 0, 0.25);
+    --balance-ok:         #4caf50;
 
     /* Tailles fluides : basées sur la plus petite dimension de l'écran (vmin) */
     --gap:          clamp(6px, 2vmin, 20px);
@@ -895,4 +896,165 @@ body {
     display: flex;
     flex-direction: column;
     gap: clamp(2px, 0.8vmin, 8px);
+}
+
+/* ─── Labo d'équilibrage ──────────────────────────────────────────────────── */
+/*
+ * Paysage : tableau des personnages à gauche, matrice des duels à droite.
+ * Portrait : onglets « Personnages » / « Matrice des duels » (un seul panneau visible, pas de scroll).
+ */
+
+.balance {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(4px, 1.2vmin, 12px);
+    width: 100%;
+    height: 100%;
+    padding: var(--gap);
+    box-sizing: border-box;
+    overflow: hidden;
+    color: var(--text-light);
+}
+
+.balanceNav {
+    display: flex;
+    gap: clamp(4px, 1vmin, 10px);
+}
+
+.balanceProgress {
+    height: 4px;
+    border-radius: 2px;
+    background-color: var(--panel-shade);
+    overflow: hidden;
+}
+
+.balanceProgress span {
+    display: block;
+    height: 100%;
+    width: 0;
+    background-color: var(--spinner-text);
+    transition: width 150ms linear;
+}
+
+.balanceSummary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3em 1.2em;
+    font-size: var(--font-small);
+    line-height: 1.2;
+}
+
+.balanceSummary strong { color: var(--spinner-text); font-weight: normal; }
+
+.balanceTabs { display: none; gap: 6px; }
+
+.balanceTabs .btn {
+    margin: 0;
+    font-size: clamp(13px, 2.6vmin, 22px);
+    padding: 0.2em 0.8em;
+}
+
+.balanceBody {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: var(--gap);
+}
+
+.balanceCharacters {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1px;
+}
+
+.balanceRow {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1.3fr) auto auto minmax(0, 1.4fr) 2.6em;
+    align-items: center;
+    gap: clamp(3px, 0.8vmin, 10px);
+    padding: 0 4px;
+    border-radius: 3px;
+    font-size: clamp(11px, 2vmin, 18px);
+    line-height: 1;
+}
+
+.balanceModified { background-color: var(--panel-shade); box-shadow: inset 3px 0 0 var(--spinner-text); }
+
+.balanceAvatar { height: clamp(12px, 3vmin, 30px); width: auto; }
+
+.balanceName {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.balanceStat {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.balanceStat input {
+    width: 3.4em;
+    padding: 0 2px;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--primary);
+    border-radius: 3px;
+    border: none;
+}
+
+.balanceBarTrack {
+    position: relative;
+    height: 60%;
+    max-height: 14px;
+    border-radius: 3px;
+    background-color: var(--panel-shade);
+    overflow: hidden;
+}
+
+.balanceBar  { position: absolute; top: 0; bottom: 0; left: 0; }
+.balanceMid  { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background-color: var(--text-light); opacity: 0.5; }
+.balanceHigh { background-color: var(--secondary); }
+.balanceLow  { background-color: var(--player-outline); }
+.balanceOk   { background-color: var(--balance-ok); }
+.balanceStale .balanceBar { opacity: 0.35; }
+.balanceRate { text-align: right; }
+
+.balanceMatrixPanel {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2px, 0.8vmin, 8px);
+}
+
+.balanceMatrix {
+    flex: 1 1 0;
+    min-height: 0;
+    aspect-ratio: 1;
+    max-width: 100%;
+    align-self: center;
+    display: grid;
+    grid-template-columns: repeat(var(--matrix-size, 16), 1fr);
+    grid-template-rows: repeat(var(--matrix-size, 16), 1fr);
+    gap: 1px;
+}
+
+.matrixHead  { width: 100%; height: 100%; object-fit: contain; min-width: 0; min-height: 0; }
+.matrixCell  { border-radius: 1px; }
+.matrixWin   { background-color: var(--secondary); }
+.matrixLoss  { background-color: var(--player-outline); }
+.matrixEmpty { background-color: var(--panel-shade); }
+
+/* Portrait : un seul panneau à la fois, choisi par les onglets */
+@media (orientation: portrait) {
+    .balanceTabs { display: flex; }
+    .balanceBody { grid-template-columns: minmax(0, 1fr); }
+    .balanceBody[data-tab="characters"] .balanceMatrixPanel { display: none; }
+    .balanceBody[data-tab="matrix"] .balanceCharacters     { display: none; }
 }
