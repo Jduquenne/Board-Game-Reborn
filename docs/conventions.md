@@ -40,7 +40,15 @@ Only one explicit error today: `GameEngine.#randomEmptyCell` throws when no empt
 
 ## Testing
 
-No tests exist yet; they are planned ([roadmap Phase 4](roadmap.md#-phase-4--automated-tests)). Conventions (location, naming) will be written here once the approach is decided.
+Approach: [D-008](decisions.md#d-008--tests-with-nodes-built-in-test-runner). Command: [`development.md`](development.md#tests).
+
+- One file per engine: `tests/<Module>.test.mjs` (`.mjs` so Node loads them as ES modules without a `package.json`).
+- Only `node:test` and `node:assert/strict` — no library.
+- Test names in English, describing the rule (`'defense halves the damage (rounded down) and is consumed'`).
+- Build the state by hand with `tests/helpers.mjs` (`setBoard`, `setFight`, `markMovable`, `recordEvents`) instead of relying on `startGame`'s randomness.
+- Control time with `mock.timers.enable({ apis: ['setTimeout'] })` + `mock.timers.tick(ms)`, and randomness with `mock.method(Math, 'random', () => x)`; reset both in `afterEach` (`mock.timers.reset()`, `mock.restoreAll()`).
+- Unsubscribe every EventBus listener and call `aiEngine.stop()` in `afterEach` (engines and Store are singletons shared by the tests of a file; each file runs in its own process).
+- Every change to a game rule in `src/Engine/` comes with a test, and the matching rule in [`spec-gameplay.md`](spec-gameplay.md) is updated.
 
 ## Commit messages
 

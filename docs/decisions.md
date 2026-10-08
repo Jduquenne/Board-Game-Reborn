@@ -58,6 +58,15 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Alternatives considered**: not documented.
 - **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
 
+## D-008 — Tests with Node's built-in test runner
+
+- **Date**: 2026-10-08
+- **Status**: accepted
+- **Context**: the owner decided to add automated tests (roadmap Phase 4) without breaking D-001.
+- **Decision**: tests use Node's built-in runner and assertions (`node:test`, `node:assert/strict`), no library, no `package.json`. They live in `tests/` as `*.test.mjs` and cover `src/Engine/` (plus `core/` and `Models/` indirectly). Randomness is controlled by building the board by hand (`tests/helpers.mjs`) or mocking `Math.random`; delays with `mock.timers`. Node is a development tool only — the game still runs in the browser without it.
+- **Alternatives considered**: a browser-based test page (harder to run from the terminal); a test library via npm (rejected by D-001).
+- **Consequences**: Views (DOM) are not covered by automated tests and still need manual checks in a browser. Node prints two expected warnings: `.js` files are reparsed as ES modules (no `package.json` `"type"`), and `mock.timers` is experimental in Node 22.
+
 ## D-007 — BattleBanner may import FightEngine
 
 - **Date**: 2026-10-08

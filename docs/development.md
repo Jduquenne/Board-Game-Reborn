@@ -33,9 +33,24 @@ for f in $(find src -name "*.js"); do node --check "$f"; done
 
 ✅ Verified 2026-10-08: all 26 files pass with Node v22.14.0. Silent output = success.
 
-## Build, lint, format, tests
+## Tests
 
-None exist yet. Tests will be added (owner decision, 2026-10-08); the approach must respect the zero-dependency rule and will be recorded in [decisions](decisions.md). See [roadmap Phase 4](roadmap.md#-phase-4--automated-tests).
+From the project root:
+
+```bash
+node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning
+```
+
+✅ Verified 2026-10-08 with Node v22.14.0: 44 tests, all passing, ~0.1 s. Look at the final `# pass` / `# fail` lines.
+
+- Node finds every `*.test.mjs` file automatically; to run one file: `node --test tests/FightEngine.test.mjs`.
+- The plain `node --test` also works; it just prints two expected warnings (see [D-008](decisions.md#d-008--tests-with-nodes-built-in-test-runner)).
+- Only `src/Engine/` logic is covered. Views (DOM) still require a manual check in the browser.
+- How to write tests: [`conventions.md`](conventions.md#testing).
+
+## Build, lint, format
+
+None exist.
 
 ## Debugging
 

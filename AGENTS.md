@@ -57,6 +57,7 @@ src/
 ├── Models/         ← createCell/Player/Weapon/Bonus/Trap factories
 ├── Repository/     ← static game content (PLAYER_DATA, WEAPON_DATA…)
 └── Views/          ← Menu, Options, Game + Board, PlayersSidebar, BattleBanner, TrapBanner
+tests/              ← node:test suites for src/Engine/ (see D-008)
 docs/               ← project documentation (archive/ = original context files)
 log/devlog.md       ← session journal
 ```
@@ -73,7 +74,7 @@ Details: [`docs/architecture.md`](docs/architecture.md#directory-structure).
 6. State changes only through `store.setState(updater)`.
 7. No page scroll: `html`, `body`, `#app` keep `overflow: hidden`; every view fits in 100vw × 100vh.
 8. Never add a dependency, `package.json` or bundler.
-9. Every JS file must pass `node --check`.
+9. Every JS file must pass `node --check`; every game-rule change in `src/Engine/` comes with a test and all tests pass.
 10. When adding an event or a state key, update [`docs/architecture.md`](docs/architecture.md) in the same task.
 
 Verification for rules 1–2:
@@ -94,13 +95,14 @@ Details: [`docs/conventions.md`](docs/conventions.md#layer-rules) and [`docs/ui-
 ## Before you finish a task
 
 1. Syntax check: `for f in $(find src -name "*.js"); do node --check "$f"; done` (silent = OK).
-2. Golden-rule greps (rules 1–2 above).
-3. Run `python -m http.server 8080` and check the affected screens at <http://localhost:8080>; if you could not test in a browser, say so.
-4. Add an entry to [`log/devlog.md`](log/devlog.md).
-5. Update [`docs/roadmap.md`](docs/roadmap.md) (and `docs/` if architecture, rules or conventions changed).
-6. Propose a commit message in Conventional Commits format (see [`docs/conventions.md`](docs/conventions.md#commit-messages)) — never commit.
+2. Tests: `node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning` (must end with `# fail 0`).
+3. Golden-rule greps (rules 1–2 above).
+4. Run `python -m http.server 8080` and check the affected screens at <http://localhost:8080>; if you could not test in a browser, say so.
+5. Add an entry to [`log/devlog.md`](log/devlog.md).
+6. Update [`docs/roadmap.md`](docs/roadmap.md) (and `docs/` if architecture, rules or conventions changed).
+7. Propose a commit message in Conventional Commits format (see [`docs/conventions.md`](docs/conventions.md#commit-messages)) — never commit.
 
-There is no build, lint, formatter or automated test suite.
+There is no build, lint or formatter. Tests cover `src/Engine/` only; Views need the browser check (step 4).
 
 ## Where things are tracked
 

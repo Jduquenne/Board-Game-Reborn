@@ -62,8 +62,11 @@ src/
     ├── GameView.js                ← orchestrates sub-components, starts/stops AI, sets --cell-size
     ├── BoardView.js               ← event delegation on the board
     ├── PlayersSidebar.js
-    ├── BattleBanner.js            ← fight UI, calls fightEngine.attack()/defend()
+    ├── BattleBanner.js            ← fight UI, calls fightEngine.attack()/defend(), restarts a game
     └── TrapBanner.js
+tests/
+├── helpers.mjs                    ← builds controlled game states, records events
+└── *.test.mjs                     ← one file per engine (node:test), see D-008
 ```
 
 > Note (migration): the previous `CLAUDE.md` did not list `AIEngine.js`, `aiMode` or `isAI`. Added here from the code.

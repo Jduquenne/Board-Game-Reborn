@@ -13,6 +13,15 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Automated tests (Phase 4)
+
+- **Done**: test suite with Node's built-in runner, no dependency ([D-008](../docs/decisions.md#d-008--tests-with-nodes-built-in-test-runner)): `tests/helpers.mjs` + one file per engine (`MovementSystem`, `GameEngine`, `FightEngine`, `AIEngine`). Test command added to the `AGENTS.md` checklist and golden rule 9; development, conventions, architecture and roadmap updated. No source code changed.
+- **Numbers**: 44 tests, 44 pass, ~0.1 s (Node v22.14.0). Mutation check on a scratch copy: 6 deliberate bugs (trap damage, defense halving, blocking players, easy-mode odds, AI defend rule, weapon swap) each made exactly one test fail.
+- **Problems**: Node prints two harmless warnings (typeless `.js` modules, experimental `mock.timers`), silenced in the documented command.
+- **Still open**:
+  - Views are not covered by automated tests (manual browser check).
+  - Remaining Phase 3 item: internal scroll in `#menu` and `.modalRules` (likely handled in the Phase 5 UI/UX overhaul).
+
 ## 2026-10-08 — "Nouvelle partie" keeps the settings
 
 - **Done**: the "Nouvelle partie" button in `BattleBanner` no longer calls `location.reload()` (which reset the Store config to defaults); it hides the battle modal and calls `gameEngine.startGame(store.state.config)`. Spec and roadmap updated.
