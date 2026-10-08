@@ -17,7 +17,7 @@ Based on reading the code, plus the owner's in-browser checks of the Phase 3 fix
 - 44 automated tests on `src/Engine/` (Node built-in runner), all passing; no tests for Views; no lint.
 - AI plays both movement and fight actions.
 - "Nouvelle partie" keeps the previous game's settings.
-- Known bugs: internal scroll in the game sidebar and rules modal ([ui-design](ui-design.md#known-deviations)).
+- Responsive layout on phone, tablet and desktop (Phase 5 Batch C, to be confirmed on real devices); remaining UI points in [ui-design](ui-design.md#known-deviations).
 - Image sources and licences unknown ([ATTRIBUTION](../ATTRIBUTION.md)).
 
 ## Phases
@@ -38,7 +38,7 @@ Confirmed by the owner on 2026-10-08.
 
 - ✅ The AI plays its own fight actions (Attack / Defend). Done when: in an AI game, a fight runs to the end without the human clicking for the AI. Checked by a Node simulation and in the browser by the owner on 2026-10-08.
 - ✅ "Nouvelle partie" keeps the previous game's settings (it used to reload the page and reset them). Done when: after a game played with custom options, "Nouvelle partie" starts with the same options. Checked by a Node simulation and in the browser by the owner on 2026-10-08.
-- ⬜ No internal scroll in `#menu` (game sidebar) and `.modalRules`. Done when: both use `overflow: hidden` and their content fits, verified in a browser at small and large viewport sizes.
+- 🟡 No internal scroll in `#menu` (game sidebar) and `.modalRules`. Done when: both use `overflow: hidden` and their content fits, verified in a browser at small and large viewport sizes. Fixed by Phase 5 Batch C; checked with headless Chrome on 8 sizes; awaiting the owner's check.
 
 ### ✅ Phase 4 — Automated tests
 
@@ -55,8 +55,9 @@ Scope decided by the owner on 2026-10-08:
 
 Delivered in three batches, each checked in a browser by the owner:
 - ✅ **Batch A — quick fixes**: U-03 colour variables, U-04 focus / accessible close button / image `alt`, U-05 spelling, U-06 inline styles, U-52 duplicated banner CSS. Done on 2026-10-08; owner moved on to Batch B.
-- 🟡 **Batch B — playability**: U-34 visible fight cells, U-35 active player on the board, U-36 weapon spin, U-37 confirm before leaving, U-41/U-42 complete rules and closing, U-51 health in the fight banner, U-53 end-of-game choice. Done on 2026-10-08; awaiting the owner's browser check.
-- ⬜ **Batch C — responsive layout**: U-01, U-02, U-07?, U-10, U-20, U-21, U-30, U-31, U-32, U-33, U-40, U-50 (closes the last Phase 3 item). Keyboard play on the board (rest of U-04) to be decided.
+- ✅ **Batch B — playability**: U-34 visible fight cells, U-35 active player on the board, U-36 weapon spin, U-37 confirm before leaving, U-41/U-42 complete rules and closing, U-51 health in the fight banner, U-53 end-of-game choice. Done on 2026-10-08; owner moved on to Batch C.
+- 🟡 **Batch C — responsive layout**: U-01, U-02, U-10, U-20, U-21, U-30, U-31, U-32, U-33, U-40, U-50 (closes the last Phase 3 item). Done on 2026-10-08, checked with headless Chrome on 8 screen sizes × 9 screens (72/72 without scroll or overflow); awaiting the owner's check on real devices. U-07 (offline font) not addressed.
+- ⏸ Keyboard play on the board (rest of U-04): waiting for the owner's decision.
 
 Done when: the three batches are done and the owner has checked every screen on a phone, a tablet and a desktop without scroll or overflow.
 

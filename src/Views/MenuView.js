@@ -6,7 +6,7 @@ export class MenuView extends Component {
     render() {
         return `
             <div class="mainMenu">
-                <div class="title h150px fatFont">Board Game Reborn</div>
+                <div class="title gameTitle">Board Game Reborn</div>
                 <div class="menuSelect">
                     <button class="btn borderPixel fatFont" id="btn-play">Lancer le combat</button>
                     <button class="btn borderPixel fatFont" id="btn-options">Paramètres</button>

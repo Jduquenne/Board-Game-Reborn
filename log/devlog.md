@@ -13,6 +13,21 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Phase 5 Batch C (responsive layout)
+
+- **Done**: Batch B taken as validated (owner said "next"). Batch C:
+  - CSS rewritten with fluid sizes (`clamp()` on `vmin`, size variables in `:root`), `100dvh`, no fixed heights; unused utilities removed (`.h150px`, `.h200px`, `.flex`, `.groupBtnColumn`, `.nb-spinner-*`).
+  - Game screen: board area + sidebar side by side in landscape, stacked in portrait (player cards side by side); sidebar never scrolls; cell size computed from `.boardArea`, recomputed on resize / rotation (`ResizeObserver`) and on view switch, with a dedicated formula for the isometric view (cells 10–96px). Isometric `margin-right: 10vw` removed.
+  - Options: generic grid (3 columns, 2 under 480px), horizontal `− value +` controls with `<output>`, buttons disabled at min / max (U-21). Adding an option no longer needs CSS.
+  - Rules dialog centred and fluid, two columns on short landscape screens; fight / trap banners grow with their content, actions on their own line under 600px wide.
+  - Docs: ui-design (viewport, layouts, adaptive board, visual identity, known deviations), roadmap, architecture.
+- **Numbers**: `node --check` 26/26, 44/44 tests, golden-rule greps OK; CSS braces balanced, every variable defined and used. Headless Chrome (CDP script outside the repo), 8 sizes from 360×640 to 1920×1080 × 9 screens: before 21/72 screens without issue (board invisible on phone portrait, overlapping options on phone landscape, internal scroll, banner / rules out of the viewport), after 72/72 with no page scroll, no element outside the viewport, no scrollable or clipped area. Screenshots reviewed for phone portrait / landscape, tablet and desktop.
+- **Problems**: Chrome served cached ES modules at first (stale results); fixed by disabling the network cache in the script. A `-`/`+` button with the pixel border looks heavy at small sizes (cosmetic).
+- **Still open**:
+  - Owner's check on real devices (phone, tablet, desktop), including rotation during a game.
+  - Keyboard play on the board (rest of U-04): owner decision.
+  - Offline font (U-07) not addressed.
+
 ## 2026-10-08 — Phase 5 Batch B (playability)
 
 - **Done**: Batch A taken as validated (owner said "next"). Batch B:

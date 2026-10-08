@@ -10,16 +10,26 @@ import { WeaponsRepository } from '../Repository/WeaponsRepository.js';
 import { AssetManager } from '../AssetManager.js';
 import { aiEngine } from '../Engine/AIEngine.js';
 
+// Taille d'une cellule du plateau, en pixels
+const CELL_MIN = 10;
+const CELL_MAX = 96;
+
+// Bordure du plateau : border 5px × 2 côtés
+const BOARD_BORDER = 10;
+
 export class GameView extends Component {
-    #subComponents = [];
-    #onKeydown     = null;
+    #subComponents  = [];
+    #onKeydown      = null;
+    #resizeObserver = null;
 
     render() {
         const weapons = WeaponsRepository.findAll();
 
         return `
             <div class="game">
-                <div id="board"></div>
+                <div class="boardArea">
+                    <div id="board"></div>
+                </div>
 
                 <div id="menu">
                     <h2 class="playersTitle whiteFont">Joueurs</h2>
@@ -36,6 +46,7 @@ export class GameView extends Component {
                     <div class="modalContent borderPixel">
                         <h2 class="rulesTitle">Règles</h2>
                         <button class="close" id="btn-close-rules" aria-label="Fermer les règles">X</button>
+                        <div class="rulesBody">
                         <p class="rule">- À chaque tour, déplace ton personnage en ligne droite (haut, bas, gauche, droite) d'autant de cases que ses PM au maximum. Les obstacles et les joueurs bloquent le passage.</p>
                         <p class="rule">- Marche sur une arme pour l'échanger avec la tienne : ton ancienne arme reste au sol.</p>
                         <p class="rule">- Les bonus donnent des points de vie ou des PM supplémentaires.</p>
@@ -43,6 +54,7 @@ export class GameView extends Component {
                         <p class="rule">- Les cases cerclées de rouge sont à côté de l'adversaire : t'y arrêter lance le duel, et tu attaques en premier.</p>
                         <p class="rule">- En duel, chacun son tour : « Attaquer » inflige les dégâts de ton arme, « Se défendre » divise par 2 les prochains dégâts reçus. Le premier à 0 point de vie perd.</p>
                         <p class="rule">- En mode IA, l'ordinateur joue le second personnage (badge « IA »).</p>
+                        </div>
                         <p class="rule">- Dégâts des armes :</p>
                         <div id="weaponList">
                             ${weapons.map(w => `
@@ -93,8 +105,11 @@ export class GameView extends Component {
         // Lance le jeu après que les sous-composants sont montés et à l'écoute
         gameEngine.startGame(store.state.config);
 
-        // Adapte la taille des cellules pour que le plateau tienne dans le viewport
+        // Adapte la taille des cellules à la place disponible, puis à chaque
+        // redimensionnement de la fenêtre ou rotation de l'écran
         this.#setCellSize();
+        this.#resizeObserver = new ResizeObserver(() => this.#setCellSize());
+        this.#resizeObserver.observe(this.query('.boardArea'));
 
         // Boutons
         this.query('#btn-rules').addEventListener('click', () => {
@@ -124,12 +139,14 @@ export class GameView extends Component {
             this.query('#board').classList.add('isometric');
             this.query('#btn-isometric').classList.add('hidden');
             this.query('#btn-topview').classList.remove('hidden');
+            this.#setCellSize();
         });
 
         this.query('#btn-topview').addEventListener('click', () => {
             this.query('#board').classList.remove('isometric');
             this.query('#btn-topview').classList.add('hidden');
             this.query('#btn-isometric').classList.remove('hidden');
+            this.#setCellSize();
         });
 
         // Retour au menu : confirmation, la partie en cours serait perdue
@@ -147,6 +164,7 @@ export class GameView extends Component {
 
     onUnmount() {
         document.removeEventListener('keydown', this.#onKeydown);
+        this.#resizeObserver?.disconnect();
         aiEngine.stop();
         this.#subComponents.forEach(c => c.unmount());
         this.#subComponents = [];
@@ -156,22 +174,31 @@ export class GameView extends Component {
     // ─── Private ──────────────────────────────────────────────────────────────
 
     // Calcule la taille maximale d'une cellule pour que le plateau tienne
-    // entièrement dans le viewport sans scroll, puis l'applique via CSS custom property.
+    // entièrement dans sa zone (.boardArea) sans scroll, puis l'applique via CSS custom property.
     #setCellSize() {
         const { rows, cols } = store.state.config;
+        const area  = this.query('.boardArea');
+        const board = this.query('#board');
+        if (!area || !board) return;
 
-        // L'espace disponible pour le plateau = viewport - largeur de la sidebar - bordures
-        const menuEl    = this.query('#menu');
-        const sidebarW  = menuEl.offsetWidth + 40; // + marges
-        const boardBorder = 10; // border: 5px × 2 côtés
+        const availW = area.clientWidth;
+        const availH = area.clientHeight;
 
-        const availW = window.innerWidth  - sidebarW - boardBorder;
-        const availH = window.innerHeight - boardBorder;
+        let size;
+        if (board.classList.contains('isometric')) {
+            // Vue isométrique (rotateZ 45° puis rotateX 45°) : le plateau projeté mesure
+            // (largeur + hauteur) / √2 de large et (largeur + hauteur) / 2 de haut,
+            // plus environ 0,7 cellule pour le relief des obstacles
+            const sum = cols + rows;
+            size = Math.min(
+                (availW * Math.SQRT2 - 2 * BOARD_BORDER) / sum,
+                (2 * availH - 2 * BOARD_BORDER) / (sum + 1.5),
+            );
+        } else {
+            size = Math.min((availW - BOARD_BORDER) / cols, (availH - BOARD_BORDER) / rows);
+        }
 
-        // On prend le plus petit des deux axes pour que tout rentre
-        const size     = Math.floor(Math.min(availW / cols, availH / rows));
-        const cellSize = Math.min(Math.max(size, 10), 60); // entre 10px et 60px
-
-        this.query('#board').style.setProperty('--cell-size', `${cellSize}px`);
+        const cellSize = Math.min(Math.max(Math.floor(size), CELL_MIN), CELL_MAX);
+        board.style.setProperty('--cell-size', `${cellSize}px`);
     }
 }

@@ -63,7 +63,7 @@ export class BattleBanner extends Component {
             <h2 class="battleInfosText">
                 <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="${attacker.player.name}">
                 ${this.#hp(attacker)}
-                ${actions}
+                <span class="battleActions">${actions}</span>
                 ${this.#hp(target)}
                 <img class="targetImg" src="${AssetManager.player(target.player)}" alt="${target.player.name}">
             </h2>
@@ -102,8 +102,10 @@ export class BattleBanner extends Component {
             <h2 class="battleInfosText">
                 <img class="attackerImg" src="${AssetManager.player(winner.player)}" alt="${winner.player.name}">
                 ${winner.player.name} remporte le duel !
-                <button class="btn" id="btn-new-game">Nouvelle partie</button>
-                <button class="btn" id="btn-exit">Quitter</button>
+                <span class="battleActions">
+                    <button class="btn" id="btn-new-game">Nouvelle partie</button>
+                    <button class="btn" id="btn-exit">Quitter</button>
+                </span>
             </h2>
         `;
         // Relance une partie en place avec les paramètres de la partie précédente

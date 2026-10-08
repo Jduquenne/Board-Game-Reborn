@@ -24,24 +24,14 @@ export class OptionsView extends Component {
     render() {
         return `
             <div class="mainMenu options-view">
-                <div class="title h150px fatFont">Board Game Reborn</div>
-                <div class="menuSelectOptions">
-                    ${OPTIONS.map((opt, i) => `
-                        <div class="nb-spinner-${i}">
-                            <div class="whiteFont">${opt.label}</div>
-                            <button class="btn borderPixel fatFont" data-key="${opt.key}" data-action="increment">+</button>
-                            <input disabled class="spinner" type="text"
-                                value="${this.#config[opt.key] ?? opt.default}"
-                                data-key="${opt.key}"
-                                data-min="${opt.min}"
-                                data-max="${opt.max}">
-                            <button class="btn borderPixel fatFont" data-key="${opt.key}" data-action="decrement">-</button>
-                        </div>
-                    `).join('')}
+                <div class="title gameTitle">Board Game Reborn</div>
+
+                <div class="optionsGrid">
+                    ${OPTIONS.map(opt => this.#optionTemplate(opt)).join('')}
                 </div>
 
                 <div class="ai-mode-selector">
-                    <span class="whiteFont">Mode de jeu</span>
+                    <span class="optionLabel whiteFont">Mode de jeu</span>
                     <div class="groupBtnRow">
                         ${AI_MODES.map(m => `
                             <button
@@ -53,7 +43,7 @@ export class OptionsView extends Component {
                     </div>
                 </div>
 
-                <div class="flex h150px">
+                <div class="optionsActions">
                     <button class="btn borderPixel fatFont" id="btn-start">Lancer le combat</button>
                     <button class="btn borderPixel fatFont" id="btn-back">Retour</button>
                 </div>
@@ -62,23 +52,21 @@ export class OptionsView extends Component {
     }
 
     onMount() {
-        // Event delegation — gère les spinners ET les boutons de mode IA
+        // Event delegation — gère les boutons +/− ET les boutons de mode IA
         this.root.addEventListener('click', (e) => {
-            // Spinners
-            const spinnerBtn = e.target.closest('[data-action]');
-            if (spinnerBtn) {
-                const key    = spinnerBtn.dataset.key;
-                const action = spinnerBtn.dataset.action;
-                const input  = this.query(`input[data-key="${key}"]`);
-                const min    = parseInt(input.dataset.min);
-                const max    = parseInt(input.dataset.max);
-                let   val    = parseInt(input.value);
+            // Boutons +/− : la valeur reste entre min et max, le bouton est désactivé à la limite
+            const stepBtn = e.target.closest('[data-action]');
+            if (stepBtn) {
+                const opt     = OPTIONS.find(o => o.key === stepBtn.dataset.key);
+                const current = this.#config[opt.key] ?? opt.default;
+                const next    = stepBtn.dataset.action === 'increment'
+                    ? Math.min(current + 1, opt.max)
+                    : Math.max(current - 1, opt.min);
 
-                if (action === 'increment' && val < max) val++;
-                if (action === 'decrement' && val > min) val--;
-
-                input.value = val;
-                this.#config[key] = val;
+                this.#config[opt.key] = next;
+                this.query(`output[data-key="${opt.key}"]`).textContent = next;
+                this.query(`[data-key="${opt.key}"][data-action="decrement"]`).disabled = next <= opt.min;
+                this.query(`[data-key="${opt.key}"][data-action="increment"]`).disabled = next >= opt.max;
                 return;
             }
 
@@ -99,5 +87,24 @@ export class OptionsView extends Component {
         });
 
         this.query('#btn-back').addEventListener('click', () => router.navigate('menu'));
+    }
+
+    // ─── Private ──────────────────────────────────────────────────────────────
+
+    #optionTemplate(opt) {
+        const value = this.#config[opt.key] ?? opt.default;
+
+        return `
+            <div class="optionItem">
+                <span class="optionLabel whiteFont" id="label-${opt.key}">${opt.label}</span>
+                <div class="optionControl">
+                    <button class="btn borderPixel stepBtn" data-key="${opt.key}" data-action="decrement"
+                        aria-label="Diminuer : ${opt.label}" ${value <= opt.min ? 'disabled' : ''}>−</button>
+                    <output class="spinner" data-key="${opt.key}" aria-labelledby="label-${opt.key}" aria-live="polite">${value}</output>
+                    <button class="btn borderPixel stepBtn" data-key="${opt.key}" data-action="increment"
+                        aria-label="Augmenter : ${opt.label}" ${value >= opt.max ? 'disabled' : ''}>+</button>
+                </div>
+            </div>
+        `;
     }
 }

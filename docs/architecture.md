@@ -58,8 +58,8 @@ src/
 │   └── TrapRepository.js          ← TRAP_DATA
 └── Views/
     ├── MenuView.js
-    ├── OptionsView.js             ← OPTIONS and AI_MODES arrays
-    ├── GameView.js                ← orchestrates sub-components, starts/stops AI, sets --cell-size
+    ├── OptionsView.js             ← OPTIONS and AI_MODES arrays (rendering is generic, no CSS per option)
+    ├── GameView.js                ← orchestrates sub-components, starts/stops AI, sizes the board (--cell-size, ResizeObserver)
     ├── BoardView.js               ← event delegation on the board
     ├── PlayersSidebar.js
     ├── BattleBanner.js            ← fight UI, calls fightEngine.attack()/defend(), restarts a game

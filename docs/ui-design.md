@@ -2,27 +2,43 @@
 
 ## Viewport constraints
 
-- **No scroll**: the game must fit entirely within `100vw × 100vh`; no scrollable axis.
-- `html`, `body` and `#app` must keep `overflow: hidden` (currently set in `css/style.css`).
-- **Responsive**: every view adapts to the screen size without overflow.
-- Fixed heights (`.h150px`, `calc(...)`) are forbidden if they cause the viewport to overflow.
+- **No scroll**: every screen fits entirely in the visible viewport (`100dvh`, with `100vh` as fallback); no scrollable axis, including inside the sidebar and dialogs.
+- `html`, `body` and `#app` keep `overflow: hidden`.
+- **Fully responsive** (owner decision, 2026-10-08): phone portrait / landscape, tablet, desktop.
+- No fixed pixel heights or font sizes for layout: sizes are fluid with `clamp()` based on `vmin` (CSS variables `--gap`, `--font-base`, `--font-small`, `--font-title`, `--font-big-btn` in `:root`).
+- Checked on 2026-10-08 with headless Chrome at 360×640, 640×360, 390×844, 844×390, 768×1024, 1024×768, 1366×768 and 1920×1080 on every screen (menu, options, game, isometric, rules, quit dialog, fight, end of game, trap): no page scroll, no element outside the viewport, no scrollable or clipped area.
+
+## Layouts
+
+| Screen | Landscape | Portrait |
+|---|---|---|
+| Menu | title + buttons centred | same |
+| Options | 3-column grid of `− value +` controls (2 columns under 480px wide), game mode, actions | same |
+| Game | board area on the left, sidebar on the right (`clamp(180px, 30vw, 420px)`) | board area on top, sidebar below with the two player cards side by side; "Joueurs" title hidden |
+| Rules dialog | one column; **two columns** when landscape and ≤ 600px high | one column |
+| Fight banner | sprites, health, actions on one line | actions move to their own line under 600px wide (`.battleActions`) |
+
+Phones in landscape (≤ 500px high) also hide the "Joueurs" title and tighten the player cards.
 
 ## Adaptive board
 
-The cell size (`--cell-size`) is computed dynamically by `GameView.#setCellSize()` when the game starts so the board always fits on screen:
+`GameView.#setCellSize()` computes the cell size (`--cell-size` on `#board`) from the real size of `.boardArea` (the flex area left by the sidebar):
 
-- available width = `window.innerWidth` − sidebar width − 40px margins − 10px board border;
-- available height = `window.innerHeight` − 10px;
-- size = `floor(min(availW / cols, availH / rows))`, clamped between 10px and 60px;
-- applied as a CSS custom property on `#board` (CSS fallback: `60px`).
+- top view: `min((areaW − 10) / cols, (areaH − 10) / rows)`;
+- isometric view: the rotated board measures `(W + H) / √2` wide and `(W + H) / 2` high, plus about 0.7 cell for the obstacle relief → `min((areaW·√2 − 20) / (cols + rows), (2·areaH − 20) / (cols + rows + 1.5))`;
+- rounded down and clamped between 10px and 96px (`CELL_MIN`, `CELL_MAX`).
 
-The size is not recomputed on window resize.
+It runs at game start, on every resize / rotation (`ResizeObserver` on `.boardArea`, disconnected on unmount) and when switching between top and isometric views. Measured on 2026-10-08: 33px on a 360×640 phone, 72px on a 768×1024 tablet, 96px on 1920×1080.
 
 ## Visual identity
 
-- Colours: CSS variables in `:root` (`css/style.css`) — `--primary` (#424242, background), `--secondary` (#E73535, accents), `--third` (#344973, cards / hover), `--text-light`, `--spinner-text`, `--danger`, `--bonus-border`, `--focus-ring`, `--overlay`, `--banner-gradient`. New colours go there, never hard-coded in a rule.
-- Buttons show the same highlight on hover and on keyboard focus (`:focus-visible`).
+- Colours: CSS variables in `:root` (`css/style.css`) — `--primary` (#424242, background), `--secondary` (#E73535, accents), `--third` (#344973, cards / hover), `--text-light`, `--spinner-text`, `--danger`, `--bonus-border`, `--focus-ring`, `--overlay`, `--banner-gradient`, cell outline and ring colours. New colours go there, never hard-coded in a rule.
+- Font: VT323 (Google Fonts, imported in `css/style.css`).
+- Pixel-art button border (`.borderPixel`, `assets/border.svg`); red banner gradient for fights and traps; character sprites slightly overflow the fight banner.
+- Buttons show the same highlight on hover and on keyboard focus (`:focus-visible`); disabled buttons are faded.
 - Visibility is toggled with the `.hidden` class only, never with inline `style.display`.
+- Board can switch between top view and an isometric view (`#board.isometric`).
+- UI text is in French.
 
 ## Board and dialog cues
 
@@ -32,13 +48,11 @@ The size is not recomputed on window resize.
 - Fight banner shows both players' health (`.bannerHp`) when choosing an action and the target's health after a hit; at the end, the winner and the "Nouvelle partie" / "Quitter" buttons appear together.
 - Dialogs (`.modalRules`: rules, quit confirmation) close with their button, the Escape key or a click outside; focus moves to their main button when opened.
 - "Menu" during a game asks for confirmation ("Quitter la partie ?").
-- Font: VT323 (Google Fonts, imported in `css/style.css`).
-- Board can switch between top view and an isometric view (`#board.isometric`).
-- UI text is in French.
+- Options: `−` / `+` buttons are disabled at the option's min / max.
 
 ## UI/UX audit (2026-10-08)
 
-Inventory for [roadmap Phase 5](roadmap.md#-phase-5--uiux-overhaul). Derived from reading `css/style.css` and `src/Views/`; **not observed in a browser**. IDs (U-xx) are referenced by the roadmap, which tracks their status (Batch A: U-03, U-04 partly, U-05, U-06, U-52 fixed on 2026-10-08; Batch B: U-34, U-35, U-36, U-37, U-41, U-42, U-51, U-53 fixed on 2026-10-08).
+Inventory for [roadmap Phase 5](roadmap.md#-phase-5--uiux-overhaul). Derived from reading `css/style.css` and `src/Views/`; **not observed in a browser**. IDs (U-xx) are referenced by the roadmap, which tracks their status (Batch A: U-03, U-04 partly, U-05, U-06, U-52 fixed on 2026-10-08; Batch B: U-34, U-35, U-36, U-37, U-41, U-42, U-51, U-53 fixed on 2026-10-08; Batch C: U-01, U-02, U-10, U-20, U-21, U-30, U-31, U-32, U-33, U-40, U-50 fixed on 2026-10-08). The audit below describes the state **before** these fixes.
 
 ### Global
 
@@ -86,7 +100,7 @@ Inventory for [roadmap Phase 5](roadmap.md#-phase-5--uiux-overhaul). Derived fro
 
 ## Known deviations
 
-Found during the migration on 2026-10-08, not yet checked in a browser:
-
-- **To fix** (owner decision, 2026-10-08): `#menu` (game sidebar) has `overflow-y: auto` and `.modalRules` has `overflow: auto`, so they can scroll internally. Not an accepted exception. Tracked in [roadmap Phase 3](roadmap.md#-phase-3--fix-known-bugs).
-- `.h150px` (fixed 150px height) is used in `MenuView`; only `.options-view .h150px` is clamped. Deferred to the site-wide UI/UX overhaul ([roadmap Phase 5](roadmap.md#-phase-5--uiux-overhaul)).
+- Fixed on 2026-10-08 (Batch C): internal scroll in the game sidebar and the rules dialog; fixed `.h150px` heights (class removed).
+- U-04 (rest): the board cannot be played with the keyboard. ⏸ Waiting for the owner's decision.
+- U-07: the VT323 font is loaded from Google Fonts; offline, the browser fallback monospace font is used. Not addressed (embedding the font would add a third-party file to `assets/`, see [ATTRIBUTION](../ATTRIBUTION.md)).
+- The 360×640 phone screens are dense (small text in the player cards and options); readable in headless Chrome screenshots, to be confirmed on a real phone.
