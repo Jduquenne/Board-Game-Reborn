@@ -13,6 +13,15 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Tool outputs moved out of the project (Live Server reload loop)
+
+- **Done**: the owner's app reloaded every second: VS Code Live Server (port 5500) reloads on any file change in the project, and a background `ui-check` run (left over from the previous session) was writing a screenshot to `tools/output/` every 2–3 s. Stopped it (and the unused Python server on port 8090). Owner chose option 1: `tools/ui-check.mjs` now writes to `<system temp>/boardgame-reborn/ui-check/` (`--out` to override) and `training/train-*.mjs` to `<system temp>/boardgame-reborn/training/`. Docs: D-009, development, architecture, AGENTS step 4.
+- **Numbers**: full UI check re-run after the change: 104/104 (8 sizes × 13 screens), exit code 0, screenshots in the system temp directory; nothing written to the project folder.
+- **Problems**: the interrupted run means the Phase 7.3 full UI check had not completed before this fix (training screens alone: 32/32).
+- **Still open**:
+  - `tools/output/` and `training/output/` may still contain old generated files (git-ignored); they can be deleted by the owner.
+  - Owner's check of Phase 7.3.
+
 ## 2026-10-08 — Phase 7.3: movement learned by a genetic algorithm
 
 - **Done**:

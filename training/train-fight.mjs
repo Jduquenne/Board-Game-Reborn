@@ -1,9 +1,12 @@
 // Entraîne les décisions de combat par Q-learning et affiche la progression.
 //
 // Usage :   node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-fight.mjs [--games 50000] [--seed 1] [--opponent normal]
-// Sortie :  courbe de progression (évaluation régulière) + politique apprise + training/output/fight-model.json
+// Sortie :  courbe de progression (évaluation régulière) + politique apprise + modèle dans
+//           <dossier temporaire du système>/boardgame-reborn/training/fight-model.json
 
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { FightTrainer } from '../src/AI/FightTrainer.js';
 import { describeFightKey } from '../src/AI/FightPolicy.js';
 import { SCRIPTED_AGENTS } from '../src/AI/ScriptedAgents.js';
@@ -50,6 +53,8 @@ for (const { key, values } of trainer.qtable.entries().sort((a, b) => a.key.loca
     console.log(`  ${best.padEnd(7)} ${values.map(v => v.toFixed(2).padStart(6)).join(' ')}   ${describeFightKey(key).text}`);
 }
 
-mkdirSync('training/output', { recursive: true });
-writeFileSync('training/output/fight-model.json', JSON.stringify(trainer.qtable.toJSON(), null, 1));
-console.log('\nModel saved to training/output/fight-model.json');
+// Hors du projet : un serveur avec rechargement automatique (Live Server) rechargerait la page
+const OUT_DIR = join(tmpdir(), 'boardgame-reborn', 'training');
+mkdirSync(OUT_DIR, { recursive: true });
+writeFileSync(join(OUT_DIR, 'fight-model.json'), JSON.stringify(trainer.qtable.toJSON(), null, 1));
+console.log(`\nModel saved to ${join(OUT_DIR, 'fight-model.json')}`);

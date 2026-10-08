@@ -1,9 +1,12 @@
 // Fait évoluer le déplacement de l'IA par algorithme génétique et affiche la progression.
 //
 // Usage :   node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-move.mjs [--generations 30] [--seed 1] [--opponent normal]
-// Sortie :  progression par génération, poids du champion, training/output/move-model.json
+// Sortie :  progression par génération, poids du champion, modèle dans
+//           <dossier temporaire du système>/boardgame-reborn/training/move-model.json
 
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { MoveTrainer } from '../src/AI/MoveTrainer.js';
 import { MOVE_FEATURES } from '../src/AI/MoveFeatures.js';
 import { SCRIPTED_AGENTS } from '../src/AI/ScriptedAgents.js';
@@ -37,6 +40,8 @@ console.log(`\n${GENERATIONS} generations in ${((performance.now() - start) / 10
 console.log('\nChampion weights:');
 MOVE_FEATURES.forEach((f, i) => console.log(`  ${trainer.bestGenome[i].toFixed(2).padStart(6)}  ${f.label}`));
 
-mkdirSync('training/output', { recursive: true });
-writeFileSync('training/output/move-model.json', JSON.stringify({ features: MOVE_FEATURES.map(f => f.key), weights: trainer.bestGenome }, null, 1));
-console.log('\nModel saved to training/output/move-model.json');
+// Hors du projet : un serveur avec rechargement automatique (Live Server) rechargerait la page
+const OUT_DIR = join(tmpdir(), 'boardgame-reborn', 'training');
+mkdirSync(OUT_DIR, { recursive: true });
+writeFileSync(join(OUT_DIR, 'move-model.json'), JSON.stringify({ features: MOVE_FEATURES.map(f => f.key), weights: trainer.bestGenome }, null, 1));
+console.log(`\nModel saved to ${join(OUT_DIR, 'move-model.json')}`);

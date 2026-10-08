@@ -63,7 +63,7 @@ node tools/ui-check.mjs --viewport phone --screen game    # filters (substring m
 - Finds Chrome / Chromium / Edge in the usual install paths; otherwise set `CHROME_PATH`.
 - Screen sizes: 360×640, 640×360, 390×844, 844×390, 768×1024, 1024×768, 1366×768, 1920×1080. Screens: menu, options, game, isometric, rules, quit dialog, fight, end of game, trap.
 - Fails (exit code 1) on: JavaScript error in the page, empty page (`#app` without content), page scroll, element outside the viewport, scrollable area, clipped content.
-- Screenshots and `report.json` go to `tools/output/` (git-ignored): look at the ones related to your change.
+- Screenshots and `report.json` go to `<system temp>/boardgame-reborn/ui-check/` (path printed at the end; `--out <folder>` to change it): look at the ones related to your change. They are written **outside the project** on purpose: an auto-reloading dev server (e.g. VS Code Live Server) would otherwise reload the page at every screenshot.
 - To check a new screen or dialog, add it to the `SCREENS` array in the script. Rationale: [D-009](decisions.md#d-009--automated-ui-checks-with-headless-chrome).
 
 ## AI arena
@@ -91,7 +91,7 @@ node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/arena.mjs --games 1
 node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-fight.mjs --games 30000 --seed 1 --opponent normal
 ```
 
-✅ Verified 2026-10-08: prints the evaluation every 5 % of the games, then the learned policy; writes `training/output/fight-model.json` (git-ignored). Result with seed 1: 11.8 % → 51.5 % wins against Normal in ~3,000 games (Normal's own fight rule: 51.5 % on the same games); 60,000 games in ~7 s.
+✅ Verified 2026-10-08: prints the evaluation every 5 % of the games, then the learned policy; writes `<system temp>/boardgame-reborn/training/fight-model.json` (outside the project, same reason). Result with seed 1: 11.8 % → 51.5 % wins against Normal in ~3,000 games (Normal's own fight rule: 51.5 % on the same games); 60,000 games in ~7 s.
 
 Movement (genetic algorithm):
 
@@ -99,7 +99,7 @@ Movement (genetic algorithm):
 node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-move.mjs --generations 25 --seed 1 --opponent normal
 ```
 
-✅ Verified 2026-10-08: prints best / average fitness and the evaluation of the champion per generation, then its weights; writes `training/output/move-model.json`. Result with seed 1: 47.5 % → 71.8 % wins against Normal in 25 generations (45,000 games, ~13 s); on 1,000 unseen games (seed 4242) two other seeds give 65.6 % and 66.8 %.
+✅ Verified 2026-10-08: prints best / average fitness and the evaluation of the champion per generation, then its weights; writes `<system temp>/boardgame-reborn/training/move-model.json`. Result with seed 1: 47.5 % → 71.8 % wins against Normal in 25 generations (45,000 games, ~13 s); on 1,000 unseen games (seed 4242) two other seeds give 65.6 % and 66.8 %.
 
 ## Build, lint, format
 

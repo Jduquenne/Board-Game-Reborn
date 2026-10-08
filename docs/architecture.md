@@ -89,9 +89,9 @@ training/
 ├── arena.mjs                      ← CLI: scripted agents against each other (win rates, games/s)
 ├── train-fight.mjs                ← CLI: Q-learning of fight decisions, progress table, learned policy
 ├── train-move.mjs                 ← CLI: genetic evolution of the movement, progress table, champion weights
-└── output/                        ← models written by the CLI (git-ignored)
+                                     (the CLIs write their models to the system temp directory)
 tools/
-└── ui-check.mjs                   ← responsive UI check with headless Chrome (D-009); output in tools/output/ (git-ignored)
+└── ui-check.mjs                   ← responsive UI check with headless Chrome (D-009); screenshots in the system temp directory
 tests/
 ├── helpers.mjs                    ← builds controlled game states, records events
 └── *.test.mjs                     ← one file per engine (node:test), see D-008

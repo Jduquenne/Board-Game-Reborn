@@ -8,7 +8,9 @@
 // Usage :   node tools/ui-check.mjs [--viewport <filtre>] [--screen <filtre>] [--out <dossier>]
 // Exemple : node tools/ui-check.mjs --viewport phone --screen game
 // Chrome :  détecté automatiquement, ou variable d'environnement CHROME_PATH.
-// Sortie :  code 0 si aucun problème, 1 sinon.
+// Sortie :  code 0 si aucun problème, 1 sinon. Captures et report.json dans le dossier temporaire du
+//           système (hors du projet : un serveur avec rechargement automatique, comme Live Server,
+//           rechargerait la page à chaque capture), sauf si --out est donné.
 
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -28,7 +30,7 @@ const arg  = (name, fallback) => {
 };
 const VIEWPORT_FILTER = arg('viewport', '');
 const SCREEN_FILTER   = arg('screen', '');
-const OUT             = resolve(ROOT, arg('out', 'tools/output'));
+const OUT             = resolve(ROOT, arg('out', join(tmpdir(), 'boardgame-reborn', 'ui-check')));
 
 // ─── Cas testés ───────────────────────────────────────────────────────────────
 
