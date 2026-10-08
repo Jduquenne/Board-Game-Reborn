@@ -50,19 +50,21 @@ export class QTable {
     }
 
     // Meilleure action connue (en cas d'égalité, la première de la liste)
-    best(key) {
+    // allowed : actions possibles dans cette situation (par défaut toutes), ex. pas de fuite sans case de repli
+    best(key, allowed = this.actions) {
         const values = this.values(key);
-        let bestIndex = 0;
-        for (let i = 1; i < values.length; i++) {
-            if (values[i] > values[bestIndex]) bestIndex = i;
+        let bestIndex = -1;
+        for (let i = 0; i < values.length; i++) {
+            if (!allowed.includes(this.actions[i])) continue;
+            if (bestIndex < 0 || values[i] > values[bestIndex]) bestIndex = i;
         }
         return this.actions[bestIndex];
     }
 
     // Choix epsilon-greedy : explore au hasard avec la probabilité epsilon, sinon exploite
-    choose(key, rng = Math.random) {
-        if (rng() < this.epsilon) return this.actions[Math.floor(rng() * this.actions.length)];
-        return this.best(key);
+    choose(key, rng = Math.random, allowed = this.actions) {
+        if (rng() < this.epsilon) return allowed[Math.floor(rng() * allowed.length)];
+        return this.best(key, allowed);
     }
 
     /**

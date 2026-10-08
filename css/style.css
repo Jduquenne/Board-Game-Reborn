@@ -823,6 +823,7 @@ body {
 .policyCell        { border-radius: 2px; }
 .policyAttack      { background-color: var(--secondary); }
 .policyDefend      { background-color: var(--spinner-text); }
+.policyFlee        { background-color: var(--balance-ok); }
 .policyUnknown     { background-color: var(--unknown-cell); border: 1px dashed var(--text-light); opacity: 0.35; box-sizing: border-box; }
 
 .trainingLegend {
@@ -833,6 +834,7 @@ body {
 
 .legendAttack  { color: var(--secondary); }
 .legendDefend  { color: var(--spinner-text); }
+.legendFlee    { color: var(--balance-ok); }
 .legendUnknown { color: var(--text-light); opacity: 0.6; }
 
 .trainingNotice {

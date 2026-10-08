@@ -1,5 +1,6 @@
 import { Component } from '../core/Component.js';
 import { fightEngine } from '../Engine/FightEngine.js';
+import { fleeChance, fleeDestination } from '../Engine/Rules.js';
 import { gameEngine } from '../Engine/GameEngine.js';
 import { store } from '../core/Store.js';
 import { AssetManager } from '../AssetManager.js';
@@ -17,6 +18,8 @@ export class BattleBanner extends Component {
         this.listen('fight:attack', ({ attacker, target, damage, critical, dodged }) => {
             this.#setBannerDamage(attacker, target, damage, { critical, dodged });
         });
+
+        this.listen('fight:flee', ({ fleer, enemy, success }) => this.#setBannerFlee(fleer, enemy, success));
 
         this.listen('fight:defend', ({ attacker, target }) => {
             this.#setBannerDefend(attacker, target);
@@ -54,10 +57,14 @@ export class BattleBanner extends Component {
 
     #setBannerActionChoice(attacker, target) {
         // Tour de l'IA : pas de boutons, AIEngine choisit l'action
+        // Fuite : chance affichée (Chance contre tacle adverse), bouton absent sans case de repli
+        const canFlee = !!fleeDestination(store.state);
+        const chance  = Math.round(fleeChance(attacker.player, target.player) * 100);
         const actions = attacker.player.isAI
             ? `${attacker.player.name} réfléchit…`
             : `<button class="btn" id="btn-attack">Attaquer</button>
-               <button class="btn" id="btn-defend">Se défendre</button>`;
+               <button class="btn" id="btn-defend">Se défendre</button>
+               ${canFlee ? `<button class="btn" id="btn-flee" title="Ta Chance contre son tacle (Agilité)">Fuir (${chance} %)</button>` : ''}`;
 
         this.root.innerHTML = `
             <h2 class="battleInfosText">
@@ -72,6 +79,21 @@ export class BattleBanner extends Component {
 
         this.root.querySelector('#btn-attack').addEventListener('click', () => fightEngine.attack());
         this.root.querySelector('#btn-defend').addEventListener('click', () => fightEngine.defend());
+        this.root.querySelector('#btn-flee')?.addEventListener('click', () => fightEngine.flee());
+    }
+
+    // Résultat d'une tentative de fuite ; réussie, le combat est fini et la bannière se ferme
+    #setBannerFlee(fleer, enemy, success) {
+        this.root.innerHTML = `
+            <h2 class="battleInfosText">
+                <img class="attackerImg" src="${AssetManager.player(fleer.player)}" alt="${fleer.player.name}">
+                ${success
+                    ? `${fleer.player.name} <span class="bannerDodge">s'enfuit</span> !`
+                    : `${fleer.player.name} tente de fuir… mais ${enemy.player.name} le <span class="bannerDmg">retient</span> !`}
+                <img class="targetImg" src="${AssetManager.player(enemy.player)}" alt="${enemy.player.name}">
+            </h2>
+        `;
+        if (success) setTimeout(() => this.#hideModal(), 1200);
     }
 
     // Résultat d'une attaque : esquive (Chance de la cible), coup critique (Agilité de l'attaquant) ou coup normal

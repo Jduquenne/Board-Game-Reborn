@@ -217,6 +217,69 @@ export function applyDefend(state) {
     };
 }
 
+// ─── Fuite (lot 3) ────────────────────────────────────────────────────────────
+
+// Chance de fuir : la Chance du fuyard contre le tacle (Agilité) de l'adversaire
+//   (Chance + 2) / (Chance + tacle adverse + 4), bornée entre 10 % et 90 %
+export const FLEE_MIN = 0.10;
+export const FLEE_MAX = 0.90;
+
+export function fleeChance(fleer, enemy) {
+    const luck = fleer.luck ?? 0, tackle = enemy.agility ?? 0;
+    return Math.min(FLEE_MAX, Math.max(FLEE_MIN, (luck + 2) / (luck + tackle + 4)));
+}
+
+/**
+ * Case de repli du combattant qui doit jouer : la case accessible (règles de déplacement normales)
+ * la plus éloignée de l'adversaire, sans être collée à lui. null si aucune → fuite impossible.
+ */
+export function fleeDestination(state) {
+    const { fight, players, cells, config } = state;
+    if (!fight) return null;
+
+    const fleer = players[fight.attackerIndex], enemy = players[fight.targetIndex];
+    const distance = c => Math.abs(c.row - enemy.position.row) + Math.abs(c.col - enemy.position.col);
+    const options = getMovableCells(fleer.position, fleer.player.maxMove, cells, config).filter(c => distance(c) > 1);
+    if (options.length === 0) return null;
+
+    return options.reduce((best, c) => (distance(c) > distance(best) ? c : best));
+}
+
+/**
+ * Tentative de fuite du combattant qui doit jouer (à la place d'une attaque).
+ *   - réussite : le combat s'arrête, le fuyard se déplace vers sa case de repli (ramassage et pièges
+ *     comme un déplacement normal), puis c'est le tour de l'adversaire ;
+ *   - échec : le tour est perdu, le combat continue (resolveRound donne la main à l'adversaire).
+ * Refusée si aucune case de repli n'existe.
+ * @param {() => number} rng  aléatoire (graine possible en simulation, Math.random en jeu)
+ */
+export function applyFlee(state, rng = Math.random) {
+    const { fight, players, phase } = state;
+    if (!fight || phase !== 'fighting') return unchanged(state);
+
+    const destination = fleeDestination(state);
+    if (!destination) return unchanged(state);
+
+    const { attackerIndex, targetIndex } = fight;
+    const chance  = fleeChance(players[attackerIndex].player, players[targetIndex].player);
+    const success = rng() < chance;
+    const fleeEvent = s => ({
+        name: 'fight:flee',
+        payload: { fleer: s.players[attackerIndex], enemy: s.players[targetIndex], success, chance },
+    });
+
+    if (!success) {
+        const next = { ...state }; // nouvel état : l'action est jouée, même ratée
+        return { state: next, events: [fleeEvent(next)] };
+    }
+
+    // Le combat est fini : défenses remises à zéro, puis déplacement normal du fuyard vers sa case de repli
+    const calmed  = players.map(p => ({ ...p, player: { ...p.player, defense: false } }));
+    const playing = refreshMarkings({ ...state, phase: 'playing', fight: null, players: calmed, activePlayerIndex: attackerIndex });
+    const moved   = applyMove(playing, destination.row, destination.col);
+    return { state: moved.state, events: [fleeEvent(moved.state), ...moved.events] };
+}
+
 // Fin d'un round de combat : victoire si la cible n'a plus de vie, sinon échange des rôles
 export function resolveRound(state, attackerIndex, targetIndex) {
     const { players } = state;

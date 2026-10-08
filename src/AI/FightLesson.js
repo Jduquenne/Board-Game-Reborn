@@ -55,9 +55,11 @@ export class FightLesson {
             progress: { label: 'exploration', value: `${Math.round(qtable.epsilon * 100)} %` },
             reference: this.#reference,
             history: this.#history,
-            policy: qtable.entries().map(({ key, values }) => ({
-                key, values, best: qtable.best(key), ...describeFightKey(key),
-            })),
+            actions: qtable.actions,
+            policy: qtable.entries().map(({ key, values }) => {
+                const info = describeFightKey(key);
+                return { key, values, best: qtable.best(key, info.canFlee ? qtable.actions : ['attack', 'defend']), ...info };
+            }),
         };
     }
 

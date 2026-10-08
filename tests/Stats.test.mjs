@@ -69,7 +69,7 @@ test('the normal AI counts strength when it can finish the enemy', () => {
         setFight(1, 0);
         return normalAgent.chooseFightAction(store.state);
     };
-    assert.equal(scenario(0), 'defend', 'without strength: not lethal, and the enemy can kill → defend');
+    assert.equal(scenario(0), 'flee', 'without strength: not lethal, and the enemy can kill → flee (escape possible)');
     assert.equal(scenario(5), 'attack', 'with strength 5: lethal hit');
 });
 

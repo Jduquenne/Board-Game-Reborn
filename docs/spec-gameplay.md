@@ -48,8 +48,12 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
      2. otherwise **critical hit**: chance of the attacker's Agility × 3 % (max 40 %) → damage × 1.5;
      3. damage = weapon damage × (1 + Strength × 5 %), rounded (`weaponDamage`), × 1.5 on a critical, halved (rounded down) if the target is defending.
      Defense flags of both players reset. No random draw is made when both chances are 0. The fight banner shows "Coup critique !" or "… esquive l'attaque".
+   - **Flee** (batch 3, `applyFlee`): possible only if an escape cell exists — the reachable cell (normal movement rules, current PM) farthest from the enemy and not next to it. Chance = (Luck + 2) / (Luck + enemy Agility + 4), clamped 10–90 %, shown on the "Fuir (xx %)" button.
+     - Success: the fight ends (both defenses reset), the fleer moves to the escape cell (pickups and traps apply), then it is the enemy's turn.
+     - Failure: the action is lost and the fight continues — the enemy plays next.
+     - No other cost (owner's decision). A fight now ends with a death **or** a successful flee.
    - **Defend**: the attacker enters defense; the next hit they receive is halved.
-3. After each action (500 ms), if the target's health is 0 the attacker wins (`gameover`); otherwise roles swap.
+3. After each action (500 ms), if the target's health is 0 the attacker wins (`gameover`); otherwise roles swap. A successful flee ends the fight immediately.
 4. At the end: "Nouvelle partie" starts a new game in place with the same configuration (board size, item counts, game mode); characters and placements are drawn again. "Quitter" returns to the menu (configuration reset to defaults).
 
 ## AI
@@ -74,7 +78,7 @@ When the AI is the attacker (fight start or new round), it acts 1500 ms later; t
 - **Easy**: attack with 70 % probability, otherwise defend.
 - **Normal**, by priority:
   1. Attack if the hit kills the enemy (damage halved if the enemy is defending).
-  2. Otherwise defend if the enemy's next hit can kill the AI and the AI is not already defending.
+  2. Otherwise, if the enemy's next hit can kill the AI: flee when the flee chance is at least 50 % and an escape cell exists, else defend (unless already defending).
   3. Otherwise attack.
 - **Trained** ("IA Entraînée"): uses the models saved from the training page ("Utiliser dans le jeu", stored in the browser): one movement model — evolved weights or neural network, whichever was saved last — and the Q-learning fight table. For each missing model it plays like Normal.
 

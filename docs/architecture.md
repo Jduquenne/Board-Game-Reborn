@@ -156,6 +156,7 @@ Hash-based (`#menu`, `#options`, `#game`, `#training`, `#balance`); default rout
 | `fight:start` | GameEngine | `{ attacker, target }` |
 | `fight:attack` | FightEngine | `{ attacker, target, damage, critical, dodged }` |
 | `fight:defend` | FightEngine | `{ attacker, target }` |
+| `fight:flee` | FightEngine | `{ fleer, enemy, success, chance }` (on success followed by the move's events and `turn:changed`, no `fight:round-end`) |
 | `fight:round-end` | FightEngine | `{ nextAttacker, nextTarget }` |
 | `fight:end` | FightEngine | `{ winner, loser }` |
 | `state:changed` | Store | full `state` |

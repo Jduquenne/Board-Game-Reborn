@@ -144,7 +144,7 @@ Each character's exact stats are derived from its class and the common budget, t
 
 1. ✅ Stats model (HP, STR, AGI, INT, LCK, PM) + Strength in the damage formula — done 2026-10-08 (all characters at 0, so no gameplay change yet; Strength editable in the Balance lab).
 2. ✅ Agility criticals and Luck dodge (seeded randomness in the rules) — done 2026-10-08 (`applyAttack(state, rng)`; no draw when both chances are 0; dodge and critical shown in the fight banner; Agility and Luck editable in the Balance lab).
-3. **Flee** action with Luck against tackle (rules, UI, AIs).
+3. ✅ **Flee** action with Luck against tackle (rules, UI, AIs) — done 2026-10-08 (`applyFlee`, escape cell = farthest reachable cell not next to the enemy; "Fuir (xx %)" button; Normal AI flees when the next enemy hit is lethal and the chance ≥ 50 %; Q-learning gets a 3rd action; defend's +10 % flee bonus from v0.2 not implemented).
 4. Weapon types.
 5. Classes, character stats, balancing in the lab.
 6. Anti-stalemate and first-player rules.

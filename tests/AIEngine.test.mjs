@@ -13,7 +13,7 @@ let events;
 
 beforeEach(() => {
     mock.timers.enable({ apis: ['setTimeout'] });
-    events = recordEvents(['fight:attack', 'fight:defend', 'fight:start']);
+    events = recordEvents(['fight:attack', 'fight:defend', 'fight:flee', 'fight:start']);
     aiEngine.start();
 });
 
@@ -117,9 +117,11 @@ test('normal: otherwise moves closer to the enemy', () => {
 // ─── Combat ───────────────────────────────────────────────────────────────────
 
 // Joueur 1 (IA) attaque le joueur 0 (humain)
-function aiFight({ aiMode = 'normal', human = {}, ai = {}, event = 'fight:start' } = {}) {
+// cornered : l'IA est coincée (obstacles autour d'elle) → aucune case de repli, donc pas de fuite possible
+function aiFight({ aiMode = 'normal', human = {}, ai = {}, event = 'fight:start', cornered = false } = {}) {
     setBoard({
         aiMode,
+        setup: cornered ? cells => { cells[0][2].decor = DECOR.OBSTACLE; cells[1][1].decor = DECOR.OBSTACLE; } : undefined,
         players: [
             { row: 0, col: 0, name: 'Humain', ...human },
             { row: 0, col: 1, name: 'IA', isAI: true, ...ai },
@@ -130,7 +132,7 @@ function aiFight({ aiMode = 'normal', human = {}, ai = {}, event = 'fight:start'
     eventBus.emit(event, event === 'fight:start' ? { attacker } : { nextAttacker: attacker });
 }
 
-const fightActions = () => events.names().filter(n => n === 'fight:attack' || n === 'fight:defend');
+const fightActions = () => events.names().filter(n => ['fight:attack', 'fight:defend', 'fight:flee'].includes(n));
 
 test('the AI waits before acting in a fight', () => {
     aiFight();
@@ -167,24 +169,45 @@ test('normal fight: takes the enemy defense into account for a lethal hit', () =
     aiFight({
         human: { health: 30, defense: true, weapon: weapon(40) },
         ai:    { health: 20, weapon: weapon(35) },
+        cornered: true,
     });
     mock.timers.tick(FIGHT_THINK_DELAY);
-    assert.deepEqual(fightActions(), ['fight:defend'], '35 / 2 = 17 < 30, and the enemy can kill the AI');
+    assert.deepEqual(fightActions(), ['fight:defend'], '35 / 2 = 17 < 30, and the enemy can kill the AI (no escape)');
 });
 
-test('normal fight: defends when the next enemy hit is lethal', () => {
+test('normal fight: flees when the next enemy hit is lethal and an escape exists', () => {
     aiFight({
         human: { health: 100, weapon: weapon(40) },
+        ai:    { health: 40, weapon: weapon(20) },
+    });
+    mock.timers.tick(FIGHT_THINK_DELAY);
+    assert.deepEqual(fightActions(), ['fight:flee'], 'flee chance 50 % with no Luck / Agility');
+});
+
+test('normal fight: does not flee when the chance is below one in two', () => {
+    aiFight({
+        human: { health: 100, weapon: weapon(40), agility: 10 },  // tacle 10 → 2 / 14 ≈ 14 %
         ai:    { health: 40, weapon: weapon(20) },
     });
     mock.timers.tick(FIGHT_THINK_DELAY);
     assert.deepEqual(fightActions(), ['fight:defend']);
 });
 
-test('normal fight: attacks when already defending', () => {
+test('normal fight: defends when the next enemy hit is lethal and it cannot flee', () => {
+    aiFight({
+        human: { health: 100, weapon: weapon(40) },
+        ai:    { health: 40, weapon: weapon(20) },
+        cornered: true,
+    });
+    mock.timers.tick(FIGHT_THINK_DELAY);
+    assert.deepEqual(fightActions(), ['fight:defend']);
+});
+
+test('normal fight: attacks when already defending and it cannot flee', () => {
     aiFight({
         human: { health: 100, weapon: weapon(40) },
         ai:    { health: 40, defense: true, weapon: weapon(20) },
+        cornered: true,
     });
     mock.timers.tick(FIGHT_THINK_DELAY);
     assert.deepEqual(fightActions(), ['fight:attack']);
@@ -224,7 +247,7 @@ test('stop() cancels a pending action', () => {
 
 test('trained mode: the AI fights with the model saved by the training page', () => {
     // Modèle qui préfère toujours se défendre, stocké comme le fait la page d'entraînement
-    const model = { actions: ['attack', 'defend'], table: { '10|10|0|0': [0, 1] } };
+    const model = { actions: ['attack', 'defend', 'flee'], table: { '10|10|0|0|5': [0, 1, 0] } };
     globalThis.localStorage = { getItem: key => (key === 'bgr.fightModel' ? JSON.stringify(model) : null), setItem: () => {} };
     aiEngine.stop();
     aiEngine.start(); // recharge le modèle

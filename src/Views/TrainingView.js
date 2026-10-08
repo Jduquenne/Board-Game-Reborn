@@ -112,6 +112,7 @@ export class TrainingView extends Component {
                             <p class="trainingLegend">
                                 <span class="legendAttack">■ attaquer</span>
                                 <span class="legendDefend">■ se défendre</span>
+                                <span class="legendFlee">■ fuir</span>
                                 <span class="legendUnknown">⬚ jamais vu</span>
                                 · pâle = peu sûr · lignes : coups pour le tuer · colonnes : coups pour me tuer
                             </p>
@@ -262,22 +263,27 @@ export class TrainingView extends Component {
     }
 
     // Grille 10 × 10 : situation (coups pour le tuer × coups pour me tuer) → action apprise
+    // Pour chaque case, la situation « personne en défense » la plus fréquente (avec fuite possible en priorité)
     #renderPolicy(policy) {
-        const byKey = new Map(policy.map(p => [p.key, p]));
+        const ACTION_LABEL = { attack: 'attaquer', defend: 'se défendre', flee: 'fuir' };
+        const ACTION_CLASS = { attack: 'policyAttack', defend: 'policyDefend', flee: 'policyFlee' };
         const cells = [];
 
         for (let my = 1; my <= MAX_HITS; my++) {
             for (let enemy = 1; enemy <= MAX_HITS; enemy++) {
-                const entry = byKey.get(`${my}|${enemy}|0|0`);
+                const matches = policy.filter(p => p.key.startsWith(`${my}|${enemy}|0|0`));
+                const entry = matches.find(p => p.canFlee) ?? matches[0];
                 if (!entry) {
                     cells.push(`<span class="policyCell policyUnknown" title="Jamais rencontrée"></span>`);
                     continue;
                 }
-                const [attack, defend] = entry.values;
-                const confidence = Math.min(1, Math.abs(attack - defend) * 4);
-                cells.push(`<span class="policyCell ${entry.best === 'attack' ? 'policyAttack' : 'policyDefend'}"
+                // Confiance : écart entre la meilleure action et la suivante
+                const sorted = [...entry.values].sort((a, b) => b - a);
+                const confidence = Math.min(1, (sorted[0] - (sorted[1] ?? sorted[0])) * 4);
+                const qText = entry.values.map((v, i) => `Q ${ACTION_LABEL[this.#lastStats.actions?.[i]] ?? i} ${v.toFixed(2)}`).join(', ');
+                cells.push(`<span class="policyCell ${ACTION_CLASS[entry.best]}"
                     style="opacity: ${(0.35 + 0.65 * confidence).toFixed(2)}"
-                    title="${entry.text} → ${entry.best === 'attack' ? 'attaquer' : 'se défendre'} (Q attaque ${attack.toFixed(2)}, Q défense ${defend.toFixed(2)})"></span>`);
+                    title="${entry.text} → ${ACTION_LABEL[entry.best]} (${qText})"></span>`);
             }
         }
         this.query('#tr-policy').innerHTML = cells.join('');

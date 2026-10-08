@@ -13,13 +13,26 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Game design batch 3: flee
+
+- **Done**:
+  - `Rules.js`: `fleeChance` = (Luck + 2) / (Luck + enemy Agility + 4) clamped 10–90 %; `fleeDestination` = reachable cell farthest from the enemy and not next to it (null → flee impossible); `applyFlee(state, rng)`: success ends the fight (defenses reset) and moves the fleer with the normal move rule (pickups, traps, turn to the enemy), failure keeps the fight (the enemy plays next). Event `fight:flee`.
+  - `FightEngine.flee()` (no round end after a successful flee), `GameEnv` action `flee`, `AIEngine` plays `flee`.
+  - Normal AI: if the next enemy hit is lethal → flee when chance ≥ 50 % and an escape exists, else defend (unless already defending).
+  - Q-learning: 3rd action `flee`; observation gets the flee chance in tenths or `x` when impossible (key `myHits|enemyHits|myDef|enemyDef|flee`); `QTable.best/choose` take the allowed actions; strategy map shows "fuir" in green. Fight models saved before this change must be retrained.
+  - Fight banner: "Fuir (xx %)" button (only when an escape cell exists), messages "X s'enfuit !" / "X tente de fuir… mais Y le retient !".
+  - Docs: spec-gameplay, architecture (event), spec-game-design (batch 3 ✅), roadmap.
+- **Numbers**: 136/136 tests (11 new in `tests/Flee.test.mjs`, AI fight tests updated: flee when an escape exists, defend / attack when cornered). Balance (IA Normal, 400 games per pair): 41.8–55.9 %, movement points now matter — 1-PM characters 42–45 %, 4–5-PM characters 54–56 %. Fight learning with flee: 6 % → ~45 % after 5,000 games, plateau 40–47 % against Normal's rule (51 %) — the fight-learning test now checks clear progress (< 15 % → > 30 %). UI check: see below.
+- **Problems**: the learned fight policy no longer reaches the scripted rule (delayed consequences of fleeing) — for batch 7.
+- **Still open**: owner's check; re-run the health auto-tuning with flee (batch 5); batch 4 (weapon types).
+
 ## 2026-10-08 — Tuned health applied; game design batch 2: criticals and dodge
 
 - **Done**:
   - Owner approved: tuned health values written into `PLAYER_DATA` (owner's draft PM / Strength kept). Balance check: 42.6–58.5 % (IA Normal, 400 games per pair).
   - Batch 2: `Rules.js` constants and helpers `criticalChance` (Agility × 3 %, max 40 %, × 1.5) and `dodgeChance` (Luck × 3 %, max 35 %); `applyAttack(state, rng)` resolves dodge, then critical, then defense; no random draw when a chance is 0 (reproducibility); event `fight:attack` gets `critical` and `dodged`. `GameEnv` passes its seeded rng, the game uses `Math.random`. Fight banner: "Coup critique !" / "… esquive l'attaque". Balance lab: Agility and Luck columns, header row instead of per-input labels, fixed-width avatars and headers so the columns of the independent row grids line up.
   - Docs: spec-gameplay (attack resolution), architecture (event payload), spec-game-design (batch 2 ✅), roadmap.
-- **Numbers**: 123/123 tests (7 new: chances and caps, no draw at 0, dodge, failed dodge, critical before defense, strength × critical = 90, no critical on a dodge, balance effect of Agility / Luck and reproducibility). Balance screens 24/24 after two layout fixes. Full UI check: see below.
+- **Numbers**: 123/123 tests (7 new: chances and caps, no draw at 0, dodge, failed dodge, critical before defense, strength × critical = 90, no critical on a dodge, balance effect of Agility / Luck and reproducibility). Balance screens 24/24 after two layout fixes. Full UI check: 136/136.
 - **Problems**: tablet landscape clipped long names after adding two columns; header labels were misaligned (each row is its own grid) — both fixed, the misalignment was only visible on the screenshots.
 - **Still open**: owner's check; giving characters Agility / Luck (batch 5) — with randomness in fights, fine health tuning should now converge; batch 3 (flee).
 

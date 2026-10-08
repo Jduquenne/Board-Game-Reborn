@@ -1,4 +1,4 @@
-import { createGame, applyMove, applyPass, applyAttack, applyDefend, resolveRound, skipIfBlocked } from '../Engine/Rules.js';
+import { createGame, applyMove, applyPass, applyAttack, applyDefend, applyFlee, resolveRound, skipIfBlocked } from '../Engine/Rules.js';
 
 // Configuration par défaut d'une partie simulée (mêmes valeurs que les options par défaut du jeu)
 export const DEFAULT_CONFIG = Object.freeze({
@@ -16,7 +16,7 @@ export const DEFAULT_CONFIG = Object.freeze({
  * Actions possibles (step) :
  *   { type: 'move', row, col }  — en phase 'playing', vers une case isMovable
  *   { type: 'pass' }            — en phase 'playing', si aucune case n'est accessible
- *   { type: 'attack' } / { type: 'defend' } — en phase 'fighting' ; le round est résolu immédiatement
+ *   { type: 'attack' } / { type: 'defend' } / { type: 'flee' } — en phase 'fighting' ; le round est résolu immédiatement
  */
 export class GameEnv {
     #config;
@@ -67,7 +67,8 @@ export class GameEnv {
             case 'move':   result = applyMove(before, action.row, action.col); break;
             case 'pass':   result = applyPass(before); break;
             case 'attack':
-            case 'defend': result = this.#fightStep(before, action.type); break;
+            case 'defend':
+            case 'flee':   result = this.#fightStep(before, action.type); break;
             default:       throw new Error(`Unknown action type: ${action.type}`);
         }
 
@@ -83,8 +84,11 @@ export class GameEnv {
 
     // Action de combat + résolution immédiate du round (pas de délai d'affichage en simulation)
     #fightStep(state, type) {
-        const acted = type === 'attack' ? applyAttack(state, this.#rng) : applyDefend(state);
+        const acted = type === 'attack' ? applyAttack(state, this.#rng)
+                    : type === 'flee'   ? applyFlee(state, this.#rng)
+                    : applyDefend(state);
         if (acted.state === state) return acted;
+        if (acted.state.phase !== 'fighting') return acted; // fuite réussie : plus de round à résoudre
 
         const { attackerIndex, targetIndex } = state.fight;
         const resolved = resolveRound(acted.state, attackerIndex, targetIndex);
