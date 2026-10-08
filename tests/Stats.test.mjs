@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { store } from '../src/core/Store.js';
 import { createPlayer } from '../src/Models/Player.js';
 import { PlayersRepository } from '../src/Repository/PlayersRepository.js';
-import { weaponDamage } from '../src/Engine/Rules.js';
+import { weaponDamage, applyAttack, criticalChance, dodgeChance } from '../src/Engine/Rules.js';
 import { fightEngine } from '../src/Engine/FightEngine.js';
 import { normalAgent } from '../src/AI/ScriptedAgents.js';
 import { fightStateKey } from '../src/AI/FightPolicy.js';
@@ -87,4 +87,75 @@ test('strength makes a character stronger in the balance analysis', () => {
     const { characters } = runBalance({ characters: [char('Strong', 10), char('Weak', 0)], agent: normalAgent, gamesPerPair: 200 });
     assert.ok(characters[0].winRate > 0.65, `strong win rate ${characters[0].winRate}`);
     assert.equal(characters[0].strength, 10);
+});
+
+// ─── Lot 2 : coups critiques (Agilité) et esquive (Chance) ────────────────────
+
+
+const attackState = ({ attacker = {}, target = {} } = {}) => {
+    setBoard({ players: [
+        { row: 0, col: 0, weapon: createWeapon('w40', 40, 'w.png'), ...attacker },
+        { row: 0, col: 1, health: 200, ...target },
+    ] });
+    setFight(0, 1);
+    return store.state;
+};
+const fixedRng = value => {
+    const rng = () => { rng.calls++; return value; };
+    rng.calls = 0;
+    return rng;
+};
+
+test('critical and dodge chances grow by 3 % per point, up to a cap', () => {
+    assert.equal(criticalChance({ agility: 0 }), 0);
+    assert.ok(Math.abs(criticalChance({ agility: 5 }) - 0.15) < 1e-12);
+    assert.equal(criticalChance({ agility: 20 }), 0.40);
+    assert.ok(Math.abs(dodgeChance({ luck: 5 }) - 0.15) < 1e-12);
+    assert.equal(dodgeChance({ luck: 20 }), 0.35);
+    assert.equal(dodgeChance({}), 0, 'missing stat counts as 0');
+});
+
+test('without agility nor luck, no random draw is made', () => {
+    const rng = fixedRng(0);
+    const { events: emitted } = applyAttack(attackState(), rng);
+    assert.equal(rng.calls, 0);
+    assert.deepEqual([emitted[0].payload.damage, emitted[0].payload.critical, emitted[0].payload.dodged], [40, false, false]);
+});
+
+test('a dodge cancels the damage', () => {
+    const { state, events: emitted } = applyAttack(attackState({ target: { luck: 10 } }), fixedRng(0.1)); // 0,1 < 30 %
+    assert.equal(emitted[0].payload.dodged, true);
+    assert.equal(emitted[0].payload.damage, 0);
+    assert.equal(state.players[1].player.health, 200);
+});
+
+test('a dodge fails when the draw is above the chance', () => {
+    const { events: emitted } = applyAttack(attackState({ target: { luck: 10 } }), fixedRng(0.5)); // 0,5 ≥ 30 %
+    assert.equal(emitted[0].payload.dodged, false);
+    assert.equal(emitted[0].payload.damage, 40);
+});
+
+test('a critical hit multiplies the damage by 1.5, before the defense halves it', () => {
+    let r = applyAttack(attackState({ attacker: { agility: 10 } }), fixedRng(0.1)); // 0,1 < 30 %
+    assert.deepEqual([r.events[0].payload.critical, r.events[0].payload.damage], [true, 60]);
+
+    r = applyAttack(attackState({ attacker: { agility: 10 }, target: { defense: true } }), fixedRng(0.1));
+    assert.equal(r.events[0].payload.damage, 30, '60 halved');
+
+    r = applyAttack(attackState({ attacker: { agility: 10, strength: 10 } }), fixedRng(0.1));
+    assert.equal(r.events[0].payload.damage, 90, '40 × 1.5 (strength) × 1.5 (critical)');
+});
+
+test('a dodged attack cannot be critical', () => {
+    const { events: emitted } = applyAttack(attackState({ attacker: { agility: 10 }, target: { luck: 10 } }), fixedRng(0));
+    assert.deepEqual([emitted[0].payload.dodged, emitted[0].payload.critical, emitted[0].payload.damage], [true, false, 0]);
+});
+
+test('agility and luck make a character stronger, reproducibly', () => {
+    const char = (name, stats) => ({ name, health: 100, maxMove: 3, image: `${name}.png`, ...stats });
+    const run = stats => runBalance({ characters: [char('A', stats), char('B', {})], agent: normalAgent, gamesPerPair: 200, seed: 3 });
+
+    assert.ok(run({ agility: 10 }).characters[0].winRate > 0.55, 'agility');
+    assert.ok(run({ luck: 10 }).characters[0].winRate > 0.55, 'luck');
+    assert.deepEqual(run({ agility: 5, luck: 5 }), run({ agility: 5, luck: 5 }), 'same seed, same result');
 });

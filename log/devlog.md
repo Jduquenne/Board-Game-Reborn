@@ -13,6 +13,23 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-08 — Tuned health applied; game design batch 2: criticals and dodge
+
+- **Done**:
+  - Owner approved: tuned health values written into `PLAYER_DATA` (owner's draft PM / Strength kept). Balance check: 42.6–58.5 % (IA Normal, 400 games per pair).
+  - Batch 2: `Rules.js` constants and helpers `criticalChance` (Agility × 3 %, max 40 %, × 1.5) and `dodgeChance` (Luck × 3 %, max 35 %); `applyAttack(state, rng)` resolves dodge, then critical, then defense; no random draw when a chance is 0 (reproducibility); event `fight:attack` gets `critical` and `dodged`. `GameEnv` passes its seeded rng, the game uses `Math.random`. Fight banner: "Coup critique !" / "… esquive l'attaque". Balance lab: Agility and Luck columns, header row instead of per-input labels, fixed-width avatars and headers so the columns of the independent row grids line up.
+  - Docs: spec-gameplay (attack resolution), architecture (event payload), spec-game-design (batch 2 ✅), roadmap.
+- **Numbers**: 123/123 tests (7 new: chances and caps, no draw at 0, dodge, failed dodge, critical before defense, strength × critical = 90, no critical on a dodge, balance effect of Agility / Luck and reproducibility). Balance screens 24/24 after two layout fixes. Full UI check: see below.
+- **Problems**: tablet landscape clipped long names after adding two columns; header labels were misaligned (each row is its own grid) — both fixed, the misalignment was only visible on the screenshots.
+- **Still open**: owner's check; giving characters Agility / Luck (batch 5) — with randomness in fights, fine health tuning should now converge; batch 3 (flee).
+
+## 2026-10-08 — Owner's first character draft; automatic health tuning
+
+- **Done**: the owner wrote a first draft in `PLAYER_DATA` (5 × 3 grid: health / PM trade-off × Strength 5 / 4 / 3) and asked for an adjustment as close to 50 % as possible while keeping different stats. Added `training/auto-balance.mjs` (adjusts health only, step × 0.7 per pass, keeps the best pass, checks on other maps, prints proposed lines without applying them).
+- **Numbers** (IA Normal, 400 games per pair): original characters 22–87 %; owner's draft 36.9–59.6 %; tuned 42.6–58.5 % (other maps: 43.1–59.0 %). Without damping the tuning oscillated between 13 % and 20 % worst gap.
+- **Problems**: exact convergence is impossible with deterministic fights: damage values are integers, so a few HP change the number of hits needed (Thork 106 HP vs Vanessa 110 HP with 12 damage: 9 vs 10 hits → 36.6 % vs 59.5 %).
+- **Still open**: owner's decision to apply the tuned health values; batch 2 (criticals, dodge) should make fine balance possible.
+
 ## 2026-10-08 — Game design batch 1: stats model and Strength
 
 - **Done**: `createPlayer` gets `strength`, `agility`, `intelligence`, `luck` (0 by default); `PLAYER_DATA` entries may set them. `Rules.js`: `STRENGTH_BONUS` (5 %) and `weaponDamage(player, weapon)` = round(weapon damage × (1 + STR × 5 %)), used by attacks **and** by every AI (normal agent's edge / weapon / lethal checks, fight observation, movement features, neural inputs) so they reason on real damage. Balance analysis and lab: Strength column (editable, copied with the stats); other stats will be added with the batches that give them an effect. Sidebar: line "FOR · AGI · INT · CHA". Docs: architecture (data model), spec-gameplay (stats, attack formula), spec-game-design (batch 1 ✅), conventions (add a character), roadmap.

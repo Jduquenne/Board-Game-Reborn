@@ -68,7 +68,8 @@ export function* balanceSteps({ characters, agent, gamesPerPair = 100, seed = 1,
                 .filter(v => v.rate !== null)
                 .sort((a, b) => b.rate - a.rate);
             return {
-                name: c.name, health: c.health, maxMove: c.maxMove, strength: c.strength ?? 0,
+                name: c.name, health: c.health, maxMove: c.maxMove,
+                strength: c.strength ?? 0, agility: c.agility ?? 0, luck: c.luck ?? 0,
                 winRate: rates.reduce((a, b) => a + b, 0) / Math.max(1, rates.length),
                 best: vs[0] ?? null,
                 worst: vs.at(-1) ?? null,

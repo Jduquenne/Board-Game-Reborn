@@ -117,6 +117,14 @@ node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/balance.mjs --games
 
 Same analysis as the Balance lab page (both use `src/AI/Balance.js`). Every character plays every other one (`--games` per pair, seats alternated) with the **same AI on both sides**, so only the characters differ. Prints each character's average win rate, best / worst matchup, draws and first-player advantage; writes the full matrix to `../BoardGameReborn-output/training/balance-<agent>.csv`. ✅ Verified 2026-10-08: 42,000 games in 6 s with `normal`, ~3 min with `champion`. Sanity check: the 7 characters with identical stats (100 HP / 3 PM) all land at 48–50 % with `normal`.
 
+Automatic health tuning (keeps each character's PM and Strength, adjusts health only):
+
+```bash
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/auto-balance.mjs --games 400 --passes 14 [--agent normal|champion]
+```
+
+Prints the spread per pass (step size × 0.7 each pass, best pass kept), checks the result on other maps (seed + 1000) and prints proposed `PLAYER_DATA` lines — **nothing is applied**. ✅ Verified 2026-10-08 on the owner's first draft: 36.9–59.6 % → 42.6–58.5 % (check on other maps: 43.1–59.0 %). With deterministic fights, balance moves by steps (1 HP can add one hit to take), so it cannot converge exactly; randomness in fights (batch 2) should smooth it.
+
 ## Build, lint, format
 
 None exist.

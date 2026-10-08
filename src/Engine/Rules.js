@@ -20,6 +20,18 @@ export const TRAP_DAMAGE = 20;
 // Force : chaque point augmente les dégâts de l'arme de 5 % (docs/spec-game-design.md §3)
 export const STRENGTH_BONUS = 0.05;
 
+// Agilité : chance de coup critique (3 % par point, 40 % max), qui multiplie les dégâts par 1,5
+export const CRITICAL_PER_AGILITY = 0.03;
+export const CRITICAL_MAX         = 0.40;
+export const CRITICAL_MULTIPLIER  = 1.5;
+
+// Chance : chance d'esquiver complètement un coup (3 % par point, 35 % max)
+export const DODGE_PER_LUCK = 0.03;
+export const DODGE_MAX      = 0.35;
+
+export const criticalChance = player => Math.min(CRITICAL_MAX, (player.agility ?? 0) * CRITICAL_PER_AGILITY);
+export const dodgeChance    = player => Math.min(DODGE_MAX, (player.luck ?? 0) * DODGE_PER_LUCK);
+
 /**
  * Dégâts d'une arme entre les mains d'un joueur (avant défense) :
  *   arrondi( dégâts de l'arme × (1 + Force × 5 %) )
@@ -140,8 +152,16 @@ export function skipIfBlocked(state) {
     return passTurn({ ...state, activePlayerIndex: nextIndex(state.activePlayerIndex, state.players) }, [], true);
 }
 
-// Attaque : dégâts de l'arme (avec la Force), divisés par 2 si la cible se défend ; les défenses sont consommées
-export function applyAttack(state) {
+/**
+ * Attaque. Ordre de résolution :
+ *   1. esquive  : la cible esquive avec la chance « Chance × 3 % » → 0 dégât ;
+ *   2. critique : sinon, l'attaquant fait un critique avec la chance « Agilité × 3 % » → dégâts × 1,5 ;
+ *   3. défense  : si la cible se défend, dégâts divisés par 2 (arrondi inférieur).
+ * Les défenses des deux joueurs sont consommées. Aucun tirage n'est fait quand une chance vaut 0
+ * (les parties sans Agilité ni Chance restent exactement reproductibles).
+ * @param {() => number} rng  aléatoire (graine possible en simulation, Math.random en jeu)
+ */
+export function applyAttack(state, rng = Math.random) {
     const { fight, players, phase } = state;
     if (!fight || phase !== 'fighting') return unchanged(state);
 
@@ -149,8 +169,17 @@ export function applyAttack(state) {
     const attacker = players[attackerIndex];
     const target   = players[targetIndex];
 
-    let damage = weaponDamage(attacker.player);
-    if (target.player.defense) damage = Math.floor(damage / 2);
+    const dodgeP    = dodgeChance(target.player);
+    const criticalP = criticalChance(attacker.player);
+    const dodged    = dodgeP > 0 && rng() < dodgeP;
+    const critical  = !dodged && criticalP > 0 && rng() < criticalP;
+
+    let damage = 0;
+    if (!dodged) {
+        damage = weaponDamage(attacker.player);
+        if (critical) damage = Math.round(damage * CRITICAL_MULTIPLIER);
+        if (target.player.defense) damage = Math.floor(damage / 2);
+    }
 
     const newHealth = Math.max(0, target.player.health - damage);
 
@@ -164,7 +193,7 @@ export function applyAttack(state) {
         state: { ...state, players: newPlayers },
         events: [{
             name: 'fight:attack',
-            payload: { attacker: newPlayers[attackerIndex], target: newPlayers[targetIndex], damage },
+            payload: { attacker: newPlayers[attackerIndex], target: newPlayers[targetIndex], damage, critical, dodged },
         }],
     };
 }

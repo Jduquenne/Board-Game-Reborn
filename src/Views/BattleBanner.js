@@ -14,8 +14,8 @@ export class BattleBanner extends Component {
             setTimeout(() => this.#setBannerActionChoice(attacker, target), 1000);
         });
 
-        this.listen('fight:attack', ({ attacker, target, damage }) => {
-            this.#setBannerDamage(attacker, target, damage);
+        this.listen('fight:attack', ({ attacker, target, damage, critical, dodged }) => {
+            this.#setBannerDamage(attacker, target, damage, { critical, dodged });
         });
 
         this.listen('fight:defend', ({ attacker, target }) => {
@@ -74,13 +74,18 @@ export class BattleBanner extends Component {
         this.root.querySelector('#btn-defend').addEventListener('click', () => fightEngine.defend());
     }
 
-    #setBannerDamage(attacker, target, damage) {
+    // Résultat d'une attaque : esquive (Chance de la cible), coup critique (Agilité de l'attaquant) ou coup normal
+    #setBannerDamage(attacker, target, damage, { critical = false, dodged = false } = {}) {
+        const text = dodged
+            ? `${target.player.name} <span class="bannerDodge">esquive</span> l'attaque de ${attacker.player.name} !`
+            : `${critical ? '<span class="bannerCritical">Coup critique !</span> ' : ''}${attacker.player.name} inflige
+                <span class="bannerDmg">${damage}</span>
+                dégâts à ${target.player.name} !`;
+
         this.root.innerHTML = `
             <h2 class="battleInfosText">
                 <img class="attackerImg" src="${AssetManager.player(attacker.player)}" alt="${attacker.player.name}">
-                ${attacker.player.name} inflige
-                <span class="bannerDmg">${damage}</span>
-                dégâts à ${target.player.name} !
+                ${text}
                 ${this.#hp(target)}
                 <img class="targetImg" src="${AssetManager.player(target.player)}" alt="${target.player.name}">
             </h2>

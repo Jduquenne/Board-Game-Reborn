@@ -93,7 +93,7 @@ Measured with `training/balance.mjs` (see devlog 2026-10-08): health dominates w
 
 Owner's wishes (2026-10-08):
 - 🟡 A visual **balance lab** in the AI training area (2026-10-08, [D-015](decisions.md#d-015--balance-lab-stats-edited-in-the-lab-only)): page `#balance`, editable health / movement points (lab only), win-rate bars, duel matrix, draws and first-player advantage, "Copier les stats". Awaiting the owner's check.
-- 🟡 Richer **game design**: more character stats, weapons suited to some stats, and a **flee action** in fights (owner's idea, 2026-10-08). Draft specification: [`spec-game-design.md`](spec-game-design.md) (v0.3: stats, flee rule, classes and batch order decided by the owner). Batch 1 (stats model + Strength) done 2026-10-08, awaiting the owner's check; next: batch 2 (Agility criticals, Luck dodge).
+- 🟡 Richer **game design**: more character stats, weapons suited to some stats, and a **flee action** in fights (owner's idea, 2026-10-08). Draft specification: [`spec-game-design.md`](spec-game-design.md) (v0.3: stats, flee rule, classes and batch order decided by the owner). Batch 1 (stats model + Strength) and batch 2 (Agility criticals, Luck dodge) done 2026-10-08; owner's draft characters applied with tuned health (42.6–58.5 %). Next: batch 3 (flee).
 
 ## Ideas / later
 

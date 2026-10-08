@@ -99,6 +99,7 @@ training/
 ├── train-move.mjs                 ← CLI: genetic evolution of the movement, progress table, champion weights
 ├── train-imitation.mjs            ← CLI: neural network imitating the champion, loss / accuracy / win rate per epoch
 ├── balance.mjs                    ← CLI: character balance analysis (uses src/AI/Balance.js, CSV matrix)
+├── auto-balance.mjs               ← CLI: tunes health to approach 50 % for everyone (proposal only)
                                      (the CLIs write their models to ../BoardGameReborn-output/training/)
 tools/
 └── ui-check.mjs                   ← responsive UI check with headless Chrome (D-009); screenshots in ../BoardGameReborn-output/ui-check/
@@ -153,7 +154,7 @@ Hash-based (`#menu`, `#options`, `#game`, `#training`, `#balance`); default rout
 | `trap:triggered` | GameEngine | `{ playerInfo }` |
 | `turn:skipped` | GameEngine | `{ playerInfo }` (blocked player, emitted before `turn:changed`) |
 | `fight:start` | GameEngine | `{ attacker, target }` |
-| `fight:attack` | FightEngine | `{ attacker, target, damage }` |
+| `fight:attack` | FightEngine | `{ attacker, target, damage, critical, dodged }` |
 | `fight:defend` | FightEngine | `{ attacker, target }` |
 | `fight:round-end` | FightEngine | `{ nextAttacker, nextTarget }` |
 | `fight:end` | FightEngine | `{ winner, loser }` |

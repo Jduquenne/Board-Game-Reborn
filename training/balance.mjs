@@ -26,7 +26,9 @@ const AGENT      = AGENT_NAME === 'champion'
     ? createWeightedMoveAgent(CHAMPION_MOVE_WEIGHTS, { name: 'champion' })
     : SCRIPTED_AGENTS[AGENT_NAME];
 
-const characters = PlayersRepository.findAll().map(p => ({ name: p.name, health: p.health, maxMove: p.maxMove, strength: p.strength, image: p.image }));
+const characters = PlayersRepository.findAll().map(p => ({
+    name: p.name, health: p.health, maxMove: p.maxMove, strength: p.strength, agility: p.agility, luck: p.luck, image: p.image,
+}));
 const pct = x => `${(x * 100).toFixed(1).padStart(5)} %`;
 
 const start = performance.now();

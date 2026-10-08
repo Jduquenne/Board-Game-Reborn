@@ -83,7 +83,7 @@ export class GameEnv {
 
     // Action de combat + résolution immédiate du round (pas de délai d'affichage en simulation)
     #fightStep(state, type) {
-        const acted = (type === 'attack' ? applyAttack : applyDefend)(state);
+        const acted = type === 'attack' ? applyAttack(state, this.#rng) : applyDefend(state);
         if (acted.state === state) return acted;
 
         const { attackerIndex, targetIndex } = state.fight;

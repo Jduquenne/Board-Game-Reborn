@@ -3,13 +3,24 @@ import { router } from '../core/Router.js';
 import { AssetManager } from '../AssetManager.js';
 import { PlayersRepository } from '../Repository/PlayersRepository.js';
 
-// Stats modifiables dans le labo (Agilité, Chance… arriveront avec les lots qui leur donnent un effet)
+// Stats modifiables dans le labo (l'Intelligence arrivera avec les sorts, quand elle aura un effet)
 const LIMITS = Object.freeze({
     health:   { min: 10, max: 500, step: 5 },
     maxMove:  { min: 1,  max: 8,   step: 1 },
     strength: { min: 0,  max: 10,  step: 1 },
+    agility:  { min: 0,  max: 10,  step: 1 },
+    luck:     { min: 0,  max: 10,  step: 1 },
 });
 const STATS = Object.keys(LIMITS);
+
+// Colonnes du tableau : libellé court + explication (infobulle et lecteur d'écran)
+const STAT_COLUMNS = [
+    { key: 'health',   label: 'PV',  title: 'Points de vie' },
+    { key: 'maxMove',  label: 'PM',  title: 'Points de mouvement' },
+    { key: 'strength', label: 'FOR', title: 'Force : +5 % de dégâts par point' },
+    { key: 'agility',  label: 'AGI', title: 'Agilité : 3 % de coup critique (×1,5) par point, 40 % max' },
+    { key: 'luck',     label: 'CHA', title: "Chance : 3 % d'esquive par point, 35 % max" },
+];
 
 // Seuils de couleur des barres : en dessous / au-dessus = trop faible / trop fort
 const LOW = 0.4, HIGH = 0.6;
@@ -20,7 +31,9 @@ const pct = x => `${Math.round(x * 100)} %`;
 // leur équilibre. Aucune logique d'IA ici : l'analyse tourne dans src/AI/balance.worker.js.
 export class BalanceView extends Component {
     #worker     = null;
-    #original   = PlayersRepository.findAll().map(p => ({ name: p.name, health: p.health, maxMove: p.maxMove, strength: p.strength, image: p.image }));
+    #original   = PlayersRepository.findAll().map(p => ({
+        name: p.name, health: p.health, maxMove: p.maxMove, strength: p.strength, agility: p.agility, luck: p.luck, image: p.image,
+    }));
     #characters = this.#original.map(c => ({ ...c }));
     #result     = null;   // dernier résultat d'analyse
     #analyzed   = null;   // stats utilisées pour ce résultat (pour savoir si elles ont changé depuis)
@@ -203,18 +216,10 @@ export class BalanceView extends Component {
                 <div class="balanceRow ${modified ? 'balanceModified' : ''}" title="${title}">
                     <img class="balanceAvatar" src="${AssetManager.player(c)}" alt="">
                     <span class="balanceName">${c.name}</span>
-                    <label class="balanceStat">PV
-                        <input type="number" data-index="${i}" data-stat="health" value="${c.health}"
-                            min="${LIMITS.health.min}" max="${LIMITS.health.max}" step="${LIMITS.health.step}" aria-label="Points de vie de ${c.name}">
-                    </label>
-                    <label class="balanceStat">PM
-                        <input type="number" data-index="${i}" data-stat="maxMove" value="${c.maxMove}"
-                            min="${LIMITS.maxMove.min}" max="${LIMITS.maxMove.max}" step="${LIMITS.maxMove.step}" aria-label="Points de mouvement de ${c.name}">
-                    </label>
-                    <label class="balanceStat" title="Force : +5 % de dégâts par point">FOR
-                        <input type="number" data-index="${i}" data-stat="strength" value="${c.strength}"
-                            min="${LIMITS.strength.min}" max="${LIMITS.strength.max}" step="${LIMITS.strength.step}" aria-label="Force de ${c.name}">
-                    </label>
+                    ${STAT_COLUMNS.map(col => `
+                        <input class="balanceInput" type="number" data-index="${i}" data-stat="${col.key}" value="${c[col.key]}"
+                            min="${LIMITS[col.key].min}" max="${LIMITS[col.key].max}" step="${LIMITS[col.key].step}"
+                            aria-label="${col.title} — ${c.name}">`).join('')}
                     <span class="balanceBarTrack ${stale ? 'balanceStale' : ''}">
                         ${res ? `<span class="balanceBar ${level}" style="width: ${(res.winRate * 100).toFixed(1)}%"></span>` : ''}
                         <span class="balanceMid"></span>
@@ -222,7 +227,15 @@ export class BalanceView extends Component {
                     <span class="balanceRate">${res ? pct(res.winRate) : '—'}</span>
                 </div>`;
         });
-        this.query('#bl-characters').innerHTML = rows.join('');
+        const header = `
+            <div class="balanceRow balanceHeader">
+                <span class="balanceAvatar"></span>
+                <span class="balanceName">Personnage</span>
+                ${STAT_COLUMNS.map(col => `<span class="balanceColHead" title="${col.title}">${col.label}</span>`).join('')}
+                <span class="balanceColHead">victoires</span>
+                <span></span>
+            </div>`;
+        this.query('#bl-characters').innerHTML = header + rows.join('');
         if (stale) this.#notice('Stats modifiées depuis l\'analyse : relance-la pour voir l\'effet.');
     }
 
@@ -257,7 +270,7 @@ export class BalanceView extends Component {
     // Stats actuelles, au format de PLAYER_DATA (src/Repository/PlayersRepository.js), dans le presse-papiers
     async #copy() {
         const lines = this.#characters.map(c =>
-            `    { name: '${c.name.replace(/'/g, "\\'")}', health: ${c.health}, image: '${c.image}', maxMove: ${c.maxMove}, strength: ${c.strength} },`);
+            `    { name: '${c.name.replace(/'/g, "\\'")}', health: ${c.health}, image: '${c.image}', maxMove: ${c.maxMove}, strength: ${c.strength}, agility: ${c.agility}, luck: ${c.luck} },`);
         const text = lines.join('\n');
         try {
             await navigator.clipboard.writeText(text);

@@ -43,7 +43,11 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
 
 1. The player who moved into the security zone attacks first.
 2. Each round, the attacker chooses **Attack** or **Defend**:
-   - **Attack**: deals the weapon's damage × (1 + Strength × 5 %), rounded (`weaponDamage` in `Rules.js`), to the target; halved (rounded down) if the target is defending. Defense flags of both players reset.
+   - **Attack**, resolved in this order (`applyAttack` in `Rules.js`):
+     1. **dodge**: the target dodges with a chance of Luck × 3 % (max 35 %) → 0 damage;
+     2. otherwise **critical hit**: chance of the attacker's Agility × 3 % (max 40 %) → damage × 1.5;
+     3. damage = weapon damage × (1 + Strength × 5 %), rounded (`weaponDamage`), × 1.5 on a critical, halved (rounded down) if the target is defending.
+     Defense flags of both players reset. No random draw is made when both chances are 0. The fight banner shows "Coup critique !" or "… esquive l'attaque".
    - **Defend**: the attacker enters defense; the next hit they receive is halved.
 3. After each action (500 ms), if the target's health is 0 the attacker wins (`gameover`); otherwise roles swap.
 4. At the end: "Nouvelle partie" starts a new game in place with the same configuration (board size, item counts, game mode); characters and placements are drawn again. "Quitter" returns to the menu (configuration reset to defaults).
@@ -88,7 +92,7 @@ When the AI is the attacker (fight start or new round), it acts 1500 ms later; t
 
 ## Character stats
 
-Every character has Health, PM and four combat stats (Strength, Agility, Intelligence, Luck — see [`spec-game-design.md`](spec-game-design.md)). Implemented so far (batch 1): **Strength** multiplies weapon damage by (1 + 5 % per point). Agility, Intelligence and Luck exist but have no effect yet. All current characters have 0 in every combat stat, so the game plays exactly as before. The sidebar shows the four stats (FOR · AGI · INT · CHA).
+Every character has Health, PM and four combat stats (Strength, Agility, Intelligence, Luck — see [`spec-game-design.md`](spec-game-design.md)). Implemented so far: **Strength** multiplies weapon damage by (1 + 5 % per point) (batch 1); **Agility** gives critical hits and **Luck** gives dodges (batch 2). Intelligence has no effect yet (future spells). Characters currently have Strength 3–5 and no Agility / Luck (owner's draft, health tuned on 2026-10-08). The sidebar shows the four stats (FOR · AGI · INT · CHA).
 
 ## Content
 
