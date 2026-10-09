@@ -254,6 +254,58 @@ export function applyDefend(state) {
     };
 }
 
+// ─── Sorts (lot 8) ────────────────────────────────────────────────────────────
+
+// Coût de chaque sort ; Soin : 10 + 3 × Intelligence PV (sans dépasser les PV de départ) ;
+// Entrave : la cible ne peut plus fuir pendant ses 3 prochaines actions de combat
+export const SPELL_COST       = 20;
+export const HEAL_BASE        = 10;
+export const HEAL_PER_INT     = 3;
+export const ROOT_ACTIONS     = 3;
+export const SPELLS           = ['heal', 'root'];
+
+export const healAmount = player => HEAL_BASE + HEAL_PER_INT * (player.intelligence ?? 0);
+
+// Sorts que le combattant actif peut lancer maintenant (assez de mana ; Soin inutile à PV pleins)
+export function castableSpells(state) {
+    const { fight, players } = state;
+    if (!fight) return [];
+    const caster = players[fight.attackerIndex].player;
+    if ((caster.mana ?? 0) < SPELL_COST) return [];
+    return SPELLS.filter(spell => spell !== 'heal' || caster.health < caster.maxHealth);
+}
+
+/**
+ * Lance un sort à la place de l'action du round. La défense du lanceur est consommée.
+ * Refusé si le sort n'est pas lançable (castableSpells).
+ */
+export function applySpell(state, spell) {
+    const { fight, players, phase } = state;
+    if (!fight || phase !== 'fighting' || !castableSpells(state).includes(spell)) return unchanged(state);
+
+    const { attackerIndex, targetIndex } = fight;
+    const caster = players[attackerIndex].player;
+    let amount = 0;
+
+    const newPlayers = players.map((p, i) => {
+        if (i === attackerIndex) {
+            const health = spell === 'heal' ? Math.min(caster.maxHealth, caster.health + healAmount(caster)) : caster.health;
+            amount = spell === 'heal' ? health - caster.health : ROOT_ACTIONS;
+            return { ...p, player: { ...caster, health, mana: caster.mana - SPELL_COST, defense: false } };
+        }
+        if (i === targetIndex && spell === 'root') return { ...p, player: { ...p.player, rooted: ROOT_ACTIONS } };
+        return p;
+    });
+
+    return {
+        state: { ...state, players: newPlayers },
+        events: [{
+            name: 'fight:spell',
+            payload: { caster: newPlayers[attackerIndex], target: newPlayers[targetIndex], spell, amount },
+        }],
+    };
+}
+
 // ─── Fuite (lot 3) ────────────────────────────────────────────────────────────
 
 // Chance de fuir : la Chance du fuyard contre le tacle (Agilité) de l'adversaire
@@ -275,6 +327,7 @@ export function fleeOptions(state) {
     if (!fight) return [];
 
     const fleer = players[fight.attackerIndex], enemy = players[fight.targetIndex];
+    if (fleer.player.rooted > 0) return []; // Entrave (lot 8) : impossible de fuir
     return getMovableCells(fleer.position, fleer.player.maxMove, cells, config)
         .filter(c => Math.abs(c.row - enemy.position.row) + Math.abs(c.col - enemy.position.col) > 1);
 }
@@ -337,7 +390,7 @@ export function applyFlee(state, rng = Math.random, target = null) {
     }
 
     // Le combat est fini : défenses remises à zéro, puis déplacement normal du fuyard vers sa case de repli
-    const calmed  = players.map(p => ({ ...p, player: { ...p.player, defense: false } }));
+    const calmed  = players.map(p => ({ ...p, player: { ...p.player, defense: false, rooted: 0 } }));
     const playing = refreshMarkings({ ...state, phase: 'playing', fight: null, players: calmed, activePlayerIndex: attackerIndex });
     const moved   = applyMove(playing, destination.row, destination.col);
     return { state: moved.state, events: [fleeEvent(moved.state), ...moved.events] };
@@ -356,8 +409,13 @@ export function resolveRound(state, attackerIndex, targetIndex) {
         };
     }
 
+    // Entrave : chaque action de combat du joueur entravé en consomme une
+    const newPlayers = attacker.player.rooted > 0
+        ? players.map((p, i) => (i === attackerIndex ? { ...p, player: { ...p.player, rooted: p.player.rooted - 1 } } : p))
+        : players;
+
     return {
-        state: { ...state, phase: 'fighting', fight: { attackerIndex: targetIndex, targetIndex: attackerIndex } },
+        state: { ...state, players: newPlayers, phase: 'fighting', fight: { attackerIndex: targetIndex, targetIndex: attackerIndex } },
         events: [{ name: 'fight:round-end', payload: { nextAttacker: target, nextTarget: attacker } }],
     };
 }
@@ -409,16 +467,21 @@ function passTurn(state, events, fromSkip = false) {
         nextState = refreshMarkings({ ...nextState, activePlayerIndex: next });
     }
 
-    // Mort subite : le joueur qui commence son tour perd des PV, et perd la partie à 0
-    const damage = suddenDeathDamage(turn);
-    if (damage > 0) {
-        const players = nextState.players.map((p, i) => i === next
-            ? { ...p, player: { ...p.player, health: Math.max(0, p.player.health - damage) } }
-            : p);
+    // Début de tour : le joueur récupère Intelligence points de mana (lot 8),
+    // puis la mort subite lui fait perdre des PV (lot 6) — à 0, il perd la partie
+    const starting = nextState.players[next].player;
+    const mana     = Math.min(starting.maxMana ?? 0, (starting.mana ?? 0) + (starting.intelligence ?? 0));
+    const damage   = suddenDeathDamage(turn);
+    if (damage > 0 || mana !== (starting.mana ?? 0)) {
+        const updated = { ...starting, mana, health: Math.max(0, starting.health - damage) };
+        const players = nextState.players.map((p, i) => (i === next ? { ...p, player: updated } : p));
         const cells = cloneCells(nextState.cells);
         const { row, col } = players[next].position;
-        cells[row][col].player = players[next].player;
+        cells[row][col].player = updated;
         nextState = { ...nextState, players, cells };
+    }
+    if (damage > 0) {
+        const players = nextState.players;
         out.push({ name: 'sudden-death:hit', payload: { playerInfo: players[next], damage, turn } });
 
         if (players[next].player.health <= 0) {

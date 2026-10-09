@@ -1,6 +1,6 @@
 import { store } from '../core/Store.js';
 import { eventBus } from '../core/EventBus.js';
-import { applyAttack, applyDefend, applyFlee, resolveRound, markEscapeCells, clearEscapeCells } from './Rules.js';
+import { applyAttack, applyDefend, applyFlee, applySpell, resolveRound, markEscapeCells, clearEscapeCells } from './Rules.js';
 
 // Délai en ms entre une action et la fin du round (laisse le temps d'afficher l'action)
 const ROUND_DELAY = 500;
@@ -14,6 +14,11 @@ class FightEngine {
 
     defend() {
         this.#act(applyDefend);
+    }
+
+    // Sort (lot 8) : 'heal' (Soin) ou 'root' (Entrave), à la place de l'action du round
+    castSpell(spell) {
+        this.#act(state => applySpell(state, spell));
     }
 
     // Fuite vers la case choisie { row, col } (joueur), ou vers la plus éloignée sans argument (IA)

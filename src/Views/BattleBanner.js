@@ -1,6 +1,6 @@
 import { Component } from '../core/Component.js';
 import { fightEngine } from '../Engine/FightEngine.js';
-import { fleeChance, fleeDestination } from '../Engine/Rules.js';
+import { fleeChance, fleeDestination, castableSpells, healAmount, SPELL_COST, ROOT_ACTIONS } from '../Engine/Rules.js';
 import { gameEngine } from '../Engine/GameEngine.js';
 import { store } from '../core/Store.js';
 import { AssetManager } from '../AssetManager.js';
@@ -22,6 +22,10 @@ export class BattleBanner extends Component {
         this.listen('fight:flee', ({ fleer, enemy, success }) => {
             this.#setFleeSelecting(false);
             this.#setBannerFlee(fleer, enemy, success);
+        });
+
+        this.listen('fight:spell', ({ caster, target, spell, amount }) => {
+            this.#setBannerSpell(caster, target, spell, amount);
         });
 
         this.listen('fight:defend', ({ attacker, target }) => {
@@ -93,13 +97,17 @@ export class BattleBanner extends Component {
     #setBannerActionChoice(attacker, target) {
         // Tour de l'IA : pas de boutons, AIEngine choisit l'action
         // Fuite : chance affichée (Chance contre tacle adverse), bouton absent sans case de repli
+        // Sorts (lot 8) : boutons seulement s'ils sont lançables (mana suffisant, Soin inutile à PV pleins)
         const canFlee = !!fleeDestination(store.state);
         const chance  = Math.round(fleeChance(attacker.player, target.player) * 100);
+        const spells  = castableSpells(store.state);
         const actions = attacker.player.isAI
             ? `${attacker.player.name} réfléchit…`
             : `<button class="btn" id="btn-attack">Attaquer</button>
                <button class="btn" id="btn-defend">Se défendre</button>
-               ${canFlee ? `<button class="btn" id="btn-flee" title="Ta Chance contre son tacle (Agilité)">Fuir (${chance} %)</button>` : ''}`;
+               ${canFlee ? `<button class="btn" id="btn-flee" title="Ta Chance contre son tacle (Agilité)">Fuir (${chance} %)</button>` : ''}
+               ${spells.includes('heal') ? `<button class="btn" id="btn-heal" title="${SPELL_COST} mana : rend ${healAmount(attacker.player)} PV">Soin</button>` : ''}
+               ${spells.includes('root') ? `<button class="btn" id="btn-root" title="${SPELL_COST} mana : ${target.player.name} ne peut plus fuir pendant ${ROOT_ACTIONS} actions">Entrave</button>` : ''}`;
 
         this.root.innerHTML = `
             <h2 class="battleInfosText">
@@ -115,6 +123,22 @@ export class BattleBanner extends Component {
         this.root.querySelector('#btn-attack').addEventListener('click', () => fightEngine.attack());
         this.root.querySelector('#btn-defend').addEventListener('click', () => fightEngine.defend());
         this.root.querySelector('#btn-flee')?.addEventListener('click', () => this.#setBannerFleeChoice(attacker, target));
+        this.root.querySelector('#btn-heal')?.addEventListener('click', () => fightEngine.castSpell('heal'));
+        this.root.querySelector('#btn-root')?.addEventListener('click', () => fightEngine.castSpell('root'));
+    }
+
+    // Sort lancé (lot 8) : Soin ou Entrave
+    #setBannerSpell(caster, target, spell, amount) {
+        const text = spell === 'heal'
+            ? `${caster.player.name} se soigne : <span class="bannerDodge">+${amount} PV</span> !`
+            : `${caster.player.name} entrave ${target.player.name} : <span class="bannerDmg">plus de fuite</span> pendant ${amount} actions !`;
+        this.root.innerHTML = `
+            <h2 class="battleInfosText">
+                <img class="attackerImg" src="${AssetManager.player(caster.player)}" alt="${caster.player.name}">
+                ${text}
+                <img class="targetImg" src="${AssetManager.player(target.player)}" alt="${target.player.name}">
+            </h2>
+        `;
     }
 
     // Résultat d'une tentative de fuite ; réussie, le combat est fini et la bannière se ferme
@@ -183,6 +207,7 @@ export class BattleBanner extends Component {
 
     // Points de vie affichés pendant le combat
     #hp(playerInfo) {
-        return `<span class="bannerHp">${playerInfo.player.health} PV</span>`;
+        const { health, mana, maxMana } = playerInfo.player;
+        return `<span class="bannerHp">${health} PV${maxMana ? ` · ${mana} mana` : ''}</span>`;
     }
 }

@@ -103,9 +103,10 @@ class AIEngine {
         if (!state.players[state.fight.attackerIndex].player.isAI) return;
 
         const action = agent.chooseFightAction(state, () => Math.random());
-        if (action === 'attack')     fightEngine.attack();
-        else if (action === 'flee')  fightEngine.flee();
-        else                         fightEngine.defend();
+        if (action === 'attack')                        fightEngine.attack();
+        else if (action === 'flee')                     fightEngine.flee();
+        else if (action === 'heal' || action === 'root') fightEngine.castSpell(action);
+        else                                            fightEngine.defend();
     }
 }
 

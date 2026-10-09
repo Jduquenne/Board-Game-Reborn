@@ -27,7 +27,7 @@ const AGENT      = AGENT_NAME === 'champion'
     : SCRIPTED_AGENTS[AGENT_NAME];
 
 const characters = PlayersRepository.findAll().map(p => ({
-    name: p.name, characterClass: p.characterClass, health: p.health, maxMove: p.maxMove, strength: p.strength, agility: p.agility, luck: p.luck, image: p.image,
+    name: p.name, characterClass: p.characterClass, health: p.health, maxMove: p.maxMove, strength: p.strength, agility: p.agility, intelligence: p.intelligence, luck: p.luck, image: p.image,
 }));
 const pct = x => `${(x * 100).toFixed(1).padStart(5)} %`;
 

@@ -25,7 +25,9 @@ test('reset starts a new game in the playing phase', () => {
     assert.equal(state.players.length, 2);
     assert.equal(env.turns, 0);
     assert.equal(env.done, false);
-    assert.equal(env.currentPlayerIndex, 0);
+    // Qui commence dépend de l'initiative des personnages tirés (lot 6)
+    const [a, b] = state.players.map(p => p.player.initiative);
+    if (a !== b) assert.equal(env.currentPlayerIndex, a > b ? 0 : 1);
 });
 
 test('the same seed generates the same board', () => {

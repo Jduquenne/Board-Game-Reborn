@@ -1,4 +1,4 @@
-import { createGame, applyMove, applyPass, applyAttack, applyDefend, applyFlee, resolveRound, skipIfBlocked } from '../Engine/Rules.js';
+import { createGame, applyMove, applyPass, applyAttack, applyDefend, applySpell, applyFlee, resolveRound, skipIfBlocked } from '../Engine/Rules.js';
 
 // Configuration par défaut d'une partie simulée (mêmes valeurs que les options par défaut du jeu)
 export const DEFAULT_CONFIG = Object.freeze({
@@ -68,7 +68,9 @@ export class GameEnv {
             case 'pass':   result = applyPass(before); break;
             case 'attack':
             case 'defend':
-            case 'flee':   result = this.#fightStep(before, action.type); break;
+            case 'flee':
+            case 'heal':
+            case 'root':   result = this.#fightStep(before, action.type); break;
             default:       throw new Error(`Unknown action type: ${action.type}`);
         }
 
@@ -86,7 +88,8 @@ export class GameEnv {
     #fightStep(state, type) {
         const acted = type === 'attack' ? applyAttack(state, this.#rng)
                     : type === 'flee'   ? applyFlee(state, this.#rng)
-                    : applyDefend(state);
+                    : type === 'defend' ? applyDefend(state)
+                    : applySpell(state, type);
         if (acted.state === state) return acted;
         if (acted.state.phase !== 'fighting') return acted; // fuite réussie : plus de round à résoudre
 

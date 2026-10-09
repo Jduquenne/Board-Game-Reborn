@@ -1,5 +1,5 @@
 import { normalAgent } from './ScriptedAgents.js';
-import { weaponDamage, fleeChance, fleeDestination } from '../Engine/Rules.js';
+import { weaponDamage, fleeChance, fleeDestination, castableSpells } from '../Engine/Rules.js';
 
 /*
  * Ce que l'IA « voit » d'un combat pour décider entre attaquer et se défendre.
@@ -19,8 +19,12 @@ import { weaponDamage, fleeChance, fleeDestination } from '../Engine/Rules.js';
 
 export const FIGHT_ACTIONS = ['attack', 'defend', 'flee'];
 
-// Actions possibles : pas de fuite sans case de repli (Rules.fleeDestination)
-export const allowedFightActions = state => (fleeDestination(state) ? FIGHT_ACTIONS : ['attack', 'defend']);
+// Actions possibles : pas de fuite sans case de repli (Rules.fleeDestination) ; sorts selon le mana (lot 8).
+// La table Q ne connaît pas les sorts (FIGHT_ACTIONS) : ses agents filtrent sur leurs propres actions.
+export const allowedFightActions = state => [
+    ...(fleeDestination(state) ? FIGHT_ACTIONS : ['attack', 'defend']),
+    ...castableSpells(state),
+];
 
 const MAX_HITS = 10;
 

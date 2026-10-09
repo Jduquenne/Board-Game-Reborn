@@ -66,6 +66,16 @@ const SCREENS = [
         eventBus.emit('fight:start', { attacker: a, target: t });
         await new Promise(r => setTimeout(r, 1300));
     })()`],
+    // Mage blessé (lot 8) : jusqu'à 5 boutons (Attaquer, Se défendre, Fuir, Soin, Entrave)
+    ['fight-mage', '#game', `(async () => {${fightSetup}
+        store.setState(s => ({
+            phase: 'fighting', fight: { attackerIndex: 0, targetIndex: 1 },
+            players: s.players.map((p, i) => i === 0
+                ? { ...p, player: { ...p.player, isAI: false, health: 40, intelligence: 7, mana: 70, maxMana: 70 } } : p),
+        }));
+        eventBus.emit('fight:start', { attacker: store.state.players[0], target: t });
+        await new Promise(r => setTimeout(r, 1300));
+    })()`],
     ['flee-choice', '#game', `(async () => {${fightSetup}
         store.setState(() => ({ phase: 'fighting', fight: { attackerIndex: 0, targetIndex: 1 } }));
         eventBus.emit('fight:start', { attacker: a, target: t });

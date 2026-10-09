@@ -90,14 +90,15 @@ Strength multiplies every weapon's damage, so a strong character wants the heavi
 
 Ranged weapons (attack from 2 cells) are kept for later: they need new rules.
 
-## 6. Intelligence, mana and spells (future)
+## 6. Intelligence, mana and spells (batch 8, decided 2026-10-09)
 
-Intelligence gives mana (INT × 10). Spells are a later batch; first ideas from the owner:
+Owner's choices: spells **in fights only** (they replace the round's action), **Heal + Hinder**, mana **regenerates**, new **Mage** class.
 
-- **Heal**: restore health, costs mana.
-- **Hinder** (entrave): e.g. remove the enemy's PM for a turn, or prevent them from fleeing.
-
-Until spells exist, Intelligence has **no effect**: characters should not spend points in it yet (the balance lab will show it).
+- **Mana** = INT × 10, full at the start; +INT at the start of each of the character's turns on the board.
+- **Heal** (Soin): 20 mana, restores 10 + 3 × INT health, up to the starting health.
+- **Hinder** (Entrave, magic roots): 20 mana, the enemy cannot flee during its next 3 fight actions; ends with the fight.
+- **Mage** class: STR 1, AGI 1, INT 6, LCK 1, PM 3 (budget STR + AGI + INT + LCK = 9). Khadgar (ex-Brute), Gunnar (ex-Ent) and Jail (ex-Thief) became Mages.
+- Ideas for later: spells on the board (instead of moving); hinder that removes PM; Q-learning with spells (the observation would need the mana).
 
 ## 7. Characters and classes (proposal)
 
@@ -109,7 +110,7 @@ Each character gets the same **budget of stat points** (exact budget to be tuned
 | Ent | HP, AGI (tackle) | STR | grabs its victims with roots: enemies can hardly flee, then it wears them down |
 | Thief (Voleur) | LCK, PM | HP, STR | dodges, flees, comes back with a better weapon |
 | Duellist (Duelliste) | AGI, STR | HP, LCK | critical hits, ends fights quickly |
-| Mage (later) | INT | HP | spells (once implemented) |
+| Mage | INT | STR, AGI | heals, hinders the enemy's escape (batch 8) |
 
 Mapping of the 15 characters — **random**, as asked by the owner (shuffle with seed 2026, then dealt in turn; can be changed at any time):
 
@@ -149,7 +150,7 @@ Each character's exact stats are derived from its class and the common budget, t
 5. ✅ Classes, character stats, balancing — done 2026-10-09: `characterClass` on characters; class templates (budget STR + AGI + LCK = 9): Brute 7/1/1 PM 2, Ent 2/6/1 PM 2, Thief 1/2/6 PM 5, Duellist 4/5/0 PM 3; each character moves one point (seed 2026). At 100 HP (IA Normal): Thief 57.5 %, Duellist 49.7 %, Brute 48.1 %, Ent 41.0 % — Thief beats every class, no counters yet. Auto-tuned health applied (owner): Ent 106–115, Thief 91–96, others 100–102 → 46.7–51.2 % per character, every class against class between 46 and 52 % (flat: no rock–paper–scissors yet).
 6. ✅ Anti-stalemate and first-player rules — done 2026-10-09 (owner: initiative **A**, derived = AGI + LCK + 2 × PM, tie → coin flip; **sudden death** from turn 80: 5 HP, +5 every 20 turns, at the start of each turn). Effect (IA Normal): draws 2.0 % → 0 %; the first-player advantage stays (≈ 55 %) but goes to high-initiative characters (Thief 54.4 %, Brute 45.4 % before re-tuning health).
 7. ✅ Retrain the AIs — done 2026-10-09: the genetic movement champion still beats IA Normal 70.5 % on the new rules; a retrained one is not better (head-to-head 47–50 %) → kept, imitation not redone. Fight Q-learning: γ 0.95 → 1 (plateau 46.1 % → 50.2 %, mean of 5 seeds; IA Normal ≈ 49.5 %); `train-fight.mjs` defaults to 100,000 games.
-8. Later: Intelligence, mana and spells.
+8. ✅ Intelligence, mana and spells — done 2026-10-09 (see §6). At 100 HP the Mages average 49.8 % (Jail 55.2 %, Khadgar 52.1 %, Gunnar 41.9 %: INT 7 = 3 spells, INT 5 = 2); spells used ≈ 1.2 heals (≈ 29 HP) and 0.6 hinders per fight involving a Mage. Auto-tuned health proposed, waiting for the owner.
 
 Each batch: tests, Balance lab measurement, owner check in the browser.
 

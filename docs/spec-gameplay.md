@@ -43,7 +43,7 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
 ## Fight
 
 1. The player who moved into the security zone attacks first.
-2. Each round, the attacker chooses **Attack** or **Defend**:
+2. Each round, the attacker chooses **Attack**, **Defend**, **Flee** or a **spell**:
    - **Attack**, resolved in this order (`applyAttack` in `Rules.js`):
      1. **dodge**: the target dodges with a chance of Luck × 3 % (max 35 %) → 0 damage;
      2. otherwise **critical hit**: chance of the attacker's Agility × 3 % (max 40 %) → damage × 1.5; a **light** weapon adds +10 % and raises the cap to 50 %;
@@ -55,6 +55,11 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
      - Failure: the action is lost and the fight continues — the enemy plays next.
      - No other cost (owner's decision). A fight now ends with a death **or** a successful flee.
    - **Defend**: the attacker enters defense; the next hit they receive is halved.
+   - **Spells** (batch 8, `applySpell`, buttons "Soin" / "Entrave" shown only when castable — `castableSpells`): each costs 20 mana and replaces the round's action; the caster's defense is consumed.
+     - **Soin** (heal): restores 10 + 3 × Intelligence health, up to the starting health (not offered at full health).
+     - **Entrave** (root): the enemy cannot flee during its next 3 fight actions (`rooted`; no escape cell, no "Fuir" button); cleared when the fight ends.
+     - **Mana**: Intelligence × 10, full at the start, +Intelligence at the start of each of the player's turns on the board (up to the maximum). Shown in the sidebar ("Mana : 60 / 70") and next to the health in the fight banner.
+     - Normal AI: heals when the next enemy hit is lethal and the heal lets it survive (before trying to flee); roots an enemy it can finish in two hits. Q-learning fight models do not use spells (their actions are attack / defend / flee).
 3. After each action (500 ms), if the target's health is 0 the attacker wins (`gameover`); otherwise roles swap. A successful flee ends the fight immediately.
 4. At the end: "Nouvelle partie" starts a new game in place with the same configuration (board size, item counts, game mode); characters and placements are drawn again. "Quitter" returns to the menu (configuration reset to defaults).
 
@@ -98,7 +103,7 @@ When the AI is the attacker (fight start or new round), it acts 1500 ms later; t
 
 ## Character stats
 
-Every character has Health, PM and four combat stats (Strength, Agility, Intelligence, Luck — see [`spec-game-design.md`](spec-game-design.md)). Implemented so far: **Strength** multiplies weapon damage by (1 + 5 % per point) (batch 1); **Agility** gives critical hits and **Luck** gives dodges (batch 2). Intelligence has no effect yet (future spells). Since batch 5 every character has a **class** (Brute, Ent, Voleur, Duelliste — `characterClass`) and stats from its class template (same budget: Strength + Agility + Luck = 9; PM 2 / 2 / 5 / 3), each with one point moved between stats; health auto-tuned (Ent 106–115, Thief 91–96, others 100–102). The sidebar shows the class under the name, and the four stats (FOR · AGI · INT · CHA).
+Every character has Health, PM and four combat stats (Strength, Agility, Intelligence, Luck — see [`spec-game-design.md`](spec-game-design.md)). Implemented so far: **Strength** multiplies weapon damage by (1 + 5 % per point) (batch 1); **Agility** gives critical hits and **Luck** gives dodges (batch 2). **Intelligence** gives mana for spells (batch 8). Since batch 5 every character has a **class** (Brute, Ent, Voleur, Duelliste, and Mage since batch 8 — `characterClass`) and stats from its class template (same budget: Strength + Agility + Intelligence + Luck = 9; PM 2 / 2 / 5 / 3 / 3), each with one point moved between stats; health auto-tuned in batch 5 (Ent 106–115, Thief 91–96, others 100–102); the three Mages (Khadgar, Gunnar, Jail, taken from Brute, Ent and Thief) start at 100 HP. The sidebar shows the class under the name, and the four stats (FOR · AGI · INT · CHA).
 
 ## Content
 

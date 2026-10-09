@@ -63,7 +63,7 @@ Approach: [D-008](decisions.md#d-008--tests-with-nodes-built-in-test-runner). Co
 
 ### Add a character
 
-1. Add an entry to `PLAYER_DATA` in `src/Repository/PlayersRepository.js` (`name`, `characterClass`, `health`, `image`, `maxMove`, `strength`, `agility`, `luck`, and optionally `intelligence` — 0 if absent). Start from its class template (`CLASS_TEMPLATES`: same PM, Strength + Agility + Luck = `STAT_BUDGET`, at most one point moved — checked by `tests/Classes.test.mjs`). Check its balance with `training/balance.mjs` or in the Balance lab, and tune its health with `training/auto-balance.mjs`.
+1. Add an entry to `PLAYER_DATA` in `src/Repository/PlayersRepository.js` (`name`, `characterClass`, `health`, `image`, `maxMove`, `strength`, `agility`, `intelligence`, `luck` — 0 if absent). Start from its class template (`CLASS_TEMPLATES`: same PM, Strength + Agility + Intelligence + Luck = `STAT_BUDGET`, at most one point moved — checked by `tests/Classes.test.mjs`). Check its balance with `training/balance.mjs` or in the Balance lab, and tune its health with `training/auto-balance.mjs`.
 2. Add the image to `assets/dungeon/characters/` with the exact `image` filename.
 
 ### Add a weapon

@@ -6,12 +6,13 @@
  *   name                              : identifiant court
  *   chooseMove(state, rng)            : { row, col } parmi les cases isMovable, ou null si aucune
  *   chooseFightAction(state, rng)     : 'attack' | 'defend' | 'flee' (fuite : seulement si fleeDestination existe)
+ *                                       | 'heal' | 'root' (sorts : seulement s'ils sont dans castableSpells)
  * L'agent joue toujours le joueur dont c'est le tour :
  *   state.activePlayerIndex en déplacement, state.fight.attackerIndex en combat.
  * rng : fonction aléatoire compatible Math.random (graine possible, voir core/Random.js).
  */
 
-import { weaponDamage, fleeChance, fleeDestination } from '../Engine/Rules.js';
+import { weaponDamage, fleeChance, fleeDestination, castableSpells, healAmount } from '../Engine/Rules.js';
 
 // Mode facile : probabilité d'attaquer plutôt que de se défendre
 const EASY_ATTACK_CHANCE = 0.7;
@@ -85,15 +86,23 @@ export const normalAgent = {
         const myDamage = enemy.defense ? Math.floor(weaponDamage(me) / 2) : weaponDamage(me);
         if (myDamage >= enemy.health) return 'attack';
 
+        const spells = castableSpells(state);
+
         // Priorité 2 : le prochain coup adverse peut nous tuer
-        //   → fuir si on a au moins une chance sur deux et une case de repli,
+        //   → se soigner si le soin nous fait survivre à ce coup (lot 8),
+        //   → sinon fuir si on a au moins une chance sur deux et une case de repli,
         //   → sinon se défendre (inutile si on est déjà en défense : le bonus ne se cumule pas)
         if (weaponDamage(enemy) >= me.health) {
+            const healed = Math.min(me.maxHealth, me.health + healAmount(me));
+            if (spells.includes('heal') && healed > weaponDamage(enemy)) return 'heal';
             if (fleeChance(me, enemy) >= 0.5 && fleeDestination(state)) return 'flee';
             if (!me.defense) return 'defend';
         }
 
-        // Priorité 3 : attaquer
+        // Priorité 3 : l'adversaire est presque battu (2 coups) → l'entraver pour qu'il ne s'enfuie pas
+        if (spells.includes('root') && !enemy.rooted && 2 * weaponDamage(me) >= enemy.health) return 'root';
+
+        // Priorité 4 : attaquer
         return 'attack';
     },
 };

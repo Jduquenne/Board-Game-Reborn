@@ -14,7 +14,7 @@ test('every class has a template within the common budget and a French label', (
     for (const cls of Object.values(CHARACTER_CLASS)) {
         const t = CLASS_TEMPLATES[cls];
         assert.ok(t, cls);
-        assert.equal(t.strength + t.agility + t.luck, STAT_BUDGET, cls);
+        assert.equal(t.strength + t.agility + t.intelligence + t.luck, STAT_BUDGET, cls);
         assert.equal(typeof CHARACTER_CLASS_LABEL[cls], 'string', cls);
     }
 });
@@ -24,10 +24,10 @@ test('every character has a class, the class PM, the budget, and differs from it
         const t = CLASS_TEMPLATES[p.characterClass];
         assert.ok(t, `${p.name}: unknown class ${p.characterClass}`);
         assert.equal(p.maxMove, t.maxMove, `${p.name}: PM`);
-        assert.equal(p.strength + p.agility + p.luck, STAT_BUDGET, `${p.name}: budget`);
-        const moved = ['strength', 'agility', 'luck'].reduce((sum, k) => sum + Math.abs(p[k] - t[k]), 0);
+        assert.equal(p.strength + p.agility + p.intelligence + p.luck, STAT_BUDGET, `${p.name}: budget`);
+        const moved = ['strength', 'agility', 'intelligence', 'luck'].reduce((sum, k) => sum + Math.abs(p[k] - t[k]), 0);
         assert.ok(moved <= 2, `${p.name}: ${moved / 2} points moved`);
-        assert.ok(['strength', 'agility', 'luck'].every(k => p[k] >= 0), `${p.name}: negative stat`);
+        assert.ok(['strength', 'agility', 'intelligence', 'luck'].every(k => p[k] >= 0), `${p.name}: negative stat`);
     }
 });
 
