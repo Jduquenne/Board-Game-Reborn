@@ -1,6 +1,7 @@
 import { Component } from '../core/Component.js';
 import { store } from '../core/Store.js';
 import { AssetManager } from '../AssetManager.js';
+import { WEAPON_TYPE_LABEL } from '../Models/Weapon.js';
 
 export class PlayersSidebar extends Component {
 
@@ -46,7 +47,7 @@ export class PlayersSidebar extends Component {
                 <div class="playerWeapon">
                     <img class="playerWeaponImg" src="${AssetManager.weapon(player.weapon)}" alt="${player.weapon.name}">
                     <div class="playerWeaponName">
-                        ${player.weapon.name} <span class="red">${player.weapon.damage}</span>
+                        ${player.weapon.name} <span class="red">${player.weapon.damage}</span> (${WEAPON_TYPE_LABEL[player.weapon.type]})
                     </div>
                 </div>
             </div>

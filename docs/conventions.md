@@ -68,7 +68,7 @@ Approach: [D-008](decisions.md#d-008--tests-with-nodes-built-in-test-runner). Co
 
 ### Add a weapon
 
-1. Add an entry to `WEAPON_DATA` in `src/Repository/WeaponsRepository.js` (`name`, `damage`, `image`).
+1. Add an entry to `WEAPON_DATA` in `src/Repository/WeaponsRepository.js` (`name`, `damage`, `image`, `type`: `HEAVY`, `LIGHT` or `BALANCED`).
 2. Add the image to `assets/dungeon/weapons/`.
 
 ### Add a bonus

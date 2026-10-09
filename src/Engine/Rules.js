@@ -1,4 +1,5 @@
 import { createCell, DECOR } from '../Models/Cell.js';
+import { WEAPON_TYPE } from '../Models/Weapon.js';
 import { getMovableCells, getAdjacentPositions } from './MovementSystem.js';
 import { PlayersRepository } from '../Repository/PlayersRepository.js';
 import { WeaponsRepository } from '../Repository/WeaponsRepository.js';
@@ -29,16 +30,28 @@ export const CRITICAL_MULTIPLIER  = 1.5;
 export const DODGE_PER_LUCK = 0.03;
 export const DODGE_MAX      = 0.35;
 
-export const criticalChance = player => Math.min(CRITICAL_MAX, (player.agility ?? 0) * CRITICAL_PER_AGILITY);
+// Types d'armes (docs/spec-game-design.md §5) :
+//   lourde : 7 % par point de Force au lieu de 5 % ;
+//   légère : +10 % de chance de critique, plafond relevé à 50 %.
+export const HEAVY_STRENGTH_BONUS  = 0.07;
+export const LIGHT_CRITICAL_BONUS  = 0.10;
+export const LIGHT_CRITICAL_MAX    = 0.50;
+
+export function criticalChance(player, weapon = player.weapon) {
+    const base = (player.agility ?? 0) * CRITICAL_PER_AGILITY;
+    if (weapon?.type === WEAPON_TYPE.LIGHT) return Math.min(LIGHT_CRITICAL_MAX, base + LIGHT_CRITICAL_BONUS);
+    return Math.min(CRITICAL_MAX, base);
+}
 export const dodgeChance    = player => Math.min(DODGE_MAX, (player.luck ?? 0) * DODGE_PER_LUCK);
 
 /**
  * Dégâts d'une arme entre les mains d'un joueur (avant défense) :
- *   arrondi( dégâts de l'arme × (1 + Force × 5 %) )
+ *   arrondi( dégâts de l'arme × (1 + Force × 5 %) )   — 7 % par point pour une arme lourde
  * Utilisée par les règles ET par les IA, pour qu'elles raisonnent sur les vrais dégâts.
  */
 export function weaponDamage(player, weapon = player.weapon) {
-    return Math.round(weapon.damage * (1 + (player.strength ?? 0) * STRENGTH_BONUS));
+    const perPoint = weapon.type === WEAPON_TYPE.HEAVY ? HEAVY_STRENGTH_BONUS : STRENGTH_BONUS;
+    return Math.round(weapon.damage * (1 + (player.strength ?? 0) * perPoint));
 }
 
 const unchanged = state => ({ state, events: [] });

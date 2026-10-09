@@ -85,7 +85,7 @@ Strength multiplies every weapon's damage, so a strong character wants the heavi
 | Type | Bonus | Example weapons | Suits |
 |---|---|---|---|
 | Heavy | +STR effect (× 1 + STR × 7 % instead of 5 %) | Marteau du destin, Excalibur | strong characters |
-| Light | +10 % critical chance | Aiguille, Shuriken de Zorro | agile characters |
+| Light | +10 % critical chance (cap raised to 50 %) | Aiguille, Shuriken de Zorro | agile characters |
 | Balanced | none | Quel'delar, Gressil | everyone |
 
 Ranged weapons (attack from 2 cells) are kept for later: they need new rules.
@@ -145,7 +145,7 @@ Each character's exact stats are derived from its class and the common budget, t
 1. ✅ Stats model (HP, STR, AGI, INT, LCK, PM) + Strength in the damage formula — done 2026-10-08 (all characters at 0, so no gameplay change yet; Strength editable in the Balance lab).
 2. ✅ Agility criticals and Luck dodge (seeded randomness in the rules) — done 2026-10-08 (`applyAttack(state, rng)`; no draw when both chances are 0; dodge and critical shown in the fight banner; Agility and Luck editable in the Balance lab).
 3. ✅ **Flee** action with Luck against tackle (rules, UI, AIs) — done 2026-10-08 (`applyFlee`, escape cell = farthest reachable cell not next to the enemy; "Fuir (xx %)" button; Normal AI flees when the next enemy hit is lethal and the chance ≥ 50 %; Q-learning gets a 3rd action; defend's +10 % flee bonus from v0.2 not implemented). Owner's follow-up the same day: the **player chooses the escape cell** among all reachable cells not next to the enemy; AIs keep the farthest one.
-4. Weapon types.
+4. ✅ Weapon types — done 2026-10-09 (`type` on weapons; heavy: 7 % per Strength point; light: +10 % critical chance, cap 50 % — owner's choice; first-draft mapping: heavy Excalibur, Hurlesang, Marteau du destin, Skyword; light Deuilleombre, Aiguille, Shuriken de Zorro, Firefox; balanced Arc de Nodens, Quel'delar, Lame du puits de soleil, Gressil).
 5. Classes, character stats, balancing in the lab.
 6. Anti-stalemate and first-player rules.
 7. Retrain the AIs.

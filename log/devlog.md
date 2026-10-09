@@ -13,12 +13,19 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-09 — Game design batch 4: weapon types
+
+- **Done**: `createWeapon(name, damage, image, type)` with `WEAPON_TYPE` (heavy / light / balanced, default balanced) and French labels `WEAPON_TYPE_LABEL`. `Rules.js`: heavy weapon → 7 % per Strength point instead of 5 % (`weaponDamage`, so every AI sees it); light weapon → +10 % critical chance, cap 50 % instead of 40 % (owner's choice; `criticalChance(player, weapon)`). `WEAPON_DATA`: first-draft mapping, 4 weapons per type (owner: "un premier jet pour tester"). UI: type shown in the sidebar, the board tooltip and the rules modal. Docs: spec-gameplay, architecture, conventions, spec-game-design (batch 4 ✅), roadmap.
+- **Numbers**: 146/146 tests (5 new in `tests/WeaponTypes.test.mjs`). Balance (IA Normal, 400 games per pair): 42.1–55.9 % (before: 42.6–58.5 %), first player 55.7 %, draws 2.1 %. UI check 144/144; rules and game screenshots checked (phone portrait / landscape, desktop).
+- **Problems**: none. Owner remarked that the full UI check (8 sizes × 18 screens) is overkill when only one screen changed — the tool already has `--screen` / `--viewport` filters.
+- **Still open**: owner's check in the browser (not done by me); owner's decision on running targeted UI checks; batch 5 (classes).
+
 ## 2026-10-08 — Flee: the player chooses the escape cell
 
 - **Done**: owner's feedback: the flee went to an automatic cell (the farthest one), the owner wants to choose it. `Rules.js`: `fleeOptions` (all reachable cells not next to the enemy — diagonal counts as not next to it), `fleeDestination` = farthest option (AIs), `markEscapeCells` / `clearEscapeCells` (new cell flag `isEscape`), `applyFlee(state, rng, target)` validates the chosen cell and clears the markings after a failure. `FightEngine.flee(target)`, `startFleeSelection()`, `cancelFleeSelection()`. Board: escape cells in green (`.fleeTarget`), click → flee there. Fight banner: "Fuir" opens the choice — banner at the top, semi-transparent, clicks go through to the board except on "Annuler". `ui-check`: screen "flee-choice".
 - **Numbers**: 141/141 tests (5 new: options incl. diagonals, chosen cell, invalid cell refused, marking / clearing, full in-game choice). UI check 144/144 (8 sizes × 18 screens).
 - **Problems**: one new test had a wrong expectation (diagonal cells counted as next to the enemy) — fixed the test, the rule was right. The top banner covered the board's first row; made it click-through.
-- **Still open**: owner's check of the flee choice; batch 4 (weapon types).
+- **Still open**: session ended by the owner after this entry. Resume with game design **batch 4 (weapon types)** — see roadmap "Current focus". No background process left running.
 
 ## 2026-10-08 — Game design batch 3: flee
 

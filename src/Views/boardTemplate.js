@@ -1,4 +1,5 @@
 import { AssetManager } from '../AssetManager.js';
+import { WEAPON_TYPE_LABEL } from '../Models/Weapon.js';
 import { DECOR } from '../Models/Cell.js';
 
 /**
@@ -40,7 +41,7 @@ function cellHtml(cell, isActivePlayer) {
     } else if (cell.weapon) {
         classes.push('weapon');
         bgImages.unshift(`url('${AssetManager.weapon(cell.weapon)}')`);
-        title = `${cell.weapon.name} — ${cell.weapon.damage} dégâts`;
+        title = `${cell.weapon.name} — ${cell.weapon.damage} dégâts, arme ${WEAPON_TYPE_LABEL[cell.weapon.type]}`;
     } else if (cell.bonus) {
         classes.push('bonus');
         bgImages.unshift(`url('${AssetManager.bonus(cell.bonus)}')`);

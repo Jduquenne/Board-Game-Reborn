@@ -8,6 +8,7 @@ import { BattleBanner } from './BattleBanner.js';
 import { TrapBanner } from './TrapBanner.js';
 import { WeaponsRepository } from '../Repository/WeaponsRepository.js';
 import { AssetManager } from '../AssetManager.js';
+import { WEAPON_TYPE_LABEL } from '../Models/Weapon.js';
 import { aiEngine } from '../Engine/AIEngine.js';
 
 // Taille d'une cellule du plateau, en pixels
@@ -55,12 +56,12 @@ export class GameView extends Component {
                         <p class="rule">- En duel, chacun son tour : « Attaquer » inflige les dégâts de ton arme, « Se défendre » divise par 2 les prochains dégâts reçus. Le premier à 0 point de vie perd.</p>
                         <p class="rule">- En mode IA, l'ordinateur joue le second personnage (badge « IA »).</p>
                         </div>
-                        <p class="rule">- Dégâts des armes :</p>
+                        <p class="rule">- Dégâts et type des armes (lourde : la Force compte davantage ; légère : plus de coups critiques) :</p>
                         <div id="weaponList">
                             ${weapons.map(w => `
                                 <div class="weaponInfo">
-                                    <img src="${AssetManager.weapon(w)}" alt="${w.name}">
-                                    <span>: ${w.damage}</span>
+                                    <img src="${AssetManager.weapon(w)}" alt="${w.name}" title="${w.name}">
+                                    <span>: ${w.damage} ${WEAPON_TYPE_LABEL[w.type]}</span>
                                 </div>
                             `).join('')}
                         </div>

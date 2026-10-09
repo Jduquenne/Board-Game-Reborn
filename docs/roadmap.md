@@ -4,11 +4,16 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⏸ waiting for a dec
 
 ## Current focus
 
-Owner priorities set on 2026-10-08, in the order below (order proposed by the agent, to be confirmed):
+**Current (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell) and 4 (weapon types) are done. **Next: batch 5** (classes, character stats, re-run the health auto-tuning with flee), then 6 (initiative A/B and anti-stalemate — owner's decision still open), 7 (retrain the AIs: fight models saved before batch 3 must be retrained), 8 (Intelligence, mana, spells).
+
+Still open on the side: Phase 7.4c (reinforcement on top of imitation) and 7.5 (generic recipe); offline font (Ideas / later).
+
+Owner priorities set on 2026-10-08:
 
 1. ✅ Phase 6 — automated UI checks.
 2. 🟡 Phase 7 — trainable AI (owner's main goal: learn how to train a game AI).
-3. Phase 8 — game feel and content.
+3. 🟡 Game design (stats, combat, classes) — current work.
+4. Phase 8 — game feel and content.
 
 ## Honest status (2026-10-08)
 
