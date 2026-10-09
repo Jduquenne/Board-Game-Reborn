@@ -7,9 +7,13 @@ import { AssetManager } from '../AssetManager.js';
 import { router } from '../core/Router.js';
 
 export class BattleBanner extends Component {
+    #hideTimer = null; // fermeture de la bannière après une fuite réussie
 
     onMount() {
         this.listen('fight:start', ({ attacker, target }) => {
+            // Un nouveau combat peut commencer avant la fermeture prévue après une fuite (l'IA joue
+            // après 900 ms) : on annule cette fermeture, sinon elle cacherait le nouveau combat
+            clearTimeout(this.#hideTimer);
             this.#showModal();
             this.#setBannerFightStart(attacker, target);
             setTimeout(() => this.#setBannerActionChoice(attacker, target), 1000);
@@ -152,7 +156,7 @@ export class BattleBanner extends Component {
                 <img class="targetImg" src="${AssetManager.player(enemy.player)}" alt="${enemy.player.name}">
             </h2>
         `;
-        if (success) setTimeout(() => this.#hideModal(), 1200);
+        if (success) this.#hideTimer = setTimeout(() => this.#hideModal(), 1200);
     }
 
     // Résultat d'une attaque : esquive (Chance de la cible), coup critique (Agilité de l'attaquant) ou coup normal

@@ -82,6 +82,19 @@ const SCREENS = [
         await new Promise(r => setTimeout(r, 1300));
         document.querySelector('#btn-flee')?.click();
     })()`],
+    // Fuite réussie puis nouveau combat 0,9 s plus tard (l'IA rattrape le fuyard) : le nouveau combat
+    // doit rester affiché après la fermeture prévue de la bannière de fuite (1,2 s) — bug du 2026-10-09
+    ['flee-reengage', '#game', `(async () => {${fightSetup}
+        document.querySelector('#battle-modal').classList.remove('hidden');
+        eventBus.emit('fight:flee', { fleer: a, enemy: t, success: true, chance: 0.5 });
+        await new Promise(r => setTimeout(r, 900));
+        store.setState(() => ({ phase: 'fighting', fight: { attackerIndex: 1, targetIndex: 0 } }));
+        eventBus.emit('fight:start', { attacker: t, target: a });
+        await new Promise(r => setTimeout(r, 1300));
+        if (document.querySelector('#battle-modal').classList.contains('hidden')) {
+            throw new Error('flee-reengage: the new fight banner was hidden');
+        }
+    })()`],
     ['win',     '#game',    `(async () => {${fightSetup}
         document.querySelector('#battle-modal').classList.remove('hidden');
         eventBus.emit('fight:end', { winner: a, loser: t });
