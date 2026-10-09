@@ -13,6 +13,26 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-09 — AI levels Difficile, Expert, Godlike; flee re-engage bug; roadmap phases 9–10
+
+- **Done**:
+  - **AI levels** (owner: "Tout me va", [D-016](../docs/decisions.md#d-016--ai-levels-difficile-expert-godlike-learned-movement-then-monte-carlo-search)): `src/AI/Levels.js` (`AI_LEVELS`), resolved by `AIEngine` after `SCRIPTED_AGENTS`; Options: "IA Difficile", "IA Expert", "IA Godlike" (7 mode buttons, "IA Entraînée" kept). Difficile = shipped genetic champion. Expert = `ExpertMoveFeatures.js` (9 champion features + expected duel edge and danger with dodge / criticals / mana heals, distance × edge, sudden death × health lead; `rankMoves`), weights from `training/train-expert.mjs` (new; `MoveTrainer` gets `genomeSize`, `makeAgent`, `sparring`). Godlike = `SearchAgent.js`: flat Monte-Carlo, Expert's 5 best cells or every allowed fight action × 48 rollouts with common seeds, hidden traps re-drawn before each rollout (`hideTraps`); `GameEnv.reset(state)`. `arena.mjs` plays the levels (`--godlike N`). 7 tests in `tests/Levels.test.mjs`. Docs: architecture, spec-gameplay (AI), development, conventions, decisions D-016, learning notes (French).
+  - **Bug (owner)**: after a successful flee, if the AI re-engaged within 1.2 s, the planned closing of the flee banner hid the new fight → the fight went on invisibly and the game was stuck on the human's turn. `BattleBanner`: the closing timer is kept and cancelled by `fight:start`. New UI-check screen `flee-reengage` (fails without the fix: "the new fight banner was hidden").
+  - **Roadmap**: Phase 9 (tactical combat: ranged attacks, board spells, terrain, procedural seeded maps — owner very keen), Phase 10 (self-play value network for Godlike); campaign, Elo, fog of war, teams in Ideas / later; Coach mode rejected by the owner.
+- **Numbers**: Expert training: from the champion against Difficile only (50 generations × 300 games, seed 2): 62.4 % vs Difficile but only 67.1 % vs Normal (≈ Difficile's level) → continued with Difficile + Normal as opponents (40 generations × 200 games, seed 3, 3.5 min): 63.2 % vs Difficile, 68.3 % vs Normal (2,000 games, seed 777). Arena (seed 1, 2,000 games per pairing, 200 with Godlike):
+
+  | A \ B wins of B | easy | normal | hard | expert | godlike |
+  |---|---|---|---|---|---|
+  | random | 61.2 % | 92.0 % | 93.9 % | 96.8 % | 98.5 % |
+  | easy | | 85.7 % | 92.5 % | 95.8 % | 95.0 % |
+  | normal | | | 66.8 % | 68.7 % | 80.0 % |
+  | hard | | | | 62.5 % | 78.0 % |
+  | expert | | | | | 86.0 % (100 games) |
+
+  Godlike thinks ≈ 0.1–0.2 s per decision (100 games against Expert in 263 s). 174/174 tests. UI check (targeted): options 8/8, flee (flee-choice + flee-reengage) 16/16, fight 16/16, win 8/8.
+- **Problems**: training Expert against a single opponent made it exploit Difficile without beating Normal more (fixed with sparring partners). The full arena with Godlike took ≈ 30 min (stopped before the last pairing, measured separately on 100 games) — use a small `--godlike N`.
+- **Still open**: owner's check in the browser (not done by me): the three levels, Godlike's thinking time on a phone, the flee bug; Expert and Godlike still use Normal's fight rule (Godlike improves it by search); order of Phases 8 / 9 to confirm.
+
 ## 2026-10-09 — Game design batch 9: stat values re-balanced (critical × 2, Thief PM 4)
 
 - **Done**: owner's remark: high-Luck characters seem favoured. Measured the value of each stat with a test character (STR 2 / AGI 2 / LCK 2, PM 3, 100 HP) added to the 15 characters, one change at a time (3 seeds × 400 games per pair, IA Normal): Luck ≈ Strength, Agility clearly weaker, PM 5 a big bonus — Thieves had both. Variants tested: critical × 2 (A1), 4 % critical per point (A2), Thief PM 4 (C). Owner chose A1 + C: `CRITICAL_MULTIPLIER` 1.5 → 2, Thief template and Prirodny / Lancelot / Bolvar PM 5 → 4. Health re-tuned with `auto-balance.mjs` and applied (Björn and Khadgar unchanged). Tests updated for the × 2 critical (`Stats`, `WeaponTypes`); fight-learning test: untrained threshold 15 % → 20 % (fights a bit more random, measured 15.0 %). Balance lab AGI tooltip "×2". Docs: spec-gameplay, spec-game-design (formula, batch 9 ✅, question 4 closed), roadmap.

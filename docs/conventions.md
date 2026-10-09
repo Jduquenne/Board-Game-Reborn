@@ -99,7 +99,7 @@ Approach: [D-008](decisions.md#d-008--tests-with-nodes-built-in-test-runner). Co
 ### Add an AI mode
 
 1. Write the agent in `src/AI/` (interface in `ScriptedAgents.js`: `name`, `chooseMove`, `chooseFightAction`), with tests using a seeded `createRng`.
-2. Add it to `AI_MODES` in `src/Views/OptionsView.js` and resolve it in `AIEngine.#agent()`.
+2. Add it to `AI_MODES` in `src/Views/OptionsView.js` and resolve it in `AIEngine.#agent()` (scripted agents in `SCRIPTED_AGENTS`, trained / search levels in `AI_LEVELS`, `src/AI/Levels.js`).
 3. Measure it in the arena (`training/arena.mjs`) against the scripted agents and record the numbers in the devlog.
 
 ### Add an event or state key

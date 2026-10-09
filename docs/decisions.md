@@ -58,6 +58,19 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Alternatives considered**: not documented.
 - **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
 
+## D-016 — AI levels Difficile, Expert, Godlike: learned movement, then Monte-Carlo search
+
+- **Date**: 2026-10-09
+- **Status**: accepted (owner: "Tout me va")
+- **Context**: the owner wants stronger opponents than IA Normal, as difficulty levels in the options, keeping "IA Entraînée".
+- **Decision**:
+  - `src/AI/Levels.js` exports `AI_LEVELS` (`hard`, `expert`, `godlike`), resolved by `AIEngine.#agent()` after `SCRIPTED_AGENTS`.
+  - **Difficile** = the shipped genetic champion (`CHAMPION_MOVE_WEIGHTS`, D-013) with Normal's fight rule.
+  - **Expert** = a weighted score of cells with 13 features (`ExpertMoveFeatures.js`: the 9 of D-013 + expected damage with dodge / criticals, heals the mana allows, sudden death); weights evolved by `training/train-expert.mjs` from the champion, fitness = mean win rate against Difficile **and** Normal (`MoveTrainer` gets `genomeSize`, `makeAgent`, `sparring`). Normal's fight rule.
+  - **Godlike** = Monte-Carlo search on top of Expert (`SearchAgent.js`): for each of Expert's 5 best cells (or each allowed fight action), 48 rollouts played by Expert on both sides, same seeds for every candidate; best mean wins. No cheating: untriggered traps are re-drawn at random before each rollout (`hideTraps`); rollouts use their own random draws. `GameEnv.reset(state)` resumes a game from a given state.
+- **Alternatives considered**: a Q-learning fight table with spells for Expert (not tried yet: fights are mostly decided before they start, D-012; the search already improves fight decisions); a neural network for Expert (the imitation network stayed below its teacher, D-014); full MCTS with a tree (simple flat rollouts are already far stronger, and cheaper to explain).
+- **Consequences**: measured levels in the devlog (2026-10-09). Godlike thinks ≈ 0.1–0.2 s per decision on the main thread (on top of the 900 / 1500 ms play delays); slow to evaluate (arena `--godlike N`). Expert and Godlike weights must be retrained when rules change (`train-expert.mjs`).
+
 ## D-015 — Balance lab: stats edited in the lab only
 
 - **Date**: 2026-10-08

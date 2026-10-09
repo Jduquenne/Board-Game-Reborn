@@ -3,6 +3,7 @@ import { store } from '../core/Store.js';
 import { gameEngine } from './GameEngine.js';
 import { fightEngine } from './FightEngine.js';
 import { SCRIPTED_AGENTS, normalAgent } from '../AI/ScriptedAgents.js';
+import { AI_LEVELS } from '../AI/Levels.js';
 import { createQFightAgent } from '../AI/FightPolicy.js';
 import { createWeightedMoveAgent } from '../AI/MoveFeatures.js';
 import { createNeuralMoveAgent } from '../AI/NeuralMovePolicy.js';
@@ -75,7 +76,7 @@ class AIEngine {
     #agent() {
         const mode = store.state.config.aiMode;
         if (mode === 'trained') return this.#trainedAgent;
-        return SCRIPTED_AGENTS[mode] ?? null;
+        return SCRIPTED_AGENTS[mode] ?? AI_LEVELS[mode] ?? null;
     }
 
     #playTurn() {

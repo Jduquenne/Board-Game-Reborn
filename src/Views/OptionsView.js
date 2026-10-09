@@ -16,6 +16,9 @@ const AI_MODES = [
     { key: 'none',   label: '2 Joueurs' },
     { key: 'easy',   label: 'IA Facile'  },
     { key: 'normal', label: 'IA Normal'  },
+    { key: 'hard',    label: 'IA Difficile' },
+    { key: 'expert',  label: 'IA Expert' },
+    { key: 'godlike', label: 'IA Godlike' },
     { key: 'trained', label: 'IA Entraînée' },
 ];
 

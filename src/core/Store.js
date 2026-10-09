@@ -9,7 +9,7 @@ const createInitialState = () => ({
         nbWeapons: 3,
         nbBonus: 3,
         nbTraps: 3,
-        aiMode: 'none', // 'none' | 'easy' | 'normal'
+        aiMode: 'none', // 'none' | 'easy' | 'normal' | 'hard' | 'expert' | 'godlike' | 'trained'
     },
     cells: [],   // Cell[][]
     players: [], // PlayerInfo[]  { player, position: { row, col } }

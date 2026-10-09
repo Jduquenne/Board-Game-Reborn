@@ -17,3 +17,26 @@ export const CHAMPION_MOVE_WEIGHTS = Object.freeze([
     -2.1546654603834394,    // Danger s'il m'attaque
     -0.20664827058100496,   // Distance à une meilleure arme
 ]);
+
+/*
+ * EXPERT_MOVE_WEIGHTS : poids de l'IA Expert (caractéristiques EXPERT_MOVE_FEATURES, src/AI/ExpertMoveFeatures.js),
+ * obtenus en deux étapes avec training/train-expert.mjs (2026-10-09) :
+ *   1. depuis le champion, contre l'IA Difficile seule, 50 générations × 300 parties, graine 2 ;
+ *   2. --start expert --generations 40 --games 200 --seed 3 (contre Difficile + Normal).
+ * → 63.2 % contre l'IA Difficile, 68.3 % contre l'IA Normal (2 000 parties, graine 777).
+ */
+export const EXPERT_MOVE_WEIGHTS = Object.freeze([
+    -0.3335744926100523,    // Case de duel
+    3.8197600188452934,     // Avantage si je lance le duel
+    2.8707204645199598,     // Gain d'arme
+    2.642631881725794,      // Bonus de vie
+    1.0060735881472058,     // Bonus de PM
+    0.17181963134869077,    // Distance à l'ennemi
+    -0.5152081270755908,    // L'ennemi peut m'attaquer
+    -1.6200780485731376,    // Danger s'il m'attaque
+    -0.6456859757206234,    // Distance à une meilleure arme
+    -0.08526510111008748,   // Avantage moyen si je lance le duel
+    -0.16156853051534206,   // Danger moyen s'il m'attaque
+    -1.1022201287397162,    // Distance à l'ennemi × mon avantage
+    3.3764426143125568,     // Mort subite : distance × avance en vie
+]);

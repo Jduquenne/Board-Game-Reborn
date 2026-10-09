@@ -4,7 +4,7 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⏸ waiting for a dec
 
 ## Current focus
 
-**Current (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell), 4 (weapon types), 5 (classes, auto-tuned health), 6 (derived initiative, sudden death), 7 (AIs re-checked, fight learning fixed with γ = 1) 8 (Intelligence, mana, spells Soin / Entrave, Mage class) and 9 (critical × 2, Thief PM 4, health re-tuned and applied) are done. Next, asked by the owner: stronger AI levels ("Difficile", "Expert", "Godlike") — plan to validate. Fight models saved in the browser before batch 3 must be retrained on the training page.
+**Current (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell), 4 (weapon types), 5 (classes, auto-tuned health), 6 (derived initiative, sudden death), 7 (AIs re-checked, fight learning fixed with γ = 1) 8 (Intelligence, mana, spells Soin / Entrave, Mage class) and 9 (critical × 2, Thief PM 4, health re-tuned and applied) are done. AI levels "Difficile", "Expert", "Godlike" done 2026-10-09 (D-016), awaiting the owner's check in the browser. Fight models saved in the browser before batch 3 must be retrained on the training page.
 
 Still open on the side: Phase 7.4c (reinforcement on top of imitation) and 7.5 (generic recipe); offline font (Ideas / later).
 
@@ -14,6 +14,8 @@ Owner priorities set on 2026-10-08:
 2. 🟡 Phase 7 — trainable AI (owner's main goal: learn how to train a game AI).
 3. 🟡 Game design (stats, combat, classes) — current work.
 4. Phase 8 — game feel and content.
+
+Added on 2026-10-09: Phase 9 (tactical combat, procedural maps — owner very keen) then Phase 10 (value network for Godlike). Order relative to Phase 8 to confirm with the owner.
 
 ## Honest status (2026-10-08)
 
@@ -75,7 +77,7 @@ Owner agreement on 2026-10-08. Bring the headless-Chrome check used for Phase 5 
 
 ### 🟡 Phase 7 — Trainable AI
 
-Owner request on 2026-10-08: train the game's AI and learn how to do it for other games (beginner). Everything hand-written, no library ([D-010](decisions.md#d-010--pure-game-rules-simulator-and-agents-for-ai-training)). Personal learning notes in French in `docs/learning/` ([D-011](decisions.md#d-011--personal-learning-notes-in-french-git-ignored)). A new "IA Entraînée" game mode will use the trained model. The hand-written "Difficile" mode is dropped (replaced by the trained AI).
+Owner request on 2026-10-08: train the game's AI and learn how to do it for other games (beginner). Everything hand-written, no library ([D-010](decisions.md#d-010--pure-game-rules-simulator-and-agents-for-ai-training)). Personal learning notes in French in `docs/learning/` ([D-011](decisions.md#d-011--personal-learning-notes-in-french-git-ignored)). A new "IA Entraînée" game mode will use the trained model. The hand-written "Difficile" mode is dropped (replaced by the trained AI). Update 2026-10-09: "IA Difficile" now exists as a trained level (the genetic champion), next to "IA Expert" and "IA Godlike" ([D-016](decisions.md#d-016--ai-levels-difficile-expert-godlike-learned-movement-then-monte-carlo-search)).
 
 - ✅ **7.1 Environment** (2026-10-08): pure rules (`Rules.js`), simulator `GameEnv` (reset / step, no delays), agents interface (`ScriptedAgents.js`: random, easy, normal), seeded `Arena` + `training/arena.mjs` (~5,700 games/s). Done when: the game behaves as before (all engine tests pass), agents can play full games in the simulator, results are reproducible with a seed. Checked by the owner.
 - ✅ **7.2 Training page + first learning (fights)** (2026-10-08): page `#training` with speed control (Regarder → Max in a Web Worker), learning curve, strategy map, live board; tabular Q-learning of attack / defend ([D-012](decisions.md#d-012--first-learning-tabular-q-learning-of-fight-decisions-training-page-in-a-web-worker)); "IA Entraînée" mode. Done when: the page shows the AI learning, the trained fight policy reaches at least the level of the "normal" fight rule, and the "IA Entraînée" mode uses it. Result: ~12 % → 51.5 % (= Normal's rule, not above: fights are mostly decided before they start). Checked by the owner.
@@ -92,6 +94,23 @@ Owner request on 2026-10-08: train the game's AI and learn how to do it for othe
 
 Owner request on 2026-10-08: more "realism" and content. Candidates, scope to validate: movement animation (and other animations), new bonuses, different weapons, character creation. Done when: TODO(owner).
 
+### ⬜ Phase 9 — Tactical combat and procedural maps (proposed)
+
+Owner's wish on 2026-10-09 ("grave chaud"): give movement and placement real weight, so that decisions matter more than stats — which is also what lets stronger AIs show their level (today games are mostly decided by stats, weapon and who strikes first). Candidates, scope to validate in a specification first:
+- **Ranged attacks**: bows, ranged spells — attack from 2–3 cells without starting a duel.
+- **Spells on the board**: area damage, teleport, placing one's own trap, slowing the enemy.
+- **Terrain**: cover (less damage taken), high ground, slow cells.
+- **Procedurally generated maps**: rooms, corridors, terrain zones instead of obstacles dropped at random; seeded (same seed → same map) so that AI training and the balance lab stay reproducible.
+- Every AI level (Normal, Difficile, Expert, Godlike) must handle the new actions; the balance lab must measure them.
+
+Done when: TODO(owner) — defined with the specification.
+
+### ⬜ Phase 10 — Value network learned by self-play for Godlike (proposed)
+
+Owner's agreement on 2026-10-09, "if it improves Godlike". AlphaZero-style idea: a neural network (hand-written, D-014) learns to estimate the probability of winning from a position, from games played by Godlike against itself; Godlike then uses it to cut its simulations short (stronger and faster). Best started after Phase 9 (richer game, where hand-made features reach their limit). Related to 7.4c (reinforcement).
+
+Done when: TODO — e.g. Godlike with the value network beats current Godlike (> 55 %) at the same or lower thinking time.
+
 ### ⏸ Character balance (found 2026-10-08)
 
 Measured with `training/balance.mjs` (see devlog 2026-10-08): health dominates when AIs engage (Xena 87 %, Indiana 22 %), movement points dominate when they are cautious (58 % draws), and the first player has a 57–63 % advantage. Waiting for the owner's decisions on what to change.
@@ -105,4 +124,10 @@ Owner's wishes (2026-10-08):
 TODO(owner): to be completed.
 
 - ❌ Keyboard play on the board (arrows + Enter) — rest of audit item U-04: rejected by the owner on 2026-10-08.
+- ⏸ **Campaign mode (roguelite)**: a series of duels, a reward to choose between them (stat points, weapon, spell); for the AI, long-term choices and build drafting. Owner (2026-10-09): "pourquoi pas, mais on n'est pas encore là".
+- ⏸ **Elo rating** for the AIs and the player, and adaptive difficulty (Godlike's number of simulations tuned to aim at ≈ 50 %). Proposed 2026-10-09, not discussed.
+- ⏸ **Fog of war**: only cells near the character are visible; the AI reasons about where the enemy probably is. Proposed 2026-10-09, not discussed.
+- ⏸ **Teams (2 vs 2) or free-for-all with 3–4 players**: AI cooperation (multi-agent learning); large engine change (built for 2 players). Proposed 2026-10-09, not discussed.
+- ❌ **Coach / analysis mode** (Godlike's win probability shown on each cell, replay with the best move): owner not convinced (2026-10-09).
+- ❌ Online multiplayer: needs a server, against D-001 — advised against (2026-10-09).
 - ⏸ Offline font: embed VT323 in `assets/` instead of loading it from Google Fonts (U-07); needs licence check ([ATTRIBUTION](../ATTRIBUTION.md)).

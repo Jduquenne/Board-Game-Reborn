@@ -32,9 +32,9 @@ export class GameEnv {
         this.#maxTurns = maxTurns;
     }
 
-    // Nouvelle partie
-    reset() {
-        this.state = skipIfBlocked(createGame(this.#config, this.#rng)).state;
+    // Nouvelle partie, ou reprise d'une partie en cours (state : recherche de l'IA Godlike)
+    reset(state = null) {
+        this.state = state ?? skipIfBlocked(createGame(this.#config, this.#rng)).state;
         this.turns = 0;
         return this.state;
     }

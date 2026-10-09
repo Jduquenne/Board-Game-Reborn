@@ -23,15 +23,30 @@ export class MoveTrainer {
     #ga;
     #config;
     #seed;
+    #makeAgent;
+    #sparring;
 
-    constructor({ opponent = normalAgent, seed = 1, config = DEFAULT_CONFIG, gamesPerIndividual = 60, gaOptions = {} } = {}) {
+    /**
+     * @param {object} [options]
+     * @param {number} [options.genomeSize]   nombre de poids (par défaut : MOVE_FEATURES)
+     * @param {(genome: number[]) => object} [options.makeAgent]  agent jouable à partir d'un génome
+     *                                        (par défaut : fonction de score du champion, MoveFeatures.js)
+     * @param {object[]} [options.sparring]   autres adversaires de la note (fitness), en plus de `opponent`
+     */
+    constructor({
+        opponent = normalAgent, seed = 1, config = DEFAULT_CONFIG, gamesPerIndividual = 60, gaOptions = {},
+        genomeSize = MOVE_FEATURES.length, makeAgent = genome => createWeightedMoveAgent(genome, { name: 'evolved' }),
+        sparring = [],
+    } = {}) {
+        this.#sparring = sparring;
         this.opponent = opponent;
         this.gamesPerIndividual = gamesPerIndividual;
         this.#config = config;
         this.#seed   = seed;
+        this.#makeAgent = makeAgent;
 
         this.#ga = new GeneticAlgorithm({
-            genomeSize: MOVE_FEATURES.length,
+            genomeSize,
             rng: createRng(seed),
             fitness: (genome, generation) => this.#fitness(genome, generation),
             ...gaOptions,
@@ -54,7 +69,7 @@ export class MoveTrainer {
 
     // Agent jouable à partir d'un génome (par défaut : le meilleur connu)
     agent(genome = this.bestGenome) {
-        return createWeightedMoveAgent(genome, { name: 'evolved' });
+        return this.#makeAgent(genome);
     }
 
     /** Mesure le meilleur individu sur les parties d'évaluation fixes. */
@@ -66,12 +81,18 @@ export class MoveTrainer {
     // ─── Private ──────────────────────────────────────────────────────────────
 
     // Taux de victoire (un nul compte pour moitié) sur les parties de la génération
+    // Avec des partenaires d'entraînement (sparring), moyenne sur l'adversaire principal et chacun d'eux
     #fitness(genome, generation) {
         const games = this.gamesPerIndividual;
-        const r = runMatch(this.agent(genome), this.opponent, {
-            games, seed: this.#seed * 100003 + generation, config: this.#config,
-        });
-        this.gamesPlayed += games;
-        return (r.winsA + r.draws / 2) / games;
+        const opponents = [this.opponent, ...this.#sparring];
+        let total = 0;
+        for (const opponent of opponents) {
+            const r = runMatch(this.agent(genome), opponent, {
+                games, seed: this.#seed * 100003 + generation, config: this.#config,
+            });
+            this.gamesPlayed += games;
+            total += (r.winsA + r.draws / 2) / games;
+        }
+        return total / opponents.length;
     }
 }

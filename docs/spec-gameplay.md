@@ -23,7 +23,7 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
 | Weapons | 1 | 5 | 3 |
 | Bonuses | 1 | 5 | 3 |
 | Traps | 1 | 5 | 3 |
-| Game mode (`aiMode`) | — | — | `none` (2 players); also `easy`, `normal` |
+| Game mode (`aiMode`) | — | — | `none` (2 players); also `easy`, `normal`, `hard`, `expert`, `godlike`, `trained` |
 
 ## Turn and movement
 
@@ -65,7 +65,11 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
 
 ## AI
 
-The AI plays player index 1. Modes: `easy`, `normal`, and `trained` ("IA Entraînée").
+The AI plays player index 1. Modes: `easy`, `normal`, `hard` ("IA Difficile"), `expert`, `godlike` and `trained` ("IA Entraînée"). None of them sees hidden information (untriggered traps).
+
+- **Difficile**: the genetic champion's movement (`CHAMPION_MOVE_WEIGHTS`), Normal's fight rule.
+- **Expert**: movement scored with 13 features (`ExpertMoveFeatures.js`: the champion's 9 + expected damage with dodge and criticals, heals the mana allows, sudden death), weights trained by `training/train-expert.mjs`; Normal's fight rule.
+- **Godlike**: Expert plus a Monte-Carlo search (`SearchAgent.js`) for every decision: for each of the Expert's 5 best cells (or each allowed fight action), 48 simulated ends of game played by Expert on both sides; the best average wins. Before each simulation, untriggered traps are removed and re-drawn at random on free cells; simulations use their own random draws. About 0.1–0.2 s of thinking per decision, added to the usual delay. Measured (arena, 2026-10-09): Difficile beats Normal 66.8 %, Expert beats Difficile 62.5 % and Normal 68.7 %, Godlike beats Expert 86 %, Difficile 78 %, Normal 80 %.
 
 ### Movement
 

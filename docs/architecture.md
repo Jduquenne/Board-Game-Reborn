@@ -63,7 +63,10 @@ src/
 │   ├── NeuralNetwork.js           ← generic multilayer perceptron written by hand (forward, backprop, SGD / Adam)
 │   ├── NeuralMovePolicy.js        ← raw network inputs per reachable cell (5 × 5 view + 9 globals) + neural movement agent
 │   ├── ImitationTrainer.js        ← supervised imitation of the genetic champion (distillation, train / test split)
-│   ├── DefaultModels.js           ← reference models shipped with the game (genetic champion weights)
+│   ├── DefaultModels.js           ← reference models shipped with the game (genetic champion and Expert weights)
+│   ├── ExpertMoveFeatures.js      ← Expert movement: the 9 champion features + 4 (expected damage, mana heals, sudden death), rankMoves
+│   ├── SearchAgent.js             ← Monte-Carlo search on top of a base agent (Godlike), hidden traps re-drawn (hideTraps)
+│   ├── Levels.js                  ← AI_LEVELS: hard (champion), expert, godlike — chosen in the options
 │   ├── Balance.js                 ← character balance analysis (every pair, same AI on both sides), step by step
 │   ├── balance.worker.js          ← Web Worker running the balance analysis for the Balance lab
 │   ├── FightLesson.js             ← training-page lesson "Combat" (wraps FightTrainer)
@@ -94,7 +97,8 @@ src/
     ├── BalanceView.js             ← Balance lab (#balance): editable character stats, win-rate bars, duel matrix
     └── boardTemplate.js           ← boardHtml(state): board HTML shared by BoardView and TrainingView
 training/
-├── arena.mjs                      ← CLI: scripted agents against each other (win rates, games/s)
+├── arena.mjs                      ← CLI: scripted agents and AI levels against each other (win rates, games/s; --godlike N)
+├── train-expert.mjs               ← CLI: genetic evolution of the Expert movement against Difficile + Normal
 ├── train-fight.mjs                ← CLI: Q-learning of fight decisions, progress table, learned policy
 ├── train-move.mjs                 ← CLI: genetic evolution of the movement, progress table, champion weights
 ├── train-imitation.mjs            ← CLI: neural network imitating the champion, loss / accuracy / win rate per epoch
@@ -174,7 +178,7 @@ Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` 
 ```js
 {
   phase: 'menu' | 'playing' | 'fighting' | 'gameover',
-  config: { rows, cols, nbObstacles, nbWeapons, nbBonus, nbTraps, aiMode }, // aiMode: 'none' | 'easy' | 'normal' | 'trained'
+  config: { rows, cols, nbObstacles, nbWeapons, nbBonus, nbTraps, aiMode }, // aiMode: 'none' | 'easy' | 'normal' | 'hard' | 'expert' | 'godlike' | 'trained'
   cells: Cell[][],        // 2D array of plain objects
   players: PlayerInfo[],  // [{ player, position: { row, col } }]
   activePlayerIndex: number,  // first player = higher initiative (createGame)

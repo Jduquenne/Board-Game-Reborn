@@ -70,8 +70,10 @@ node tools/ui-check.mjs --viewport phone --screen game    # filters (substring m
 ## AI arena
 
 ```bash
-node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/arena.mjs --games 1000 --seed 1
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/arena.mjs --games 1000 --seed 1 [--godlike 100]
 ```
+
+Since 2026-10-09 the arena also plays the AI levels `hard` and `expert`; `--godlike N` adds Godlike on N games per pairing (≈ 0.1–0.2 s per decision: 200 games against each of the 5 other agents take about 30 minutes, so keep N small, e.g. 50). The table below is the original 2026-10-08 measurement; current numbers are in the devlog.
 
 ✅ Verified 2026-10-08: plays every pair of scripted agents (random, easy, normal) with alternated seats; same seed → same results; ~5,700 games/s on the owner's machine.
 
@@ -101,6 +103,14 @@ node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-move.mjs --ge
 ```
 
 ✅ Verified 2026-10-08: prints best / average fitness and the evaluation of the champion per generation, then its weights; writes `../BoardGameReborn-output/training/move-model.json`. Result with seed 1: 47.5 % → 71.8 % wins against Normal in 25 generations (45,000 games, ~13 s); on 1,000 unseen games (seed 4242) two other seeds give 65.6 % and 66.8 %.
+
+Expert movement (genetic algorithm with the Expert features, against Difficile + Normal):
+
+```bash
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-expert.mjs --start expert --generations 40 --games 200 --seed 3
+```
+
+✅ Verified 2026-10-09: prints the starting level, best / average fitness per generation, the final level against Difficile and Normal (2,000 games, seed 777) and the weights to copy into `EXPERT_MOVE_WEIGHTS` (`src/AI/DefaultModels.js`); writes `../BoardGameReborn-output/training/expert-model.json`. `--start champion` starts again from the genetic champion. 40 generations × 30 individuals × 2 opponents × 200 games ≈ 3.5 min. Result: 62.4 / 67.1 % → 63.2 / 68.3 % (against Difficile / Normal).
 
 Neural network imitating the champion:
 
