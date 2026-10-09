@@ -97,7 +97,7 @@ When the AI is the attacker (fight start or new round), it acts 1500 ms later; t
 
 ## Character stats
 
-Every character has Health, PM and four combat stats (Strength, Agility, Intelligence, Luck — see [`spec-game-design.md`](spec-game-design.md)). Implemented so far: **Strength** multiplies weapon damage by (1 + 5 % per point) (batch 1); **Agility** gives critical hits and **Luck** gives dodges (batch 2). Intelligence has no effect yet (future spells). Characters currently have Strength 3–5 and no Agility / Luck (owner's draft, health tuned on 2026-10-08). The sidebar shows the four stats (FOR · AGI · INT · CHA).
+Every character has Health, PM and four combat stats (Strength, Agility, Intelligence, Luck — see [`spec-game-design.md`](spec-game-design.md)). Implemented so far: **Strength** multiplies weapon damage by (1 + 5 % per point) (batch 1); **Agility** gives critical hits and **Luck** gives dodges (batch 2). Intelligence has no effect yet (future spells). Since batch 5 every character has a **class** (Brute, Ent, Voleur, Duelliste — `characterClass`) and stats from its class template (same budget: Strength + Agility + Luck = 9; PM 2 / 2 / 5 / 3), each with one point moved between stats. The sidebar shows the class under the name, and the four stats (FOR · AGI · INT · CHA).
 
 ## Content
 

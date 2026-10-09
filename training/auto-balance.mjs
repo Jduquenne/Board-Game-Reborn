@@ -39,7 +39,7 @@ const spreadOf = result => {
 };
 
 let characters = PlayersRepository.findAll().map(p => ({
-    name: p.name, health: p.health, maxMove: p.maxMove, image: p.image,
+    name: p.name, characterClass: p.characterClass, health: p.health, maxMove: p.maxMove, image: p.image,
     strength: p.strength, agility: p.agility, intelligence: p.intelligence, luck: p.luck,
 }));
 const original = characters.map(c => c.health);
@@ -81,5 +81,5 @@ characters.forEach((ch, i) => console.log(
 console.log('\nProposed PLAYER_DATA (not applied):');
 for (const ch of characters) {
     const extra = ['strength', 'agility', 'intelligence', 'luck'].filter(k => ch[k]).map(k => `, ${k}: ${ch[k]}`).join('');
-    console.log(`    { name: '${ch.name.replace(/'/g, "\\'")}', health: ${ch.health}, image: '${ch.image}', maxMove: ${ch.maxMove}${extra} },`);
+    console.log(`    { name: '${ch.name.replace(/'/g, "\\'")}', characterClass: '${ch.characterClass}', health: ${ch.health}, image: '${ch.image}', maxMove: ${ch.maxMove}${extra} },`);
 }

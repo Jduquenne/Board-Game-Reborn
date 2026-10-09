@@ -27,7 +27,7 @@ const AGENT      = AGENT_NAME === 'champion'
     : SCRIPTED_AGENTS[AGENT_NAME];
 
 const characters = PlayersRepository.findAll().map(p => ({
-    name: p.name, health: p.health, maxMove: p.maxMove, strength: p.strength, agility: p.agility, luck: p.luck, image: p.image,
+    name: p.name, characterClass: p.characterClass, health: p.health, maxMove: p.maxMove, strength: p.strength, agility: p.agility, luck: p.luck, image: p.image,
 }));
 const pct = x => `${(x * 100).toFixed(1).padStart(5)} %`;
 
@@ -37,12 +37,31 @@ const seconds = (performance.now() - start) / 1000;
 
 console.log(`Character balance — agent "${AGENT.name}" on both sides, ${GAMES} games per pair, seed ${SEED}`);
 console.log(`${result.games} games in ${seconds.toFixed(1)} s · draws ${pct(result.drawRate)} · first player wins ${pct(result.firstPlayerRate)} of decided games\n`);
-console.log('character'.padEnd(18) + 'HP'.padStart(5) + 'PM'.padStart(4) + 'win rate'.padStart(10) + '   best matchup'.padEnd(30) + 'worst matchup');
+console.log('character'.padEnd(18) + 'class'.padEnd(10) + 'HP'.padStart(5) + 'PM'.padStart(4) + 'win rate'.padStart(10) + '   best matchup'.padEnd(30) + 'worst matchup');
 for (const r of [...result.characters].sort((a, b) => b.winRate - a.winRate)) {
     console.log(
-        r.name.padEnd(18) + String(r.health).padStart(5) + String(r.maxMove).padStart(4) + pct(r.winRate).padStart(10) +
+        r.name.padEnd(18) + String(r.characterClass ?? '-').padEnd(10) + String(r.health).padStart(5) + String(r.maxMove).padStart(4) + pct(r.winRate).padStart(10) +
         `   ${r.best.name} ${pct(r.best.rate)}`.padEnd(30) + `${r.worst.name} ${pct(r.worst.rate)}`,
     );
+}
+
+// Classe contre classe : moyenne des duels entre personnages des deux classes (diagonale = mêmes classes)
+const classes = [...new Set(characters.map(c => c.characterClass).filter(Boolean))];
+if (classes.length > 1) {
+    console.log('\nClass against class (row beats column):');
+    console.log(''.padEnd(10) + classes.map(c => c.padStart(10)).join('') + '   overall');
+    for (const a of classes) {
+        const cells = classes.map(b => {
+            const rates = [];
+            characters.forEach((ci, i) => characters.forEach((cj, j) => {
+                if (i !== j && ci.characterClass === a && cj.characterClass === b) rates.push(result.matrix[i][j]);
+            }));
+            return rates.length ? pct(rates.reduce((x, y) => x + y, 0) / rates.length) : '';
+        });
+        const members = result.characters.filter(c => c.characterClass === a);
+        const overall = members.reduce((x, c) => x + c.winRate, 0) / members.length;
+        console.log(a.padEnd(10) + cells.map(c => c.padStart(10)).join('') + pct(overall).padStart(10));
+    }
 }
 
 // Tableau complet (CSV) : ligne = personnage, colonne = adversaire, valeur = taux de victoire

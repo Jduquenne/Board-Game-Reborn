@@ -206,7 +206,7 @@ Game start: `OptionsView` writes `config` to the Store → `router.navigate('gam
 | Model | Factory | Fields |
 |---|---|---|
 | Cell | `createCell(row, col)` | `id` (`"row-col"`), `row`, `col`, `decor` (`DECOR.FLOOR` / `DECOR.OBSTACLE`), `weapon`, `bonus`, `player`, `trap` (`null` or `{ name, image, triggered }`), `isMovable`, `isSecurityZone`, `isEscape` (escape cell shown while choosing where to flee) |
-| Player | `createPlayer(name, health, image, maxMove, { strength, agility, intelligence, luck })` | `name`, `health`, `maxHealth`, `defense`, `weapon` (default "Épée de boisaille", 10 dmg), `image`, `maxMove`, `strength`, `agility`, `intelligence`, `luck` (combat stats, 0 by default), `isAI` |
+| Player | `createPlayer(name, health, image, maxMove, { strength, agility, intelligence, luck, characterClass })` | `name`, `health`, `maxHealth`, `defense`, `weapon` (default "Épée de boisaille", 10 dmg), `image`, `maxMove`, `strength`, `agility`, `intelligence`, `luck` (combat stats, 0 by default), `characterClass` (`CHARACTER_CLASS.BRUTE` / `ENT` / `THIEF` / `DUELLIST`, `null` by default; French labels in `CHARACTER_CLASS_LABEL`; templates in `PlayersRepository.CLASS_TEMPLATES`), `isAI` |
 | Weapon | `createWeapon(name, damage, image, type)` | `name`, `damage`, `image`, `type` (`WEAPON_TYPE.HEAVY` / `LIGHT` / `BALANCED`, default balanced; French labels in `WEAPON_TYPE_LABEL`) |
 | Bonus | `createBonus(name, type, amount, image)` | `type`: `'move'` or `'life'` |
 | Trap | `createTrap(name, image)` | `name`, `image`, `triggered: false` |

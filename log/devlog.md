@@ -13,6 +13,13 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-09 — Game design batch 5: character classes
+
+- **Done**: owner approved the class templates (budget STR + AGI + LCK = 9; Brute 7/1/1 PM 2, Ent 2/6/1 PM 2, Thief 1/2/6 PM 5, Duellist 4/5/0 PM 3), a ±1 point variation per character (seed 2026) and replacing the previous draft. `createPlayer` gets `characterClass` (`CHARACTER_CLASS`, French labels `CHARACTER_CLASS_LABEL`); `PlayersRepository` exports `CLASS_TEMPLATES` / `STAT_BUDGET`; `PLAYER_DATA` rewritten (all at 100 HP). Class shown in the sidebar (under the name) and in the Balance lab row tooltip; "Copier les stats" and `auto-balance.mjs` output keep the class; `balance.mjs` prints the class and a class-against-class table. Docs: spec-game-design (batch 5 🟡), spec-gameplay, architecture, conventions, roadmap.
+- **Numbers**: 150/150 tests (4 new in `tests/Classes.test.mjs`). Balance at 100 HP (IA Normal, 400 games per pair): 37.5–59.8 %; by class Thief 57.5 %, Duellist 49.7 %, Brute 48.1 %, Ent 41.0 %; Thief beats every class (56–63 %), Ent loses to every class. Auto-tuning (10 passes): 46.9–50.2 %, check on other maps 47.3–50.9 % — Ent 106–115 HP, Thief 91–96 HP, others 100–102 HP. UI check (targeted, game / iso / fight / flee / trap / win): 48/48.
+- **Problems**: two learning tests failed with the new stats (more dodges, criticals and flees make learning noisier): fight Q-learning reached 28 % after 5,000 games (threshold 30 %) → now 20,000 games (42 %); imitation test loss rose on 80 games → now 160 games. Thresholds unchanged.
+- **Still open**: owner's approval of the tuned health values; no counters yet (Thief dominates before tuning) — health alone flattens the overall rates but not the matchups; owner's check in the browser (not done by me).
+
 ## 2026-10-09 — Game design batch 4: weapon types
 
 - **Done**: `createWeapon(name, damage, image, type)` with `WEAPON_TYPE` (heavy / light / balanced, default balanced) and French labels `WEAPON_TYPE_LABEL`. `Rules.js`: heavy weapon → 7 % per Strength point instead of 5 % (`weaponDamage`, so every AI sees it); light weapon → +10 % critical chance, cap 50 % instead of 40 % (owner's choice; `criticalChance(player, weapon)`). `WEAPON_DATA`: first-draft mapping, 4 weapons per type (owner: "un premier jet pour tester"). UI: type shown in the sidebar, the board tooltip and the rules modal. Docs: spec-gameplay, architecture, conventions, spec-game-design (batch 4 ✅), roadmap.

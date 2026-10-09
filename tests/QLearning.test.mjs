@@ -125,10 +125,12 @@ test('a training game can be played step by step and returns the outcome', () =>
 
 // Depuis la fuite (lot 3), l'élève progresse nettement mais reste sous la règle de l'IA Normal
 // (≈ 40–47 % contre 51 % après 20 000 parties) : la conséquence d'une fuite arrive bien plus tard.
+// Depuis les classes (lot 5 : esquives, critiques, fuites plus fréquents), 5 000 parties ne suffisent
+// plus (28 %) : 20 000 parties → 42 %.
 test('the AI learns to fight (attack, defend, flee): clear progress from random fights', () => {
     const trainer = new FightTrainer({ seed: 1 });
     const before = trainer.evaluate(400).winRate;
-    trainer.train(5000);
+    trainer.train(20000);
     const after = trainer.evaluate(400).winRate;
 
     assert.ok(before < 0.15, `untrained win rate ${before}`);

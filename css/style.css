@@ -480,6 +480,7 @@ body {
 }
 
 .playerName      { font-size: clamp(15px, 3.2vmin, 26px); color: var(--text-light); }
+.playerClass     { font-size: var(--font-small); color: var(--spinner-text); font-style: italic; }
 .playerHealth    { font-size: var(--font-small); color: var(--text-light); }
 .playerMaxMove   { font-size: var(--font-small); color: var(--text-light); }
 .playerStats     { font-size: clamp(10px, 1.8vmin, 16px); color: var(--spinner-text); }

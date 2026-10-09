@@ -63,7 +63,7 @@ test('recorded decisions are split into training and test sets, with probability
 test('training lowers the error on unseen decisions, reproducibly', () => {
     const run = () => {
         const trainer = new ImitationTrainer({ seed: 2, hidden: [16] });
-        trainer.collect(80);
+        trainer.collect(160); // 80 parties ne suffisent plus depuis les classes (lot 5) : trop peu d'exemples de test
         const before = trainer.measure(trainer.test).testLoss;
         let report;
         for (let e = 0; e < 3; e++) report = trainer.trainEpoch();

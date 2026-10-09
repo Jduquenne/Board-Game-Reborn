@@ -1,5 +1,6 @@
 import { Component } from '../core/Component.js';
 import { router } from '../core/Router.js';
+import { CHARACTER_CLASS_LABEL } from '../Models/Player.js';
 import { AssetManager } from '../AssetManager.js';
 import { PlayersRepository } from '../Repository/PlayersRepository.js';
 
@@ -32,7 +33,7 @@ const pct = x => `${Math.round(x * 100)} %`;
 export class BalanceView extends Component {
     #worker     = null;
     #original   = PlayersRepository.findAll().map(p => ({
-        name: p.name, health: p.health, maxMove: p.maxMove, strength: p.strength, agility: p.agility, luck: p.luck, image: p.image,
+        name: p.name, characterClass: p.characterClass, health: p.health, maxMove: p.maxMove, strength: p.strength, agility: p.agility, luck: p.luck, image: p.image,
     }));
     #characters = this.#original.map(c => ({ ...c }));
     #result     = null;   // dernier résultat d'analyse
@@ -211,9 +212,10 @@ export class BalanceView extends Component {
             const title    = res
                 ? `${c.name} : ${pct(res.winRate)} de victoires — bat le mieux ${res.best.name} (${pct(res.best.rate)}), perd contre ${res.worst.name} (${pct(res.worst.rate)})`
                 : c.name;
+            const label    = CHARACTER_CLASS_LABEL[c.characterClass];
 
             return `
-                <div class="balanceRow ${modified ? 'balanceModified' : ''}" title="${title}">
+                <div class="balanceRow ${modified ? 'balanceModified' : ''}" title="${label ? `${label} — ` : ''}${title}">
                     <img class="balanceAvatar" src="${AssetManager.player(c)}" alt="">
                     <span class="balanceName">${c.name}</span>
                     ${STAT_COLUMNS.map(col => `
@@ -270,7 +272,7 @@ export class BalanceView extends Component {
     // Stats actuelles, au format de PLAYER_DATA (src/Repository/PlayersRepository.js), dans le presse-papiers
     async #copy() {
         const lines = this.#characters.map(c =>
-            `    { name: '${c.name.replace(/'/g, "\\'")}', health: ${c.health}, image: '${c.image}', maxMove: ${c.maxMove}, strength: ${c.strength}, agility: ${c.agility}, luck: ${c.luck} },`);
+            `    { name: '${c.name.replace(/'/g, "\\'")}', characterClass: '${c.characterClass}', health: ${c.health}, image: '${c.image}', maxMove: ${c.maxMove}, strength: ${c.strength}, agility: ${c.agility}, luck: ${c.luck} },`);
         const text = lines.join('\n');
         try {
             await navigator.clipboard.writeText(text);

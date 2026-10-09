@@ -2,6 +2,7 @@ import { Component } from '../core/Component.js';
 import { store } from '../core/Store.js';
 import { AssetManager } from '../AssetManager.js';
 import { WEAPON_TYPE_LABEL } from '../Models/Weapon.js';
+import { CHARACTER_CLASS_LABEL } from '../Models/Player.js';
 
 export class PlayersSidebar extends Component {
 
@@ -37,6 +38,7 @@ export class PlayersSidebar extends Component {
                             ${player.name}
                             ${player.isAI ? '<span class="ai-badge">IA</span>' : ''}
                         </div>
+                        ${player.characterClass ? `<div class="playerClass">${CHARACTER_CLASS_LABEL[player.characterClass]}</div>` : ''}
                         <div class="playerHealth">Points de vie : ${player.health}</div>
                         <div class="playerMaxMove">PM : ${player.maxMove}</div>
                         <div class="playerStats" title="Force · Agilité · Intelligence · Chance">
