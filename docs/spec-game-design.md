@@ -44,7 +44,7 @@ The fight still starts when a player stops next to the other (duel cell) and att
 
 ```
 base      = weapon damage × (1 + STR × 5 %)
-critical  = with chance AGI × 3 % (max 40 %)      → base × 1.5
+critical  = with chance AGI × 3 % (max 40 %)      → base × 2   (× 1.5 until batch 9)
 dodge     = target dodges with chance LCK × 3 % (max 35 %) → 0 damage
 final     = round(base or critical), halved if the target is defending
 ```
@@ -147,10 +147,11 @@ Each character's exact stats are derived from its class and the common budget, t
 2. ✅ Agility criticals and Luck dodge (seeded randomness in the rules) — done 2026-10-08 (`applyAttack(state, rng)`; no draw when both chances are 0; dodge and critical shown in the fight banner; Agility and Luck editable in the Balance lab).
 3. ✅ **Flee** action with Luck against tackle (rules, UI, AIs) — done 2026-10-08 (`applyFlee`, escape cell = farthest reachable cell not next to the enemy; "Fuir (xx %)" button; Normal AI flees when the next enemy hit is lethal and the chance ≥ 50 %; Q-learning gets a 3rd action; defend's +10 % flee bonus from v0.2 not implemented). Owner's follow-up the same day: the **player chooses the escape cell** among all reachable cells not next to the enemy; AIs keep the farthest one.
 4. ✅ Weapon types — done 2026-10-09 (`type` on weapons; heavy: 7 % per Strength point; light: +10 % critical chance, cap 50 % — owner's choice; first-draft mapping: heavy Excalibur, Hurlesang, Marteau du destin, Skyword; light Deuilleombre, Aiguille, Shuriken de Zorro, Firefox; balanced Arc de Nodens, Quel'delar, Lame du puits de soleil, Gressil).
-5. ✅ Classes, character stats, balancing — done 2026-10-09: `characterClass` on characters; class templates (budget STR + AGI + LCK = 9): Brute 7/1/1 PM 2, Ent 2/6/1 PM 2, Thief 1/2/6 PM 5, Duellist 4/5/0 PM 3; each character moves one point (seed 2026). At 100 HP (IA Normal): Thief 57.5 %, Duellist 49.7 %, Brute 48.1 %, Ent 41.0 % — Thief beats every class, no counters yet. Auto-tuned health applied (owner): Ent 106–115, Thief 91–96, others 100–102 → 46.7–51.2 % per character, every class against class between 46 and 52 % (flat: no rock–paper–scissors yet).
+5. ✅ Classes, character stats, balancing — done 2026-10-09: `characterClass` on characters; class templates (budget STR + AGI + LCK = 9): Brute 7/1/1 PM 2, Ent 2/6/1 PM 2, Thief 1/2/6 PM 5 (PM 4 since batch 9), Duellist 4/5/0 PM 3; each character moves one point (seed 2026). At 100 HP (IA Normal): Thief 57.5 %, Duellist 49.7 %, Brute 48.1 %, Ent 41.0 % — Thief beats every class, no counters yet. Auto-tuned health applied (owner): Ent 106–115, Thief 91–96, others 100–102 → 46.7–51.2 % per character, every class against class between 46 and 52 % (flat: no rock–paper–scissors yet).
 6. ✅ Anti-stalemate and first-player rules — done 2026-10-09 (owner: initiative **A**, derived = AGI + LCK + 2 × PM, tie → coin flip; **sudden death** from turn 80: 5 HP, +5 every 20 turns, at the start of each turn). Effect (IA Normal): draws 2.0 % → 0 %; the first-player advantage stays (≈ 55 %) but goes to high-initiative characters (Thief 54.4 %, Brute 45.4 % before re-tuning health).
 7. ✅ Retrain the AIs — done 2026-10-09: the genetic movement champion still beats IA Normal 70.5 % on the new rules; a retrained one is not better (head-to-head 47–50 %) → kept, imitation not redone. Fight Q-learning: γ 0.95 → 1 (plateau 46.1 % → 50.2 %, mean of 5 seeds; IA Normal ≈ 49.5 %); `train-fight.mjs` defaults to 100,000 games.
-8. ✅ Intelligence, mana and spells — done 2026-10-09 (see §6). At 100 HP the Mages average 49.8 % (Jail 55.2 %, Khadgar 52.1 %, Gunnar 41.9 %: INT 7 = 3 spells, INT 5 = 2); spells used ≈ 1.2 heals (≈ 29 HP) and 0.6 hinders per fight involving a Mage. Auto-tuned health proposed, waiting for the owner.
+8. ✅ Intelligence, mana and spells — done 2026-10-09 (see §6). At 100 HP the Mages average 49.8 % (Jail 55.2 %, Khadgar 52.1 %, Gunnar 41.9 %: INT 7 = 3 spells, INT 5 = 2); spells used ≈ 1.2 heals (≈ 29 HP) and 0.6 hinders per fight involving a Mage. Auto-tuned health proposed, waiting for the owner (superseded by batch 9).
+9. ✅ Stat values re-balanced — done 2026-10-09. Owner noticed that high-Luck characters seemed favoured. Measured with a test character against the 15 characters (3 seeds × 400 games): +6 STR +22.4 points, +6 LCK +22.6, +6 AGI only +14.3 (a critical added ≈ 1.5 % damage per point), PM 3 → 5 +9.1; Thieves had LCK 6 **and** PM 5. Owner's choice: **critical × 2** (instead of × 1.5) and **Thief PM 4** (instead of 5) → +6 STR +20.8, AGI +18.5, LCK +21.9. Health re-tuned and applied: Brutes 110, Ent 104–107, Thief 88–92, Mage 97–114, Duellist 97–100 → 48.1–51.8 % per character (check 48.1–51.7 %), classes 49.3–51.1 %, first player 52.2 %. First counters appear: Mage beats Brute 59.7 %, Duellist beats Mage 54.8 %, Thief beats Duellist 55.4 %.
 
 Each batch: tests, Balance lab measurement, owner check in the browser.
 
@@ -159,7 +160,7 @@ Each batch: tests, Balance lab measurement, owner check in the browser.
 1. ~~Stat list~~ — decided in v0.2.
 2. ~~Flee formula and failure~~ — accepted for a first version (v0.3).
 3. ~~Cost of a successful flee~~ — none (v0.3).
-4. Formulas for Strength (+5 % per point), criticals (AGI × 3 %, × 1.5) and dodge (LCK × 3 %): OK as a starting point, to be tuned in the lab?
+4. ~~Formulas for Strength, criticals and dodge~~ — tuned in batch 9 (critical × 2, Thief PM 4).
 5. ~~Classes and mapping~~ — Brute, Ent, Thief, Duellist (+ Mage later), random mapping (v0.3).
 6. ~~Initiative and anti-stalemate~~ — derived initiative (A) and sudden death (2026-10-09).
 7. ~~Order of the batches~~ — accepted by the owner (§10).

@@ -47,7 +47,7 @@ test('an attack with a light weapon can be critical without agility', () => {
     setFight(0, 1);
     const { events: emitted } = applyAttack(store.state, () => 0.05); // 0,05 < 10 %
     assert.equal(emitted[0].payload.critical, true);
-    assert.equal(emitted[0].payload.damage, 60);
+    assert.equal(emitted[0].payload.damage, 80);
 });
 
 test('an attack with a heavy weapon uses the stronger strength bonus', () => {

@@ -132,7 +132,8 @@ test('the AI learns to fight (attack, defend, flee): clear progress from random 
     trainer.train(20000);
     const after = trainer.evaluate(400).winRate;
 
-    assert.ok(before < 0.15, `untrained win rate ${before}`);
+    // ≈ 15 % depuis le critique ×2 (lot 9) : les combats sont un peu plus aléatoires
+    assert.ok(before < 0.2, `untrained win rate ${before}`);
     assert.ok(after > 0.3, `trained win rate ${after}`);
 });
 

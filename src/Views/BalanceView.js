@@ -20,7 +20,7 @@ const STAT_COLUMNS = [
     { key: 'health',   label: 'PV',  title: 'Points de vie' },
     { key: 'maxMove',  label: 'PM',  title: 'Points de mouvement' },
     { key: 'strength', label: 'FOR', title: 'Force : +5 % de dégâts par point' },
-    { key: 'agility',  label: 'AGI', title: 'Agilité : 3 % de coup critique (×1,5) par point, 40 % max' },
+    { key: 'agility',  label: 'AGI', title: 'Agilité : 3 % de coup critique (×2) par point, 40 % max' },
     { key: 'intelligence', label: 'INT', title: 'Intelligence : 10 mana par point ; sorts Soin et Entrave (20 mana)' },
     { key: 'luck',     label: 'CHA', title: "Chance : 3 % d'esquive par point, 35 % max" },
 ];

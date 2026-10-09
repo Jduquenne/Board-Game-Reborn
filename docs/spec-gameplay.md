@@ -46,8 +46,8 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
 2. Each round, the attacker chooses **Attack**, **Defend**, **Flee** or a **spell**:
    - **Attack**, resolved in this order (`applyAttack` in `Rules.js`):
      1. **dodge**: the target dodges with a chance of Luck × 3 % (max 35 %) → 0 damage;
-     2. otherwise **critical hit**: chance of the attacker's Agility × 3 % (max 40 %) → damage × 1.5; a **light** weapon adds +10 % and raises the cap to 50 %;
-     3. damage = weapon damage × (1 + Strength × 5 %) — 7 % per point with a **heavy** weapon — rounded (`weaponDamage`), × 1.5 on a critical, halved (rounded down) if the target is defending.
+     2. otherwise **critical hit**: chance of the attacker's Agility × 3 % (max 40 %) → damage × 2 (× 1.5 until 2026-10-09); a **light** weapon adds +10 % and raises the cap to 50 %;
+     3. damage = weapon damage × (1 + Strength × 5 %) — 7 % per point with a **heavy** weapon — rounded (`weaponDamage`), × 2 on a critical, halved (rounded down) if the target is defending.
      Defense flags of both players reset. No random draw is made when both chances are 0. The fight banner shows "Coup critique !" or "… esquive l'attaque".
    - **Flee** (batch 3, `applyFlee`): possible only if an escape cell exists — any cell reachable with the normal movement rules (current PM) that is not next to the enemy (`fleeOptions`). Chance = (Luck + 2) / (Luck + enemy Agility + 4), clamped 10–90 %, shown on the "Fuir (xx %)" button.
      - **The player chooses the escape cell** (owner's request): "Fuir" marks the escape cells in green on the board, the banner moves to the top ("Choisis ta case de repli", button "Annuler"; clicks go through the banner to the board), a click on a green cell attempts the flee towards it. AIs flee to the cell farthest from the enemy (`fleeDestination`).

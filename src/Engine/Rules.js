@@ -21,10 +21,11 @@ export const TRAP_DAMAGE = 20;
 // Force : chaque point augmente les dégâts de l'arme de 5 % (docs/spec-game-design.md §3)
 export const STRENGTH_BONUS = 0.05;
 
-// Agilité : chance de coup critique (3 % par point, 40 % max), qui multiplie les dégâts par 1,5
+// Agilité : chance de coup critique (3 % par point, 40 % max), qui multiplie les dégâts par 2
+// (×1,5 au départ : l'Agilité valait nettement moins qu'un point de Force ou de Chance)
 export const CRITICAL_PER_AGILITY = 0.03;
 export const CRITICAL_MAX         = 0.40;
-export const CRITICAL_MULTIPLIER  = 1.5;
+export const CRITICAL_MULTIPLIER  = 2;
 
 // Chance : chance d'esquiver complètement un coup (3 % par point, 35 % max)
 export const DODGE_PER_LUCK = 0.03;
@@ -192,7 +193,7 @@ export function skipIfBlocked(state) {
 /**
  * Attaque. Ordre de résolution :
  *   1. esquive  : la cible esquive avec la chance « Chance × 3 % » → 0 dégât ;
- *   2. critique : sinon, l'attaquant fait un critique avec la chance « Agilité × 3 % » → dégâts × 1,5 ;
+ *   2. critique : sinon, l'attaquant fait un critique avec la chance « Agilité × 3 % » → dégâts × 2 ;
  *   3. défense  : si la cible se défend, dégâts divisés par 2 (arrondi inférieur).
  * Les défenses des deux joueurs sont consommées. Aucun tirage n'est fait quand une chance vaut 0
  * (les parties sans Agilité ni Chance restent exactement reproductibles).

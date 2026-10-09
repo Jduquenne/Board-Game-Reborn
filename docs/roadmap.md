@@ -4,7 +4,7 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⏸ waiting for a dec
 
 ## Current focus
 
-**Current (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell), 4 (weapon types), 5 (classes, auto-tuned health), 6 (derived initiative, sudden death), 7 (AIs re-checked, fight learning fixed with γ = 1) and 8 (Intelligence, mana, spells Soin / Entrave, Mage class) are done — auto-tuned health with the Mages proposed, waiting for the owner (the batch 6 proposal is superseded). All batches of spec v0.3 are delivered: next steps to agree with the owner. Fight models saved in the browser before batch 3 must be retrained on the training page.
+**Current (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell), 4 (weapon types), 5 (classes, auto-tuned health), 6 (derived initiative, sudden death), 7 (AIs re-checked, fight learning fixed with γ = 1) 8 (Intelligence, mana, spells Soin / Entrave, Mage class) and 9 (critical × 2, Thief PM 4, health re-tuned and applied) are done. Next, asked by the owner: stronger AI levels ("Difficile", "Expert", "Godlike") — plan to validate. Fight models saved in the browser before batch 3 must be retrained on the training page.
 
 Still open on the side: Phase 7.4c (reinforcement on top of imitation) and 7.5 (generic recipe); offline font (Ideas / later).
 

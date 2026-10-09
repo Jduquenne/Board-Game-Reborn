@@ -135,15 +135,15 @@ test('a dodge fails when the draw is above the chance', () => {
     assert.equal(emitted[0].payload.damage, 40);
 });
 
-test('a critical hit multiplies the damage by 1.5, before the defense halves it', () => {
+test('a critical hit multiplies the damage by 2, before the defense halves it', () => {
     let r = applyAttack(attackState({ attacker: { agility: 10 } }), fixedRng(0.1)); // 0,1 < 30 %
-    assert.deepEqual([r.events[0].payload.critical, r.events[0].payload.damage], [true, 60]);
+    assert.deepEqual([r.events[0].payload.critical, r.events[0].payload.damage], [true, 80]);
 
     r = applyAttack(attackState({ attacker: { agility: 10 }, target: { defense: true } }), fixedRng(0.1));
-    assert.equal(r.events[0].payload.damage, 30, '60 halved');
+    assert.equal(r.events[0].payload.damage, 40, '80 halved');
 
     r = applyAttack(attackState({ attacker: { agility: 10, strength: 10 } }), fixedRng(0.1));
-    assert.equal(r.events[0].payload.damage, 90, '40 × 1.5 (strength) × 1.5 (critical)');
+    assert.equal(r.events[0].payload.damage, 120, '40 × 1.5 (strength) × 2 (critical)');
 });
 
 test('a dodged attack cannot be critical', () => {
