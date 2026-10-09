@@ -13,7 +13,7 @@ const config = { rows: 10, cols: 10, nbObstacles: 10, nbWeapons: 3, nbBonus: 2, 
 // ─── startGame ────────────────────────────────────────────────────────────────
 
 test('startGame builds the board from the config', () => {
-    events = recordEvents(['game:started']);
+    events = recordEvents(['game:started', 'game:initiative', 'turn:changed']);
     gameEngine.startGame(config);
     const { phase, cells, players, activePlayerIndex, fight } = store.state;
     const flat = cells.flat();
@@ -27,10 +27,12 @@ test('startGame builds the board from the config', () => {
     assert.equal(flat.filter(c => c.trap).length, 4);
     assert.equal(players.length, 2);
     assert.notEqual(players[0].player.name, players[1].player.name);
-    assert.equal(activePlayerIndex, 0);
+    // Le personnage qui a la plus haute initiative commence (égalité : l'un ou l'autre)
+    const [a, b] = players.map(p => p.player.initiative);
+    if (a !== b) assert.equal(activePlayerIndex, a > b ? 0 : 1);
     assert.equal(fight, null);
-    assert.ok(flat.some(c => c.isMovable), 'movable cells are computed for player 0');
-    assert.deepEqual(events.names(), ['game:started']);
+    assert.ok(flat.some(c => c.isMovable), 'movable cells are computed for the first player');
+    assert.deepEqual(events.names(), ['game:started', 'game:initiative', 'turn:changed']);
 });
 
 test('player 1 is the AI only when an AI mode is selected', () => {

@@ -11,7 +11,7 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
 3. Weapons, bonuses and traps are drawn from a shuffled repository list (cycling if more are requested than exist).
 4. The 2 characters are drawn at random from `PLAYER_DATA`. Each starts with the default weapon "Épée de boisaille" (10 damage).
 5. If an AI mode is selected, the player at index 1 is the AI.
-6. Player 0 starts.
+6. The character with the higher **initiative** starts (batch 6): initiative = Agility + Luck + 2 × PM, computed at game start (`initiative`, `firstPlayerIndex` in `Rules.js`); on a tie, a coin flip. A banner says who starts ("X a l'initiative (19 contre 5) et commence."); the sidebar shows "PM : 5 · Initiative 19". The AI can start.
 
 ## Configuration
 
@@ -31,6 +31,7 @@ BoardGame Reborn is a turn-based, two-player duel on a grid. Players move, pick 
 - Movement stops at the board edge, an obstacle or a player.
 - Exactly one move per turn; then the turn passes to the other player.
 - A player with no reachable cell (surrounded by obstacles, the board edge or the other player) automatically skips their turn, with a message ("<nom> est bloqué et passe son tour."); this also applies to the first player at the start of a game. If both players are blocked the game cannot continue (extremely rare, not handled).
+- **Sudden death** (batch 6, anti-stalemate): every turn passed counts (`state.turn`, both players). From turn 80 (40 each), the player starting their turn loses 5 HP, +5 every 20 turns (turn 100: 10, turn 120: 15…), with a banner "Mort subite ! X perd N points de vie." At 0 HP that player loses the game (event `game:over`, victory screen "X remporte la partie !"). Fight rounds do not count as turns.
 - "Security zones" are the empty floor cells adjacent to the waiting player. Moving onto one starts a fight instead of ending the turn.
 
 ## Pickups and traps (on the destination cell)

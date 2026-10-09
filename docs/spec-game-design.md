@@ -147,7 +147,7 @@ Each character's exact stats are derived from its class and the common budget, t
 3. ✅ **Flee** action with Luck against tackle (rules, UI, AIs) — done 2026-10-08 (`applyFlee`, escape cell = farthest reachable cell not next to the enemy; "Fuir (xx %)" button; Normal AI flees when the next enemy hit is lethal and the chance ≥ 50 %; Q-learning gets a 3rd action; defend's +10 % flee bonus from v0.2 not implemented). Owner's follow-up the same day: the **player chooses the escape cell** among all reachable cells not next to the enemy; AIs keep the farthest one.
 4. ✅ Weapon types — done 2026-10-09 (`type` on weapons; heavy: 7 % per Strength point; light: +10 % critical chance, cap 50 % — owner's choice; first-draft mapping: heavy Excalibur, Hurlesang, Marteau du destin, Skyword; light Deuilleombre, Aiguille, Shuriken de Zorro, Firefox; balanced Arc de Nodens, Quel'delar, Lame du puits de soleil, Gressil).
 5. ✅ Classes, character stats, balancing — done 2026-10-09: `characterClass` on characters; class templates (budget STR + AGI + LCK = 9): Brute 7/1/1 PM 2, Ent 2/6/1 PM 2, Thief 1/2/6 PM 5, Duellist 4/5/0 PM 3; each character moves one point (seed 2026). At 100 HP (IA Normal): Thief 57.5 %, Duellist 49.7 %, Brute 48.1 %, Ent 41.0 % — Thief beats every class, no counters yet. Auto-tuned health applied (owner): Ent 106–115, Thief 91–96, others 100–102 → 46.7–51.2 % per character, every class against class between 46 and 52 % (flat: no rock–paper–scissors yet).
-6. Anti-stalemate and first-player rules.
+6. ✅ Anti-stalemate and first-player rules — done 2026-10-09 (owner: initiative **A**, derived = AGI + LCK + 2 × PM, tie → coin flip; **sudden death** from turn 80: 5 HP, +5 every 20 turns, at the start of each turn). Effect (IA Normal): draws 2.0 % → 0 %; the first-player advantage stays (≈ 55 %) but goes to high-initiative characters (Thief 54.4 %, Brute 45.4 % before re-tuning health).
 7. Retrain the AIs.
 8. Later: Intelligence, mana and spells.
 
@@ -160,5 +160,5 @@ Each batch: tests, Balance lab measurement, owner check in the browser.
 3. ~~Cost of a successful flee~~ — none (v0.3).
 4. Formulas for Strength (+5 % per point), criticals (AGI × 3 %, × 1.5) and dodge (LCK × 3 %): OK as a starting point, to be tuned in the lab?
 5. ~~Classes and mapping~~ — Brute, Ent, Thief, Duellist (+ Mage later), random mapping (v0.3).
-6. Initiative: derived (A) or its own stat (B)? Anti-stalemate rule: shrinking board, sudden death, or nothing for now?
+6. ~~Initiative and anti-stalemate~~ — derived initiative (A) and sudden death (2026-10-09).
 7. ~~Order of the batches~~ — accepted by the owner (§10).

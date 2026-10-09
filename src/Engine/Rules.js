@@ -54,6 +54,29 @@ export function weaponDamage(player, weapon = player.weapon) {
     return Math.round(weapon.damage * (1 + (player.strength ?? 0) * perPoint));
 }
 
+// Initiative (docs/spec-game-design.md §8, option A) : le personnage qui a la plus haute commence la partie
+export const initiative = player => (player.agility ?? 0) + (player.luck ?? 0) + 2 * player.maxMove;
+
+/**
+ * Index du joueur qui commence : la plus haute initiative ; en cas d'égalité, tirage au sort
+ * (aucun tirage sinon, pour garder les parties reproductibles).
+ */
+export function firstPlayerIndex(players, rng = Math.random) {
+    const [a, b] = players.map(p => initiative(p.player));
+    if (a !== b) return a > b ? 0 : 1;
+    return rng() < 0.5 ? 0 : 1;
+}
+
+// Mort subite (anti-blocage) : à partir du tour SUDDEN_DEATH_TURN (tours des deux joueurs comptés),
+// le joueur qui commence son tour perd des PV : 5, puis +5 tous les 20 tours (5, 10, 15…)
+export const SUDDEN_DEATH_TURN     = 80;
+export const SUDDEN_DEATH_DAMAGE   = 5;
+export const SUDDEN_DEATH_INTERVAL = 20;
+
+export const suddenDeathDamage = turn => turn < SUDDEN_DEATH_TURN
+    ? 0
+    : SUDDEN_DEATH_DAMAGE * (1 + Math.floor((turn - SUDDEN_DEATH_TURN) / SUDDEN_DEATH_INTERVAL));
+
 const unchanged = state => ({ state, events: [] });
 
 // ─── Création d'une partie ────────────────────────────────────────────────────
@@ -71,7 +94,8 @@ export function createGame(config, rng = Math.random) {
         config,
         cells,
         players,
-        activePlayerIndex: 0,
+        activePlayerIndex: firstPlayerIndex(players, rng),
+        turn: 0,  // tours joués (les deux joueurs comptés) — pour la mort subite
         fight: null,
     });
 }
@@ -373,7 +397,8 @@ const hasMovableCell = state => state.cells.some(row => row.some(cell => cell.is
 // fromSkip : appelé par skipIfBlocked, le tour du joueur bloqué a déjà été sauté
 function passTurn(state, events, fromSkip = false) {
     let next = fromSkip ? state.activePlayerIndex : nextIndex(state.activePlayerIndex, state.players);
-    let nextState = refreshMarkings({ ...state, activePlayerIndex: next });
+    const turn = (state.turn ?? 0) + 1;
+    let nextState = refreshMarkings({ ...state, activePlayerIndex: next, turn });
     const out = [...events];
 
     if (fromSkip) {
@@ -382,6 +407,25 @@ function passTurn(state, events, fromSkip = false) {
         out.push({ name: 'turn:skipped', payload: { playerInfo: nextState.players[next] } });
         next = nextIndex(next, state.players);
         nextState = refreshMarkings({ ...nextState, activePlayerIndex: next });
+    }
+
+    // Mort subite : le joueur qui commence son tour perd des PV, et perd la partie à 0
+    const damage = suddenDeathDamage(turn);
+    if (damage > 0) {
+        const players = nextState.players.map((p, i) => i === next
+            ? { ...p, player: { ...p.player, health: Math.max(0, p.player.health - damage) } }
+            : p);
+        const cells = cloneCells(nextState.cells);
+        const { row, col } = players[next].position;
+        cells[row][col].player = players[next].player;
+        nextState = { ...nextState, players, cells };
+        out.push({ name: 'sudden-death:hit', payload: { playerInfo: players[next], damage, turn } });
+
+        if (players[next].player.health <= 0) {
+            const winner = players[nextIndex(next, players)];
+            out.push({ name: 'game:over', payload: { winner, loser: players[next], reason: 'sudden-death' } });
+            return { state: { ...nextState, phase: 'gameover' }, events: out };
+        }
     }
 
     out.push({ name: 'turn:changed', payload: { activePlayerIndex: next } });
@@ -474,6 +518,7 @@ function placePlayers(cells, config, rng) {
         const { row, col } = randomEmptyCell(cells, config, rng);
         // Copie profonde suffisante pour l'arme de base
         const player = { ...allPlayers[k], weapon: { ...allPlayers[k].weapon } };
+        player.initiative = initiative(player); // calculée une fois, au début de la partie (affichée par la barre latérale)
 
         // Le joueur à l'index 1 est toujours le bot si un mode IA est sélectionné
         if (k === 1 && config.aiMode && config.aiMode !== 'none') {

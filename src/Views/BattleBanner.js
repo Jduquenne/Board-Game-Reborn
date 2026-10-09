@@ -35,6 +35,14 @@ export class BattleBanner extends Component {
         this.listen('fight:end', ({ winner }) => {
             this.#setBannerWin(winner);
         });
+
+        // Fin de partie hors combat (mort subite) : même écran de victoire, après la bannière de dégâts
+        this.listen('game:over', ({ winner }) => {
+            setTimeout(() => {
+                this.#showModal();
+                this.#setBannerWin(winner, 'remporte la partie');
+            }, 1500);
+        });
     }
 
     // ─── Private ──────────────────────────────────────────────────────────────
@@ -151,11 +159,11 @@ export class BattleBanner extends Component {
     }
 
     // Message de victoire et choix de la suite affichés ensemble
-    #setBannerWin(winner) {
+    #setBannerWin(winner, text = 'remporte le duel') {
         this.root.innerHTML = `
             <h2 class="battleInfosText">
                 <img class="attackerImg" src="${AssetManager.player(winner.player)}" alt="${winner.player.name}">
-                ${winner.player.name} remporte le duel !
+                ${winner.player.name} ${text} !
                 <span class="battleActions">
                     <button class="btn" id="btn-new-game">Nouvelle partie</button>
                     <button class="btn" id="btn-exit">Quitter</button>

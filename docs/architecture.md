@@ -150,9 +150,12 @@ Hash-based (`#menu`, `#options`, `#game`, `#training`, `#balance`); default rout
 | Event | Emitter | Payload |
 |---|---|---|
 | `game:started` | GameEngine | — |
-| `turn:changed` | GameEngine | `{ activePlayerIndex }` |
+| `game:initiative` | GameEngine | `{ playerInfo, initiatives }` (first player and both initiatives, right after `game:started`) |
+| `turn:changed` | GameEngine | `{ activePlayerIndex }` (also emitted at game start, so the AI plays if it starts) |
 | `trap:triggered` | GameEngine | `{ playerInfo }` |
 | `turn:skipped` | GameEngine | `{ playerInfo }` (blocked player, emitted before `turn:changed`) |
+| `sudden-death:hit` | GameEngine / FightEngine | `{ playerInfo, damage, turn }` (from turn 80, player starting their turn; before `turn:changed`) |
+| `game:over` | GameEngine / FightEngine | `{ winner, loser, reason: 'sudden-death' }` (game ended outside a fight; replaces `turn:changed`) |
 | `fight:start` | GameEngine | `{ attacker, target }` |
 | `fight:attack` | FightEngine | `{ attacker, target, damage, critical, dodged }` |
 | `fight:defend` | FightEngine | `{ attacker, target }` |
@@ -163,7 +166,7 @@ Hash-based (`#menu`, `#options`, `#game`, `#training`, `#balance`); default rout
 
 Events are produced by the pure rules (`Rules.js`) and emitted by `GameEngine` / `FightEngine` after the Store is updated.
 
-Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` (`game:started`, `state:changed`), `BattleBanner` (`fight:*`), `TrapBanner` (`trap:triggered`, `turn:skipped`), `AIEngine` (`turn:changed`, `fight:start`, `fight:round-end`).
+Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` (`game:started`, `state:changed`), `BattleBanner` (`fight:*`, `game:over`), `TrapBanner` (`trap:triggered`, `turn:skipped`, `game:initiative`, `sudden-death:hit`), `AIEngine` (`turn:changed`, `fight:start`, `fight:round-end`).
 
 ## State shape
 
@@ -173,7 +176,8 @@ Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` 
   config: { rows, cols, nbObstacles, nbWeapons, nbBonus, nbTraps, aiMode }, // aiMode: 'none' | 'easy' | 'normal' | 'trained'
   cells: Cell[][],        // 2D array of plain objects
   players: PlayerInfo[],  // [{ player, position: { row, col } }]
-  activePlayerIndex: number,
+  activePlayerIndex: number,  // first player = higher initiative (createGame)
+  turn: number,               // turns played by both players (sudden death from 80)
   fight: { attackerIndex, targetIndex } | null,
 }
 ```
@@ -206,7 +210,7 @@ Game start: `OptionsView` writes `config` to the Store → `router.navigate('gam
 | Model | Factory | Fields |
 |---|---|---|
 | Cell | `createCell(row, col)` | `id` (`"row-col"`), `row`, `col`, `decor` (`DECOR.FLOOR` / `DECOR.OBSTACLE`), `weapon`, `bonus`, `player`, `trap` (`null` or `{ name, image, triggered }`), `isMovable`, `isSecurityZone`, `isEscape` (escape cell shown while choosing where to flee) |
-| Player | `createPlayer(name, health, image, maxMove, { strength, agility, intelligence, luck, characterClass })` | `name`, `health`, `maxHealth`, `defense`, `weapon` (default "Épée de boisaille", 10 dmg), `image`, `maxMove`, `strength`, `agility`, `intelligence`, `luck` (combat stats, 0 by default), `characterClass` (`CHARACTER_CLASS.BRUTE` / `ENT` / `THIEF` / `DUELLIST`, `null` by default; French labels in `CHARACTER_CLASS_LABEL`; templates in `PlayersRepository.CLASS_TEMPLATES`), `isAI` |
+| Player | `createPlayer(name, health, image, maxMove, { strength, agility, intelligence, luck, characterClass })` | `name`, `health`, `maxHealth`, `defense`, `weapon` (default "Épée de boisaille", 10 dmg), `image`, `maxMove`, `strength`, `agility`, `intelligence`, `luck` (combat stats, 0 by default), `initiative` (set by `createGame`, not by the factory: AGI + LCK + 2 × PM at game start), `characterClass` (`CHARACTER_CLASS.BRUTE` / `ENT` / `THIEF` / `DUELLIST`, `null` by default; French labels in `CHARACTER_CLASS_LABEL`; templates in `PlayersRepository.CLASS_TEMPLATES`), `isAI` |
 | Weapon | `createWeapon(name, damage, image, type)` | `name`, `damage`, `image`, `type` (`WEAPON_TYPE.HEAVY` / `LIGHT` / `BALANCED`, default balanced; French labels in `WEAPON_TYPE_LABEL`) |
 | Bonus | `createBonus(name, type, amount, image)` | `type`: `'move'` or `'life'` |
 | Trap | `createTrap(name, image)` | `name`, `image`, `triggered: false` |

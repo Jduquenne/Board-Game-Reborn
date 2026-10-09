@@ -40,7 +40,7 @@ export class PlayersSidebar extends Component {
                         </div>
                         ${player.characterClass ? `<div class="playerClass">${CHARACTER_CLASS_LABEL[player.characterClass]}</div>` : ''}
                         <div class="playerHealth">Points de vie : ${player.health}</div>
-                        <div class="playerMaxMove">PM : ${player.maxMove}</div>
+                        <div class="playerMaxMove" title="Initiative = AGI + CHA + 2 × PM (début de partie) : la plus haute commence">PM : ${player.maxMove} · Initiative ${player.initiative}</div>
                         <div class="playerStats" title="Force · Agilité · Intelligence · Chance">
                             FOR ${player.strength} · AGI ${player.agility} · INT ${player.intelligence} · CHA ${player.luck}
                         </div>

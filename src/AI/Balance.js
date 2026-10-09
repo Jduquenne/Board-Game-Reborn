@@ -1,6 +1,6 @@
 import { GameEnv, DEFAULT_CONFIG } from './GameEnv.js';
 import { chooseAction } from './Arena.js';
-import { refreshMarkings, skipIfBlocked } from '../Engine/Rules.js';
+import { refreshMarkings, skipIfBlocked, firstPlayerIndex } from '../Engine/Rules.js';
 import { createPlayer } from '../Models/Player.js';
 import { createRng } from '../core/Random.js';
 
@@ -39,11 +39,11 @@ export function* balanceSteps({ characters, agent, gamesPerPair = 100, seed = 1,
             for (let g = 0; g < gamesPerPair; g++) {
                 const iFirst = g % 2 === 0;
                 const pair   = iFirst ? [characters[i], characters[j]] : [characters[j], characters[i]];
-                const winner = playMatch(pair, agent, { rng, config, maxTurns });
+                const { winner, first } = playMatch(pair, agent, { rng, config, maxTurns });
 
                 if (winner === null) { draws++; continue; }
                 decided++;
-                if (winner === 0) firstPlayerWins++;
+                if (winner === first) firstPlayerWins++;
                 if ((winner === 0) === iFirst) wins[i][j]++;
                 else wins[j][i]++;
             }
@@ -87,8 +87,8 @@ export function runBalance(options) {
 }
 
 /**
- * Une partie où les deux personnages sont imposés.
- * @returns {0 | 1 | null} gagnant, ou null en cas de match nul
+ * Une partie où les deux personnages sont imposés. Le premier joueur est choisi par l'initiative.
+ * @returns {{ winner: 0 | 1 | null, first: 0 | 1 }} gagnant (null = match nul) et joueur qui a commencé
  */
 export function playMatch([charA, charB], agent, { rng, config = DEFAULT_CONFIG, maxTurns = 300 }) {
     const env = new GameEnv({ config, rng, maxTurns });
@@ -101,8 +101,9 @@ export function playMatch([charA, charB], agent, { rng, config = DEFAULT_CONFIG,
         return { ...info, player: chosen[i] };
     });
     // Les PM ont changé : on recalcule les cases accessibles, puis on gère un premier joueur bloqué
-    env.state = skipIfBlocked(refreshMarkings({ ...env.state, cells, players, activePlayerIndex: 0 })).state;
+    const first = firstPlayerIndex(players, rng);
+    env.state = skipIfBlocked(refreshMarkings({ ...env.state, cells, players, activePlayerIndex: first })).state;
 
     while (!env.done) env.step(chooseAction(agent, env.state, rng));
-    return env.winnerIndex;
+    return { winner: env.winnerIndex, first };
 }

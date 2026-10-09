@@ -4,7 +4,7 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⏸ waiting for a dec
 
 ## Current focus
 
-**Current (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell), 4 (weapon types) and 5 (classes, auto-tuned health) are done. **Next: batch 6** (initiative A/B and anti-stalemate — owner's decision still open), then 7 (retrain the AIs: fight models saved before batch 3 must be retrained), 8 (Intelligence, mana, spells).
+**Current (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell), 4 (weapon types), 5 (classes, auto-tuned health) and 6 (derived initiative, sudden death) are done — re-tuned health after batch 6 waiting for the owner. **Next: batch 7** (retrain the AIs: fight models saved before batch 3 must be retrained), 8 (Intelligence, mana, spells).
 
 Still open on the side: Phase 7.4c (reinforcement on top of imitation) and 7.5 (generic recipe); offline font (Ideas / later).
 
