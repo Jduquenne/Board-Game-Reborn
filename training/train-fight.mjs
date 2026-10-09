@@ -1,6 +1,6 @@
 // Entraîne les décisions de combat par Q-learning et affiche la progression.
 //
-// Usage :   node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-fight.mjs [--games 50000] [--seed 1] [--opponent normal]
+// Usage :   node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/train-fight.mjs [--games 100000] [--seed 1] [--opponent normal]
 // Sortie :  courbe de progression (évaluation régulière) + politique apprise + modèle dans
 //           ../BoardGameReborn-output/training/fight-model.json (à côté du projet)
 
@@ -15,7 +15,7 @@ import { runMatch } from '../src/AI/Arena.js';
 const args = process.argv.slice(2);
 const arg  = (name, fallback) => { const i = args.indexOf(`--${name}`); return i >= 0 ? args[i + 1] : fallback; };
 
-const GAMES    = Number(arg('games', 50000));
+const GAMES    = Number(arg('games', 100000));
 const SEED     = Number(arg('seed', 1));
 const OPPONENT = SCRIPTED_AGENTS[arg('opponent', 'normal')];
 const EVERY    = Math.max(1, Math.round(GAMES / 20));

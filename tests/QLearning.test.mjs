@@ -123,10 +123,9 @@ test('a training game can be played step by step and returns the outcome', () =>
     assert.equal(trainer.gamesPlayed, 1);
 });
 
-// Depuis la fuite (lot 3), l'élève progresse nettement mais reste sous la règle de l'IA Normal
-// (≈ 40–47 % contre 51 % après 20 000 parties) : la conséquence d'une fuite arrive bien plus tard.
-// Depuis les classes (lot 5 : esquives, critiques, fuites plus fréquents), 5 000 parties ne suffisent
-// plus (28 %) : 20 000 parties → 42 %.
+// Depuis les classes (lot 5 : esquives, critiques, fuites plus fréquentes), il faut 20 000 parties
+// pour une nette progression (≈ 41–44 %) ; l'élève atteint la règle de l'IA Normal (≈ 49 %) vers
+// 100 000 parties avec γ = 1 (lot 7) — trop long pour un test.
 test('the AI learns to fight (attack, defend, flee): clear progress from random fights', () => {
     const trainer = new FightTrainer({ seed: 1 });
     const before = trainer.evaluate(400).winRate;
@@ -191,4 +190,10 @@ test('model storage fails safely without a browser', () => {
     assert.equal(ModelStorage.save('fight', {}), false);
     assert.equal(ModelStorage.load('fight'), null);
     assert.equal(ModelStorage.load('move'), null);
+});
+
+// Lot 7 : γ = 1 pour le combat — avec γ = 0,95, les victoires lointaines (après une fuite ou une
+// défense) étaient sous-estimées et l'élève plafonnait sous l'IA Normal
+test('fight training does not discount future rewards (gamma = 1)', () => {
+    assert.equal(new FightTrainer({ seed: 1 }).qtable.gamma, 1);
 });

@@ -36,10 +36,13 @@ export class FightTrainer {
     constructor({ opponent = normalAgent, seed = 1, config = DEFAULT_CONFIG, qOptions = {}, qtable = null } = {}) {
         this.opponent = opponent;
         this.#rng     = createRng(seed);
-        // Table « vierge » : petites valeurs aléatoires → au départ l'IA combat au hasard
+        // Table « vierge » : petites valeurs aléatoires → au départ l'IA combat au hasard.
+        // γ = 1 : une victoire vaut une victoire, même lointaine. Avec γ = 0,95, fuir ou se défendre
+        // (victoires plus tardives) était sous-estimé : l'élève plafonnait à ≈ 46 % contre l'IA Normal,
+        // contre 50–52 % avec γ = 1 (100 000 parties). Possible car la mort subite garantit la fin des parties.
         const initRng = createRng(seed + 1);
         this.qtable   = qtable ?? new QTable({
-            actions: FIGHT_ACTIONS, alpha: 0.05, initialValue: () => (initRng() - 0.5) * 0.02, ...qOptions,
+            actions: FIGHT_ACTIONS, alpha: 0.05, gamma: 1, initialValue: () => (initRng() - 0.5) * 0.02, ...qOptions,
         });
         this.#config  = config;
 
@@ -56,7 +59,7 @@ export class FightTrainer {
         const env = new GameEnv({ config: this.#config, rng: this.#rng });
         env.reset();
 
-        // L'élève commence une partie sur deux (le joueur 0 joue en premier)
+        // L'élève change de place une partie sur deux (qui commence dépend de l'initiative des personnages)
         const learnerIndex = this.gamesPlayed % 2;
         const learner = createQFightAgent(this.qtable, { explore: true, name: 'learner' });
         const agents  = learnerIndex === 0 ? [learner, this.opponent] : [this.opponent, learner];
