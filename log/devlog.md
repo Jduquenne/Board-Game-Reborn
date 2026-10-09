@@ -18,7 +18,8 @@ Entry format:
 - **Done**: `createWeapon(name, damage, image, type)` with `WEAPON_TYPE` (heavy / light / balanced, default balanced) and French labels `WEAPON_TYPE_LABEL`. `Rules.js`: heavy weapon → 7 % per Strength point instead of 5 % (`weaponDamage`, so every AI sees it); light weapon → +10 % critical chance, cap 50 % instead of 40 % (owner's choice; `criticalChance(player, weapon)`). `WEAPON_DATA`: first-draft mapping, 4 weapons per type (owner: "un premier jet pour tester"). UI: type shown in the sidebar, the board tooltip and the rules modal. Docs: spec-gameplay, architecture, conventions, spec-game-design (batch 4 ✅), roadmap.
 - **Numbers**: 146/146 tests (5 new in `tests/WeaponTypes.test.mjs`). Balance (IA Normal, 400 games per pair): 42.1–55.9 % (before: 42.6–58.5 %), first player 55.7 %, draws 2.1 %. UI check 144/144; rules and game screenshots checked (phone portrait / landscape, desktop).
 - **Problems**: none. Owner remarked that the full UI check (8 sizes × 18 screens) is overkill when only one screen changed — the tool already has `--screen` / `--viewport` filters.
-- **Still open**: owner's check in the browser (not done by me); owner's decision on running targeted UI checks; batch 5 (classes).
+- **Update**: owner approved targeted UI checks: `AGENTS.md` step 4 and `docs/development.md` now say to run only the affected screens (`--screen`) for a change limited to a few views, and the full run for shared CSS, global layout or `index.html`.
+- **Still open**: owner's check in the browser (not done by me); batch 5 (classes).
 
 ## 2026-10-08 — Flee: the player chooses the escape cell
 

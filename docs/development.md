@@ -53,7 +53,8 @@ node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=Exp
 ## UI check (responsive layout)
 
 ```bash
-node tools/ui-check.mjs                                   # all 8 screen sizes × 9 screens (~2 min)
+node tools/ui-check.mjs                                   # full run: all 8 screen sizes × 18 screens (shared CSS, global layout, index.html)
+node tools/ui-check.mjs --screen rules                    # targeted run: only the screens a change touched, every size
 node tools/ui-check.mjs --viewport phone --screen game    # filters (substring match on the names)
 ```
 

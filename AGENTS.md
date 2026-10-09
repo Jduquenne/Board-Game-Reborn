@@ -103,7 +103,9 @@ Details: [`docs/conventions.md`](docs/conventions.md#layer-rules) and [`docs/ui-
 1. Syntax check: `for f in $(find src tools training tests -name "*.js" -o -name "*.mjs" | grep -v output); do node --input-type=module --check < "$f" || echo "FAIL $f"; done` (no `FAIL` line = OK). Do not use plain `node --check file.js`: with Node 22 it does not report syntax errors in our ES module files.
 2. Tests: `node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning` (must end with `# fail 0`).
 3. Golden-rule greps (rules 1–2 above).
-4. If the change touches the UI (`css/`, `src/Views/`, `index.html`): `node tools/ui-check.mjs` (must end with exit code 0) and look at the screenshots of the affected screens (folder printed at the end: `../BoardGameReborn-output/ui-check/`).
+4. If the change touches the UI (`css/`, `src/Views/`, `index.html`): run `node tools/ui-check.mjs` (must end with exit code 0) and look at the screenshots of the affected screens (folder printed at the end: `../BoardGameReborn-output/ui-check/`).
+   - Change limited to a few views: check only the affected screens, on every size — `node tools/ui-check.mjs --screen <filter>` (e.g. `--screen rules`, `--screen game`; one run per filter).
+   - Change to shared CSS, global layout or `index.html`: full run (every screen × every size).
 5. Run `python -m http.server 8080` and check the affected screens at <http://localhost:8080>; if you could not test in a browser, say so.
 6. Add an entry to [`log/devlog.md`](log/devlog.md).
 7. Update [`docs/roadmap.md`](docs/roadmap.md) (and `docs/` if architecture, rules or conventions changed).
