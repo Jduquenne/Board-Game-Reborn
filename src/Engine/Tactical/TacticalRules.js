@@ -55,8 +55,10 @@ export function suddenDeathDamage(turn) {
     return SUDDEN_DEATH_DAMAGE + 5 * Math.floor((turn - SUDDEN_DEATH_TURN) / 10);
 }
 
-export function createFighter(classData, team, cellId, name = classData.name) {
+// controller : 'human' ou le nom d'un agent d'IA (TACTICAL_AGENTS, src/AI/Tactical/TacticalAgents.js)
+export function createFighter(classData, team, cellId, name = classData.name, controller = 'human') {
     return {
+        controller,
         classId: classData.id,
         name,
         image: classData.image,
@@ -80,9 +82,9 @@ export function createFighter(classData, team, cellId, name = classData.name) {
 
 /**
  * Nouveau combat, en phase de placement : chaque personnage sur une case de placement de sa couleur, au hasard.
- * @param {{ classes?: string[], mapId?: string }} options  classes des joueurs 1 et 2
+ * @param {{ classes?: string[], controllers?: string[], mapId?: string }} options  classes et contrôle ('human' ou IA) des joueurs 1 et 2
  */
-export function createTacticalGame({ classes = DEFAULT_CLASSES, mapId = DEFAULT_MAP } = {}, rng = Math.random) {
+export function createTacticalGame({ classes = DEFAULT_CLASSES, controllers = ['human', 'human'], mapId = DEFAULT_MAP } = {}, rng = Math.random) {
     const map = TacticalMapsRepository.find(mapId);
     if (!map) throw new Error(`Carte inconnue : ${mapId}`);
     const board = parseMap(map);
@@ -92,7 +94,7 @@ export function createTacticalGame({ classes = DEFAULT_CLASSES, mapId = DEFAULT_
         if (!classData) throw new Error(`Classe inconnue : ${classId}`);
         const name = classes[0] === classes[1] ? `${classData.name} ${TEAM_SUFFIX[team]}` : classData.name;
         const cells = board.cells.filter(c => c.placement === team);
-        return createFighter(classData, team, cells[Math.floor(rng() * cells.length)].id, name);
+        return createFighter(classData, team, cells[Math.floor(rng() * cells.length)].id, name, controllers[team]);
     });
 
     return withOptions({

@@ -4,16 +4,19 @@ import { store } from '../core/Store.js';
 import { AssetManager } from '../AssetManager.js';
 import { TacticalClassesRepository } from '../Repository/TacticalClassesRepository.js';
 import { tacticalEngine } from '../Engine/Tactical/TacticalEngine.js';
+import { tacticalAIEngine } from '../Engine/Tactical/TacticalAIEngine.js';
 import { viewBox, floorSvg, overlaySvg, objectsSvg } from './tacticalBoardSvg.js';
 
 const TEAM_LABEL = ['Joueur 1 (bleu)', 'Joueur 2 (rouge)'];
 const TEAM_CLASS = ['teamA', 'teamB'];
+const CONTROLLERS = [{ id: 'human', label: 'Humain' }, { id: 'normal', label: 'IA Normal' }];
 const ELEMENT_LABEL = { neutral: 'neutres', earth: 'terre', fire: 'feu', water: 'eau', air: 'air' };
 
 // Mode tactique (docs/spec-tactical.md, lots 1–2) : choix des classes, placement, sorts, 2 joueurs sur le même écran
 export class TacticalView extends Component {
     #classes   = TacticalClassesRepository.findAll();
     #picked    = ['iop', 'cra']; // classes choisies pour les joueurs 1 et 2
+    #controllers = ['human', 'normal']; // 'human' ou agent d'IA (TACTICAL_AGENTS), joueurs 1 et 2
     #spellId   = null;           // sort sélectionné ; null = un clic déplace
     #hoverId   = null;
     #lastLog   = '';
@@ -47,7 +50,12 @@ export class TacticalView extends Component {
                         <h2 class="rulesTitle">Choix des classes</h2>
                         ${[0, 1].map(team => `
                             <div class="classRow">
-                                <div class="classRowLabel"><span class="tTeamDot ${TEAM_CLASS[team]}"></span>${TEAM_LABEL[team]}</div>
+                                <div class="classRowHead">
+                                    <div class="classRowLabel"><span class="tTeamDot ${TEAM_CLASS[team]}"></span>${TEAM_LABEL[team]}</div>
+                                    <div class="controllerChoices" role="radiogroup" aria-label="Contrôle du ${TEAM_LABEL[team]}">
+                                        ${CONTROLLERS.map(c => `<button class="controllerChoice" data-team="${team}" data-controller="${c.id}" role="radio" aria-checked="false">${c.label}</button>`).join('')}
+                                    </div>
+                                </div>
                                 <div class="classChoices" role="radiogroup" aria-label="Classe du ${TEAM_LABEL[team]}">
                                     ${this.#classes.map(c => `
                                         <button class="classChoice" data-team="${team}" data-class="${c.id}" role="radio" aria-checked="false"
@@ -110,7 +118,9 @@ export class TacticalView extends Component {
         });
         this.listen('tactical:spell', (payload) => this.#log(this.#spellMessage(payload)));
         this.listen('tactical:turn', ({ activeIndex, turn }) => {
-            if (turn > 1) this.#log(`À ${this.#name(activeIndex)} de jouer.`);
+            const ai = store.state.tactical?.fighters[activeIndex].controller !== 'human';
+            if (ai) this.#log(`${this.#name(activeIndex)} (IA) réfléchit…`);
+            else if (turn > 1) this.#log(`À ${this.#name(activeIndex)} de jouer.`);
         });
         this.listen('tactical:over', ({ winnerIndex }) => {
             this.query('#t-winner').textContent = `${this.#name(winnerIndex)} remporte le combat !`;
@@ -139,8 +149,9 @@ export class TacticalView extends Component {
         // Choix des classes
         this.query('.classPicker').addEventListener('click', (e) => {
             const choice = e.target.closest('.classChoice');
-            if (!choice) return;
-            this.#picked[Number(choice.dataset.team)] = choice.dataset.class;
+            const controller = e.target.closest('.controllerChoice');
+            if (choice) this.#picked[Number(choice.dataset.team)] = choice.dataset.class;
+            if (controller) this.#controllers[Number(controller.dataset.team)] = controller.dataset.controller;
             this.#showPicked();
         });
         this.query('#t-classes-ok').addEventListener('click', () => {
@@ -172,6 +183,9 @@ export class TacticalView extends Component {
         };
         document.addEventListener('keydown', this.#onKeydown);
 
+        // L'IA écoute avant le premier combat (elle place ses personnages dès tactical:started)
+        tacticalAIEngine.start();
+
         // Plateau visible derrière la fenêtre de choix des classes
         this.#showPicked();
         this.#newFight();
@@ -180,6 +194,7 @@ export class TacticalView extends Component {
 
     onUnmount() {
         document.removeEventListener('keydown', this.#onKeydown);
+        tacticalAIEngine.stop();
         store.reset();
     }
 
@@ -187,13 +202,16 @@ export class TacticalView extends Component {
 
     #newFight() {
         this.#spellId = null;
-        this.#log('Placement : clique sur une case bleue ou rouge pour placer chaque personnage, puis « Prêt ».');
-        tacticalEngine.start({ classes: [...this.#picked] });
+        this.#log(this.#controllers.every(c => c !== 'human')
+            ? 'Placement automatique des IA : « Prêt » lance le combat.'
+            : 'Placement : clique sur une case de ta couleur pour placer ton personnage, puis « Prêt ».');
+        tacticalEngine.start({ classes: [...this.#picked], controllers: [...this.#controllers] });
     }
 
     #showPicked() {
-        for (const choice of this.queryAll('.classChoice')) {
-            const on = this.#picked[Number(choice.dataset.team)] === choice.dataset.class;
+        for (const choice of this.queryAll('.classChoice, .controllerChoice')) {
+            const team = Number(choice.dataset.team);
+            const on = choice.dataset.class ? this.#picked[team] === choice.dataset.class : this.#controllers[team] === choice.dataset.controller;
             choice.classList.toggle('picked', on);
             choice.setAttribute('aria-checked', String(on));
         }
@@ -203,7 +221,11 @@ export class TacticalView extends Component {
         const tactical = store.state.tactical;
         if (id === null || !tactical) return;
         if (tactical.phase === 'placement') {
-            tacticalEngine.place(id);
+            // Seulement les cases d'un personnage humain (l'IA place les siens)
+            const team = tactical.board.cells[id].placement;
+            if (tactical.fighters.find(f => f.team === team)?.controller === 'human') tacticalEngine.place(id);
+        } else if (!this.#humanTurn(tactical)) {
+            return;
         } else if (this.#spellId) {
             const spellId = this.#spellId;
             this.#spellId = null;
@@ -226,9 +248,10 @@ export class TacticalView extends Component {
         if (!tactical || !this.query('#t-floor').childElementCount) return;
         const fighting = tactical.phase === 'fighting';
         const active = tactical.fighters[tactical.activeIndex];
+        const human = this.#humanTurn(tactical);
 
-        if (this.#spellId && !tactical.spells[this.#spellId]?.available) this.#spellId = null;
-        this.query('#t-overlay').innerHTML = overlaySvg(tactical, { spellId: this.#spellId, hoverId: this.#hoverId });
+        if (this.#spellId && (!human || !tactical.spells[this.#spellId]?.available)) this.#spellId = null;
+        this.query('#t-overlay').innerHTML = this.#overlay(tactical);
         this.query('#t-objects').innerHTML = objectsSvg(tactical);
         this.query('#t-board').classList.toggle('targeting', !!this.#spellId);
 
@@ -236,10 +259,21 @@ export class TacticalView extends Component {
             .map((f, i) => this.#fighterCard(f, i === tactical.activeIndex && fighting))
             .join('');
 
-        this.query('#t-spells').innerHTML = fighting ? active.spells.map(s => this.#spellButton(s, tactical.spells[s.id])).join('') : '';
+        this.query('#t-spells').innerHTML = human ? active.spells.map(s => this.#spellButton(s, tactical.spells[s.id])).join('') : '';
         this.query('#t-ready').classList.toggle('hidden', tactical.phase !== 'placement');
         this.query('#t-end').classList.toggle('hidden', tactical.phase === 'placement');
-        this.query('#t-end').disabled = !fighting;
+        this.query('#t-end').disabled = !human;
+    }
+
+    // Tour d'un joueur humain : seul moment où les clics sur le plateau et les sorts agissent
+    #humanTurn(tactical) {
+        return tactical.phase === 'fighting' && tactical.fighters[tactical.activeIndex].controller === 'human';
+    }
+
+    // Pendant le tour de l'IA, pas de cases atteignables ni de portée affichées
+    #overlay(tactical) {
+        if (tactical.phase === 'fighting' && !this.#humanTurn(tactical)) return '';
+        return overlaySvg(tactical, { spellId: this.#spellId, hoverId: this.#hoverId });
     }
 
     #hover(id) {
@@ -247,10 +281,10 @@ export class TacticalView extends Component {
         this.#hoverId = id;
         const tactical = store.state.tactical;
         if (!tactical) return;
-        this.query('#t-overlay').innerHTML = overlaySvg(tactical, { spellId: this.#spellId, hoverId: id });
+        this.query('#t-overlay').innerHTML = this.#overlay(tactical);
 
         // Chemin qui quitte le contact de l'ennemi : chance d'esquiver le tacle affichée tant que le pointeur est dessus
-        const rolls = !this.#spellId && tactical.tackle?.rolls[id];
+        const rolls = !this.#spellId && this.#humanTurn(tactical) && tactical.tackle?.rolls[id];
         this.query('#t-log').textContent = rolls
             ? `Quitter le contact : ${Math.round(tactical.tackle.chance * 100)} % d'esquive${rolls > 1 ? ` (${rolls} fois)` : ''}, sinon tous les PM sont perdus.`
             : this.#lastLog;
@@ -344,7 +378,7 @@ export class TacticalView extends Component {
                 <div class="playerTopInfos">
                     <img class="playerImg" src="${AssetManager.player(f)}" alt="${f.name}">
                     <div class="playerInfos">
-                        <div class="playerName"><span class="tTeamDot ${TEAM_CLASS[f.team]}"></span>${f.name}</div>
+                        <div class="playerName"><span class="tTeamDot ${TEAM_CLASS[f.team]}"></span>${f.name}${f.controller !== 'human' ? ' <span class="ai-badge">IA</span>' : ''}</div>
                         <div class="playerHealth">PV ${f.health} / ${f.maxHealth} · <span class="tPA">PA ${f.pa}</span> · <span class="tPM">PM ${f.pm}</span></div>
                         <div class="playerStats" title="Force (terre, neutre) · Intelligence (feu, soins) · Chance (eau) · Agilité (air, critiques, esquive)">FOR ${f.stats.strength} · INT ${f.stats.intelligence} · CHA ${f.stats.chance} · AGI ${f.stats.agility}</div>
                         ${status ? `<div class="playerClass">${status}</div>` : ''}

@@ -16,8 +16,8 @@ Views/       ← DOM rendering, ZERO business logic
 | Layer | May import | Must never |
 |---|---|---|
 | `core/` | other `core/` modules | contain game logic |
-| `Engine/` | `core/`, `Models/`, `Repository/`, other `Engine/` modules; `AIEngine` may import `AI/` agents | touch the DOM (`document`, `querySelector`, …); `Rules.js` must not use the Store, EventBus or timers |
-| `AI/` | `core/Random.js`, `Engine/Rules.js`, `Models/`, `Repository/`, other `AI/` modules | touch the DOM; use the Store, EventBus or game engines (it must run in Node and Web Workers) |
+| `Engine/` | `core/`, `Models/`, `Repository/`, other `Engine/` modules; `AIEngine` and `Tactical/TacticalAIEngine` may import `AI/` agents | touch the DOM (`document`, `querySelector`, …); `Rules.js` must not use the Store, EventBus or timers |
+| `AI/` | `core/Random.js`, `Engine/Rules.js`, `Engine/Tactical/TacticalRules.js` and `TacticalGrid.js`, `Models/`, `Repository/`, other `AI/` modules | touch the DOM; use the Store, EventBus or game engines (it must run in Node and Web Workers) |
 | `Models/` | other `Models/` | have methods or side effects |
 | `Repository/` | `Models/` | return shared references |
 | `Views/` | `core/`, `AssetManager`, other `Views/`, `Models/` constants (`DECOR`), `Repository/` (read-only display data) | contain business rules; import `Engine/` (exceptions below) |
@@ -53,7 +53,8 @@ src/
 │   └── Tactical/                  ← tactical mode (Phase 9, D-017 / D-018), no DOM
 │       ├── TacticalGrid.js        ← map parsing, square coordinates of the isometric map, neighbours, distance, reachableCells, cellsInRange, lineOfSight, areaCells, pushDirection
 │       ├── TacticalRules.js       ← pure rules: createTacticalGame, applyPlace / applyStart / applyMove / applyCast / applyEndTurn → { state, events }; spell effects
-│       └── TacticalEngine.js      ← applies TacticalRules to the Store key `tactical` + emits events (singleton tacticalEngine)
+│       ├── TacticalEngine.js      ← applies TacticalRules to the Store key `tactical` + emits events (singleton tacticalEngine)
+│       └── TacticalAIEngine.js    ← plays the fighters whose `controller` is an AI agent: placement, then one action every 650 ms (singleton tacticalAIEngine)
 ├── AI/
 │   ├── ScriptedAgents.js          ← hand-written agents: random, easy, normal (SCRIPTED_AGENTS)
 │   ├── GameEnv.js                 ← simulator: reset() / step(action), no delays (training, arena)
@@ -77,7 +78,10 @@ src/
 │   ├── MoveLesson.js              ← training-page lesson "Déplacement" (wraps MoveTrainer, champion demos)
 │   ├── NeuralLesson.js            ← training-page lesson "Réseau de neurones" (wraps ImitationTrainer, loss curves)
 │   ├── TrainingSession.js         ← speeds and messages for the training page; delegates to a lesson
-│   └── training.worker.js         ← Web Worker running a TrainingSession
+│   ├── training.worker.js         ← Web Worker running a TrainingSession
+│   └── Tactical/
+│       ├── TacticalAgents.js      ← tactical agents (random, normal: TACTICAL_AGENTS), applyAction; one action per call
+│       └── TacticalArena.js       ← playTacticalFight: full fight between two agents, seeded, no delays
 ├── Models/
 │   ├── Cell.js                    ← createCell() + DECOR constant
 │   ├── Player.js                  ← createPlayer()
@@ -112,6 +116,7 @@ training/
 ├── train-imitation.mjs            ← CLI: neural network imitating the champion, loss / accuracy / win rate per epoch
 ├── balance.mjs                    ← CLI: character balance analysis (uses src/AI/Balance.js, CSV matrix)
 ├── auto-balance.mjs               ← CLI: tunes health to approach 50 % for everyone (proposal only)
+├── tactical-arena.mjs             ← CLI: tactical classes against each other (win rates, matrix, first player, length)
                                      (the CLIs write their models to ../BoardGameReborn-output/training/)
 tools/
 └── ui-check.mjs                   ← responsive UI check with headless Chrome (D-009); screenshots in ../BoardGameReborn-output/ui-check/
@@ -205,7 +210,7 @@ Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` 
   tactical: null | {          // tactical mode (TacticalRules.js); phase is then 'tactical'
     phase: 'placement' | 'fighting' | 'over',
     board: { id, name, width, height, cells: [{ id, row, col, x, y, terrain, placement }], index },
-    fighters: [{ classId, name, image, team, health, maxHealth, initiative, stats: { strength, intelligence, chance, agility },
+    fighters: [{ controller /* 'human' | agent name */, classId, name, image, team, health, maxHealth, initiative, stats: { strength, intelligence, chance, agility },
                  pa, pm, maxPA, maxPM, cellId, spells, casts, cooldowns, paNext, punishment }],
     activeIndex, turn, winnerIndex,  // turn: 0 during placement
     reachable: { [cellId]: path },   // cells the active fighter can reach with its PM, with their path

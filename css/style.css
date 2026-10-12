@@ -1259,3 +1259,33 @@ body {
     border-color: var(--secondary);
     background-color: var(--secondary);
 }
+
+/* Choix du contrôle (Humain / IA) à côté de chaque joueur (lot 4) */
+.classRowHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px clamp(6px, 2vmin, 16px);
+}
+
+.controllerChoices {
+    display: flex;
+    gap: 4px;
+}
+
+.controllerChoice {
+    padding: 0.15em 0.6em;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background-color: var(--third);
+    color: var(--text-light);
+    font-family: inherit;
+    font-size: var(--font-small);
+    cursor: pointer;
+}
+
+.controllerChoice:hover,
+.controllerChoice:focus-visible { border-color: var(--ring-light); outline: none; }
+
+.controllerChoice.picked { background-color: var(--secondary); }

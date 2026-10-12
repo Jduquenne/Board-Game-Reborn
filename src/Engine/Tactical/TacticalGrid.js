@@ -115,12 +115,32 @@ export function cellsInRange(board, fromId, min, max, inLine = false) {
  * @param {Set<number>} blockers  ids des cases occupées
  */
 export function lineOfSight(board, fromId, toId, blockers) {
+    const { blocked, cells } = sightLine(board, fromId, toId);
+    return !blocked && !cells.some(id => blockers.has(id));
+}
+
+// Cases traversées entre deux cases (départ et arrivée exclues) et présence d'un bloc ; ne dépend que de la carte,
+// donc mémorisé par plateau (les simulations de l'IA testent des milliers de fois les mêmes lignes)
+const sightCache = new WeakMap();
+
+function sightLine(board, fromId, toId) {
+    let cache = sightCache.get(board.cells);
+    if (!cache) sightCache.set(board.cells, cache = new Map());
+    const key = fromId * 4096 + toId;
+    let line = cache.get(key);
+    if (!line) cache.set(key, line = traceLine(board, fromId, toId));
+    return line;
+}
+
+function traceLine(board, fromId, toId) {
     const a = board.cells[fromId];
     const b = board.cells[toId];
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     const steps = 16 * (Math.abs(dx) + Math.abs(dy));
     const nearHalf = v => Math.abs(v - Math.floor(v) - 0.5) < 1e-6;
+    const cells = new Set();
+    let blocked = false;
 
     for (let i = 1; i < steps; i++) {
         const px = a.x + dx * i / steps;
@@ -128,9 +148,10 @@ export function lineOfSight(board, fromId, toId, blockers) {
         if (nearHalf(px) && nearHalf(py)) continue; // coin exact
         const cell = cellAt(board, Math.round(px), Math.round(py));
         if (!cell || cell.id === fromId || cell.id === toId) continue;
-        if (cell.terrain === TERRAIN.BLOCK || blockers.has(cell.id)) return false;
+        if (cell.terrain === TERRAIN.BLOCK) blocked = true;
+        cells.add(cell.id);
     }
-    return true;
+    return { blocked, cells: [...cells] };
 }
 
 // Zone d'un sort : cases de sol à au plus `radius` pas de la case visée (radius 0 = la case seule)

@@ -102,7 +102,8 @@ const SCREENS = [
     ['trap',    '#game',    `(async () => {${fightSetup}
         eventBus.emit('trap:triggered', { playerInfo: a });
     })()`],
-    // Mode tactique (Phase 9) : choix des classes, placement, portée d'un sort, déplacement, fin de combat
+    // Mode tactique (Phase 9) : choix des classes, placement, portée d'un sort, déplacement, IA, fin de combat.
+    // Par défaut le joueur 2 est l'IA : les scénarios qui jouent ses actions le passent en « Humain ».
     ['tactical',           '#tactical', null],
     ['tactical-placement', '#tactical', `document.querySelector('#t-classes-ok').click()`],
     // Crâ (initiative 110) commence ; l'Iop est mis à 4 cases en ligne : Flèche magique sélectionnée, Iop sous le pointeur
@@ -110,6 +111,7 @@ const SCREENS = [
         const { store } = await import('/src/core/Store.js');
         const { tacticalEngine } = await import('/src/Engine/Tactical/TacticalEngine.js');
         const { cellAt } = await import('/src/Engine/Tactical/TacticalGrid.js');
+        document.querySelector('[data-team="1"][data-controller="human"]').click();
         document.querySelector('#t-classes-ok').click();
         tacticalEngine.ready();
         const { board, fighters } = store.state.tactical;
@@ -127,6 +129,7 @@ const SCREENS = [
         const { store } = await import('/src/core/Store.js');
         const { tacticalEngine } = await import('/src/Engine/Tactical/TacticalEngine.js');
         const { cellAt } = await import('/src/Engine/Tactical/TacticalGrid.js');
+        document.querySelector('[data-team="1"][data-controller="human"]').click();
         document.querySelector('#t-classes-ok').click();
         tacticalEngine.ready();
         const { board, fighters } = store.state.tactical;
@@ -143,6 +146,7 @@ const SCREENS = [
     // Clic sur une case atteignable : le personnage actif s'y déplace et dépense ses PM (délégation des clics du SVG)
     ['tactical-move',  '#tactical', `(async () => {
         const { store } = await import('/src/core/Store.js');
+        document.querySelector('[data-team="1"][data-controller="human"]').click();
         document.querySelector('#t-classes-ok').click();
         document.querySelector('#t-ready').click();
         const { activeIndex, reachable } = store.state.tactical;
@@ -152,6 +156,15 @@ const SCREENS = [
         cell.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         const me = store.state.tactical.fighters[activeIndex];
         if (me.cellId !== Number(id) || me.pm !== 1) throw new Error('tactical-move: click did not move the fighter');
+    })()`],
+    // Lot 4 : Iop humain contre Crâ IA (initiative 110, il commence) : l'IA doit jouer seule
+    ['tactical-ai',    '#tactical', `(async () => {
+        const { store } = await import('/src/core/Store.js');
+        document.querySelector('#t-classes-ok').click();
+        document.querySelector('#t-ready').click();
+        await new Promise(r => setTimeout(r, 3000));
+        const { turn, fighters } = store.state.tactical;
+        if (turn === 1 && fighters[1].pa === 6 && fighters[1].pm === 3) throw new Error('tactical-ai: the AI did not play');
     })()`],
     ['tactical-over',  '#tactical', `(async () => {
         const { eventBus } = await import('/src/core/EventBus.js');

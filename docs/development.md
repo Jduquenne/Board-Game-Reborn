@@ -136,6 +136,14 @@ node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/auto-balance.mjs --
 
 Prints the spread per pass (step size × 0.7 each pass, best pass kept), checks the result on other maps (seed + 1000) and prints proposed `PLAYER_DATA` lines — **nothing is applied**. ✅ Verified 2026-10-08 on the owner's first draft: 36.9–59.6 % → 42.6–58.5 % (check on other maps: 43.1–59.0 %). With deterministic fights, balance moves by steps (1 HP can add one hit to take), so it cannot converge exactly; randomness in fights (batch 2) should smooth it.
 
+## Tactical arena (Phase 9)
+
+```bash
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON training/tactical-arena.mjs [--games 40] [--seed 1] [--agent normal] [--vs normal|random]
+```
+
+Plays every ordered pair of tactical classes (16 pairs × `--games` fights, the row class as player 1) with the given agents, and prints each class's win rate (mirror matches excluded), the class-against-class matrix, the first-player and seat advantage, the average length and the share of fights that reach sudden death. Same seed → same results. ✅ Verified 2026-10-12: ≈ 13 fights/s (640 fights in ≈ 50 s); Normal beats random in every fight.
+
 ## Build, lint, format
 
 None exist.
