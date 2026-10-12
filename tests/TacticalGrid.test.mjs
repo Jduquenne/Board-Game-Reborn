@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseMap, cellAt, neighbours, distance, reachableCells, cellsInRange, TERRAIN } from '../src/Engine/Tactical/TacticalGrid.js';
+import { parseMap, cellAt, neighbours, distance, reachableCells, cellsInRange, lineOfSight, TERRAIN } from '../src/Engine/Tactical/TacticalGrid.js';
 import { TacticalMapsRepository } from '../src/Repository/TacticalMapsRepository.js';
 
 const board = parseMap(TacticalMapsRepository.find('plaine'));
@@ -81,4 +81,26 @@ test('cells in range: floor cells only, between min and max', () => {
     assert.ok(cellsInRange(board, from.id, 2, 3).every(id => [2, 3].includes(distance(from, board.cells[id]))));
     const nearHole = cellsInRange(board, byScreen(11, 5).id, 1, 1);
     assert.ok(!nearHole.includes(byScreen(10, 4).id));
+});
+
+test('line of sight: a fighter or a block in between blocks it, the end cells do not count', () => {
+    const c = (dx, dy) => cellAt(board, 16 + dx, 10 + dy).id;
+    assert.ok(lineOfSight(board, c(0, 0), c(4, 0), new Set()));
+    assert.ok(!lineOfSight(board, c(0, 0), c(4, 0), new Set([c(2, 0)])));
+    assert.ok(lineOfSight(board, c(0, 0), c(4, 0), new Set([c(0, 0), c(4, 0)])));
+    assert.ok(!lineOfSight(board, c(0, 2), c(0, 8), new Set())); // bloc en (16, 15)
+});
+
+test('line of sight through an exact corner touches neither side cell', () => {
+    const c = (dx, dy) => cellAt(board, 16 + dx, 10 + dy).id;
+    // de (0, 0) à (2, 2) : la diagonale passe par (1, 1) et par les coins, pas par (1, 0) ni (0, 1)
+    assert.ok(lineOfSight(board, c(0, 0), c(2, 2), new Set([c(1, 0), c(0, 1)])));
+    assert.ok(!lineOfSight(board, c(0, 0), c(2, 2), new Set([c(1, 1)])));
+});
+
+test('cells in line: same x or same y only', () => {
+    const from = cellAt(board, 16, 10);
+    const line = cellsInRange(board, from.id, 1, 3, true).map(id => board.cells[id]);
+    assert.equal(line.length, 12);
+    assert.ok(line.every(c => c.x === from.x || c.y === from.y));
 });

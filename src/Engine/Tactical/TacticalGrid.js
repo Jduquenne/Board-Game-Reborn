@@ -98,10 +98,50 @@ export function reachableCells(board, fromId, pm, occupied) {
     return paths;
 }
 
-// Cases de sol à une distance comprise entre min et max (portée d'une attaque ; ligne de vue : lot 2)
-export function cellsInRange(board, fromId, min, max) {
+// Cases de sol à une distance comprise entre min et max ; `inLine` : seulement sur la même ligne (même x ou même y)
+export function cellsInRange(board, fromId, min, max, inLine = false) {
     const from = board.cells[fromId];
     return board.cells
         .filter(c => isWalkable(c) && distance(from, c) >= min && distance(from, c) <= max)
+        .filter(c => !inLine || c.x === from.x || c.y === from.y)
         .map(c => c.id);
+}
+
+/**
+ * Ligne de vue entre deux cases (docs/spec-tactical.md §5) : le segment entre leurs centres ne doit traverser
+ * aucun bloc ni aucune case de `blockers` (personnages). Les trous ne bloquent pas. Les cases de départ et
+ * d'arrivée ne comptent pas. Un segment qui passe exactement par un coin entre deux cases ne les touche pas
+ * (règle permissive).
+ * @param {Set<number>} blockers  ids des cases occupées
+ */
+export function lineOfSight(board, fromId, toId, blockers) {
+    const a = board.cells[fromId];
+    const b = board.cells[toId];
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const steps = 16 * (Math.abs(dx) + Math.abs(dy));
+    const nearHalf = v => Math.abs(v - Math.floor(v) - 0.5) < 1e-6;
+
+    for (let i = 1; i < steps; i++) {
+        const px = a.x + dx * i / steps;
+        const py = a.y + dy * i / steps;
+        if (nearHalf(px) && nearHalf(py)) continue; // coin exact
+        const cell = cellAt(board, Math.round(px), Math.round(py));
+        if (!cell || cell.id === fromId || cell.id === toId) continue;
+        if (cell.terrain === TERRAIN.BLOCK || blockers.has(cell.id)) return false;
+    }
+    return true;
+}
+
+// Zone d'un sort : cases de sol à au plus `radius` pas de la case visée (radius 0 = la case seule)
+export function areaCells(board, centerId, radius) {
+    return cellsInRange(board, centerId, 0, radius);
+}
+
+// Direction (pas unitaire sur un seul axe) pour pousser `to` en s'éloignant de `from` : axe le plus long, x en cas d'égalité
+export function pushDirection(from, to) {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    if (dx === 0 && dy === 0) return null;
+    return Math.abs(dx) >= Math.abs(dy) ? { dx: Math.sign(dx), dy: 0 } : { dx: 0, dy: Math.sign(dy) };
 }

@@ -1,114 +1,109 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createTacticalGame, applyMove, applyPunch, applyEndTurn, BASE_PA, BASE_PM, PUNCH } from '../src/Engine/Tactical/TacticalRules.js';
+import { createTacticalGame, applyPlace, applyStart, applyMove, applyCast, applyEndTurn, BASE_PA, BASE_PM } from '../src/Engine/Tactical/TacticalRules.js';
 import { cellAt, distance } from '../src/Engine/Tactical/TacticalGrid.js';
 import { createRng } from '../src/core/Random.js';
+import { duel, at } from './tacticalHelpers.mjs';
 
-const newGame = (seed = 1) => createTacticalGame({}, createRng(seed));
 const eventNames = result => result.events.map(e => e.name);
 
-// Place les deux personnages côte à côte au milieu du plateau (cases (x, y) et (x + 1, y))
-function adjacent(state) {
-    const a = state.board.cells.find(c => c.row === 12 && c.col === 14);
-    const b = cellAt(state.board, a.x + 1, a.y);
-    const fighters = state.fighters.map((f, i) => ({ ...f, cellId: i === 0 ? a.id : b.id }));
-    // Recalcule les options du joueur actif en repassant par une fin de tour de chaque joueur
-    return applyEndTurn(applyEndTurn({ ...state, fighters }).state).state;
-}
-
-test('a new game: two different characters on their own placement cells, 6 PA and 3 PM, player 1 starts', () => {
-    const state = newGame();
+test('a new game starts with the placement phase, each class on a placement cell of its colour', () => {
+    const state = createTacticalGame({ classes: ['iop', 'cra'] }, createRng(1));
     const [a, b] = state.fighters;
-    assert.notEqual(a.name, b.name);
+    assert.equal(state.phase, 'placement');
+    assert.deepEqual([a.name, b.name], ['Iop', 'Crâ']);
+    assert.deepEqual([a.health, b.health], [110, 90]);
     assert.equal(state.board.cells[a.cellId].placement, 0);
     assert.equal(state.board.cells[b.cellId].placement, 1);
-    assert.deepEqual([a.pa, a.pm, b.pa, b.pm], [BASE_PA, BASE_PM, BASE_PA, BASE_PM]);
-    assert.equal(state.activeIndex, 0);
-    assert.equal(state.phase, 'fighting');
+    assert.deepEqual(state.reachable, {});
+    assert.deepEqual(state.spells, {});
 });
 
-test('same seed → same game', () => {
-    assert.deepEqual(newGame(7).fighters, newGame(7).fighters);
+test('two fighters of the same class get their colour in their name', () => {
+    const state = createTacticalGame({ classes: ['iop', 'iop'] }, createRng(1));
+    assert.deepEqual(state.fighters.map(f => f.name), ['Iop bleu', 'Iop rouge']);
+});
+
+test('placement: a click on a free cell of a colour moves the fighter of that colour', () => {
+    const state = createTacticalGame({ classes: ['iop', 'cra'] }, createRng(1));
+    const free = state.board.cells.find(c => c.placement === 1 && c.id !== state.fighters[1].cellId);
+    const result = applyPlace(state, free.id);
+    assert.deepEqual(eventNames(result), ['tactical:placed']);
+    assert.equal(result.state.fighters[1].cellId, free.id);
+    assert.equal(result.state.fighters[0].cellId, state.fighters[0].cellId);
+
+    const plain = state.board.cells.find(c => c.placement === null && c.terrain === 'floor');
+    assert.equal(applyPlace(state, plain.id).state, state);
+    assert.equal(applyPlace(state, state.fighters[0].cellId).state, state);
+});
+
+test('start: the higher initiative plays first (Crâ 110 before Iop 100), with full PA and PM', () => {
+    const state = createTacticalGame({ classes: ['iop', 'cra'] }, createRng(1));
+    const result = applyStart(state, () => 0);
+    assert.deepEqual(eventNames(result), ['tactical:initiative', 'tactical:turn']);
+    assert.equal(result.state.phase, 'fighting');
+    assert.equal(result.state.activeIndex, 1);
+    assert.equal(result.state.fighters[1].pa, BASE_PA);
+    assert.equal(result.state.fighters[1].pm, BASE_PM);
+    assert.equal(applyPlace(result.state, state.fighters[0].cellId).state, result.state); // plus de placement
+});
+
+test('start: on equal initiative, a coin flip decides', () => {
+    const state = createTacticalGame({ classes: ['iop', 'iop'] }, createRng(1));
+    assert.equal(applyStart(state, () => 0).state.activeIndex, 0);
+    assert.equal(applyStart(state, () => 0.99).state.activeIndex, 1);
 });
 
 test('moving costs one PM per cell of the path; several moves per turn while PM remain', () => {
-    let state = newGame();
+    let state = duel(['iop', 'cra'], [0, 0], [4, 4]);
     const from = state.board.cells[state.fighters[0].cellId];
-    const [twoSteps] = Object.entries(state.reachable).filter(([, p]) => p.length === 2);
-    let result = applyMove(state, Number(twoSteps[0]));
-    assert.deepEqual(eventNames(result), ['tactical:moved']);
-    state = result.state;
+    state = applyMove(state, at(state, 2, 0)).state;
     assert.equal(state.fighters[0].pm, 1);
     assert.equal(distance(from, state.board.cells[state.fighters[0].cellId]), 2);
-
-    // Il reste 1 PM : seules les cases à 1 pas sont atteignables
     assert.ok(Object.values(state.reachable).every(p => p.length === 1));
-    const [oneStep] = Object.keys(state.reachable);
-    state = applyMove(state, Number(oneStep)).state;
+    state = applyMove(state, at(state, 2, 1)).state;
     assert.equal(state.fighters[0].pm, 0);
     assert.deepEqual(state.reachable, {});
-});
-
-test('a move out of reach is refused', () => {
-    const state = newGame();
-    const far = state.board.cells.find(c => c.placement === 1);
-    const result = applyMove(state, far.id);
-    assert.equal(result.state, state);
-    assert.deepEqual(result.events, []);
-});
-
-test('the punch hits an adjacent enemy for 8 to 12 damage and costs 3 PA', () => {
-    let state = adjacent(newGame());
-    const enemyCell = state.fighters[1].cellId;
-    const result = applyPunch(state, enemyCell, () => 0.999);
-    assert.deepEqual(eventNames(result), ['tactical:attack']);
-    assert.equal(result.events[0].payload.damage, PUNCH.maxDamage);
-    state = result.state;
-    assert.equal(state.fighters[1].health, state.fighters[1].maxHealth - PUNCH.maxDamage);
-    assert.equal(state.fighters[0].pa, BASE_PA - PUNCH.cost);
-    assert.equal(applyPunch(newGame(), enemyCell, () => 0).events.length, 0); // pas à portée au départ
-    assert.equal(applyPunch(adjacent(newGame()), enemyCell, () => 0).events[0].payload.damage, PUNCH.minDamage);
-});
-
-test('two punches per turn with 6 PA, the third one is refused', () => {
-    let state = adjacent(newGame());
-    const enemyCell = state.fighters[1].cellId;
-    state = applyPunch(state, enemyCell, () => 0).state;
-    state = applyPunch(state, enemyCell, () => 0).state;
-    assert.equal(state.fighters[0].pa, 0);
-    assert.deepEqual(state.targets, []);
-    const third = applyPunch(state, enemyCell, () => 0);
-    assert.equal(third.state, state);
-});
-
-test('a punch on an empty cell is refused', () => {
-    const state = adjacent(newGame());
-    const empty = state.targets.find(id => id !== state.fighters[1].cellId);
-    assert.equal(applyPunch(state, empty, () => 0).state, state);
+    assert.equal(applyMove(state, at(state, 2, 2)).state, state);
 });
 
 test('ending the turn hands over to the other player with full PA and PM', () => {
-    let state = adjacent(newGame());
-    state = applyPunch(state, state.fighters[1].cellId, () => 0).state;
+    let state = duel(['iop', 'cra'], [0, 0], [1, 0]);
+    state = applyCast(state, 'pression', at(state, 1, 0), () => 0).state;
     const result = applyEndTurn(state);
     assert.deepEqual(eventNames(result), ['tactical:turn']);
     state = result.state;
     assert.equal(state.activeIndex, 1);
     assert.equal(state.fighters[1].pa, BASE_PA);
-    assert.equal(state.fighters[1].pm, BASE_PM);
-    assert.equal(state.fighters[0].pa, BASE_PA - PUNCH.cost); // rechargé au début de son prochain tour seulement
-    assert.ok(state.targets.includes(state.fighters[0].cellId));
+    assert.equal(state.fighters[0].pa, BASE_PA - 3); // rechargé au début de son prochain tour seulement
 });
 
-test('a punch that brings the enemy to 0 HP ends the fight; no action afterwards', () => {
-    let state = adjacent(newGame());
+test('a spell is refused out of range, without PA, or over its casts per turn', () => {
+    let state = duel(['iop', 'cra'], [0, 0], [2, 0]);
+    assert.equal(applyCast(state, 'pression', at(state, 2, 0), () => 0).state, state); // portée 1
+    state = duel(['iop', 'cra'], [0, 0], [1, 0]);
+    state = applyCast(state, 'intimidation', at(state, 1, 0), () => 0).state; // 1 par tour
+    const enemy = state.board.cells[state.fighters[1].cellId];
+    assert.equal(state.spells.intimidation.available, false);
+    assert.equal(applyCast(state, 'intimidation', enemy.id, () => 0).state, state);
+});
+
+test('a fighter brought to 0 HP loses; nothing can be played afterwards', () => {
+    let state = duel(['iop', 'cra'], [0, 0], [1, 0]);
     state = { ...state, fighters: state.fighters.map((f, i) => i === 1 ? { ...f, health: 5 } : f) };
-    const result = applyPunch(state, state.fighters[1].cellId, () => 0);
-    assert.deepEqual(eventNames(result), ['tactical:attack', 'tactical:over']);
+    const result = applyCast(state, 'pression', at(state, 1, 0), () => 0);
+    assert.deepEqual(eventNames(result), ['tactical:spell', 'tactical:over']);
     assert.deepEqual(result.events[1].payload, { winnerIndex: 0, loserIndex: 1 });
     state = result.state;
     assert.equal(state.phase, 'over');
     assert.equal(state.fighters[1].health, 0);
     assert.equal(applyEndTurn(state).state, state);
-    assert.deepEqual(state.reachable, {});
+    assert.deepEqual(state.spells, {});
+});
+
+test('same seed → same game', () => {
+    const a = createTacticalGame({ classes: ['cra', 'sacrieur'] }, createRng(7));
+    const b = createTacticalGame({ classes: ['cra', 'sacrieur'] }, createRng(7));
+    assert.deepEqual(a.fighters.map(f => f.cellId), b.fighters.map(f => f.cellId));
+    assert.equal(cellAt(a.board, 16, 10).id, cellAt(b.board, 16, 10).id);
 });

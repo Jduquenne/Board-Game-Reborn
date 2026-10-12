@@ -37,6 +37,9 @@
     --t-path:        rgba(27, 110, 32, 0.85);
     --t-range:       rgba(40, 96, 200, 0.45);
     --t-target:      rgba(20, 60, 170, 0.9);
+    --t-blocked:     rgba(90, 90, 110, 0.35);
+    --t-place-a:     rgba(40, 96, 160, 0.85);
+    --t-place-b:     rgba(160, 40, 40, 0.85);
     --t-team-a:      #2860a0;
     --t-team-b:      #a02828;
 
@@ -1139,6 +1142,9 @@ body {
 .tacticalBoard .tPath         { fill: var(--t-path); }
 .tacticalBoard .tRange        { fill: var(--t-range); }
 .tacticalBoard .tTarget       { fill: var(--t-target); }
+.tacticalBoard .tBlocked      { fill: var(--t-blocked); }
+.tacticalBoard .tPlaceA       { fill: var(--t-place-a); }
+.tacticalBoard .tPlaceB       { fill: var(--t-place-b); }
 .tacticalBoard .tBlock        { pointer-events: none; stroke: var(--t-line); stroke-width: 1; }
 .tacticalBoard .tBlockTop     { fill: var(--t-block-top); }
 .tacticalBoard .tBlockLeft    { fill: var(--t-block-left); }
@@ -1176,4 +1182,78 @@ body {
 /* Portrait : le journal tient sur une ligne de moins */
 @media (orientation: portrait) {
     .tacticalLog { min-height: 1.3em; }
+}
+
+/* Barre de sorts (lot 2) : grille de boutons compacts, nom + coût en PA */
+.spellBar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.5em, 1fr));
+    gap: clamp(3px, 0.8vmin, 8px);
+    font-size: clamp(11px, 2.1vmin, 17px);
+}
+
+.spellBar:empty { display: none; }
+
+.spellBar .spellBtn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 0.25em 0.3em;
+    font-size: 1em;
+    line-height: 1.15;
+}
+
+.spellCost {
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+/* Choix des classes */
+.classPicker {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(4px, 1.5vmin, 14px);
+}
+
+.classRow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.classRowLabel {
+    color: var(--text-light);
+    font-size: var(--font-small);
+}
+
+.classChoices {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(4px, 1vmin, 10px);
+}
+
+.classChoice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: clamp(2px, 0.8vmin, 8px);
+    border: 3px solid transparent;
+    border-radius: 8px;
+    background-color: var(--third);
+    color: var(--text-light);
+    font-family: inherit;
+    font-size: clamp(11px, 2.4vmin, 18px);
+    cursor: pointer;
+}
+
+.classChoice img { height: clamp(26px, 8vmin, 72px); width: auto; }
+
+.classChoice:hover,
+.classChoice:focus-visible { border-color: var(--ring-light); outline: none; }
+
+.classChoice.picked {
+    border-color: var(--secondary);
+    background-color: var(--secondary);
 }

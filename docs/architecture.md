@@ -51,8 +51,8 @@ src/
 │   ├── AIEngine.js                ← plugs an AI agent into the running game (singleton aiEngine)
 │   ├── MovementSystem.js          ← pure functions: getMovableCells, getAdjacentPositions
 │   └── Tactical/                  ← tactical mode (Phase 9, D-017 / D-018), no DOM
-│       ├── TacticalGrid.js        ← map parsing, square coordinates of the isometric map, neighbours, distance, reachableCells, cellsInRange
-│       ├── TacticalRules.js       ← pure rules: createTacticalGame, applyMove / applyPunch / applyEndTurn → { state, events }
+│       ├── TacticalGrid.js        ← map parsing, square coordinates of the isometric map, neighbours, distance, reachableCells, cellsInRange, lineOfSight, areaCells, pushDirection
+│       ├── TacticalRules.js       ← pure rules: createTacticalGame, applyPlace / applyStart / applyMove / applyCast / applyEndTurn → { state, events }; spell effects
 │       └── TacticalEngine.js      ← applies TacticalRules to the Store key `tactical` + emits events (singleton tacticalEngine)
 ├── AI/
 │   ├── ScriptedAgents.js          ← hand-written agents: random, easy, normal (SCRIPTED_AGENTS)
@@ -89,7 +89,8 @@ src/
 │   ├── WeaponsRepository.js       ← WEAPON_DATA
 │   ├── BonusRepository.js         ← BONUS_DATA
 │   ├── TrapRepository.js          ← TRAP_DATA
-│   └── TacticalMapsRepository.js  ← MAP_DATA: tactical maps as text (15 × 17 staggered; "plaine" = assets/image.png)
+│   ├── TacticalMapsRepository.js  ← MAP_DATA: tactical maps as text (15 × 17 staggered; "plaine" = assets/image.png)
+│   └── TacticalClassesRepository.js ← CLASS_DATA: tactical classes (Iop, Crâ, Eniripsa, Sacrieur) and their spells, + Coup de poing
 └── Views/
     ├── MenuView.js
     ├── OptionsView.js             ← OPTIONS and AI_MODES arrays (rendering is generic, no CSS per option)
@@ -101,7 +102,7 @@ src/
     ├── TrainingView.js            ← AI training page (#training): drives the Web Worker, chart, policy map, live board
     ├── BalanceView.js             ← Balance lab (#balance): editable character stats, win-rate bars, duel matrix
     ├── boardTemplate.js           ← boardHtml(state): board HTML shared by BoardView and TrainingView
-    ├── TacticalView.js            ← tactical mode (#tactical): SVG board, fighter cards, Coup de poing / Fin du tour, end of fight
+    ├── TacticalView.js            ← tactical mode (#tactical): class choice, placement, SVG board, fighter cards, spell bar, Fin du tour, end of fight
     └── tacticalBoardSvg.js        ← SVG of the isometric board: floor, highlights, blocks and characters
 training/
 ├── arena.mjs                      ← CLI: scripted agents and AI levels against each other (win rates, games/s; --godlike N)
@@ -176,7 +177,9 @@ Hash-based (`#menu`, `#options`, `#game`, `#training`, `#balance`, `#tactical`);
 | `fight:end` | FightEngine | `{ winner, loser }` |
 | `tactical:started` | TacticalEngine | — (new tactical fight in `state.tactical`) |
 | `tactical:moved` | TacticalEngine | `{ fighterIndex, path }` (`path`: cell ids, start excluded) |
-| `tactical:attack` | TacticalEngine | `{ attackerIndex, targetIndex, action, damage }` |
+| `tactical:placed` | TacticalEngine | `{ fighterIndex, cellId }` (placement phase) |
+| `tactical:initiative` | TacticalEngine | `{ activeIndex, initiatives }` (end of placement, before the first `tactical:turn`) |
+| `tactical:spell` | TacticalEngine | `{ casterIndex, spellId, spellName, cellId, results: [{ fighterIndex, kind, amount }] }` (`kind`: damage, heal, push, pull, teleport, swap, pa, punishment) |
 | `tactical:turn` | TacticalEngine | `{ activeIndex, turn }` |
 | `tactical:over` | TacticalEngine | `{ winnerIndex, loserIndex }` |
 | `state:changed` | Store | full `state` |
@@ -197,12 +200,14 @@ Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` 
   turn: number,               // turns played by both players (sudden death from 80)
   fight: { attackerIndex, targetIndex } | null,
   tactical: null | {          // tactical mode (TacticalRules.js); phase is then 'tactical'
-    phase: 'fighting' | 'over',
+    phase: 'placement' | 'fighting' | 'over',
     board: { id, name, width, height, cells: [{ id, row, col, x, y, terrain, placement }], index },
-    fighters: [{ name, image, team, health, maxHealth, pa, pm, maxPA, maxPM, cellId }],
-    activeIndex, turn, winnerIndex,
-    reachable: { [cellId]: path },  // cells the active fighter can reach with its PM, with their path
-    targets: cellId[],               // cells in range of the Coup de poing (empty without enough PA)
+    fighters: [{ classId, name, image, team, health, maxHealth, initiative, pa, pm, maxPA, maxPM, cellId,
+                 spells, casts, cooldowns, paNext, punishment }],
+    activeIndex, turn, winnerIndex,  // turn: 0 during placement
+    reachable: { [cellId]: path },   // cells the active fighter can reach with its PM, with their path
+    spells: { [spellId]: { range, blocked, valid, available, cooldown } }, // per spell of the active fighter:
+                                     // cells in range with / without line of sight, valid targets, castable now
   },
 }
 ```

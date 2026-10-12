@@ -37,20 +37,35 @@ export function floorSvg(board) {
 }
 
 /**
- * Surbrillances du personnage actif.
+ * Surbrillances : cases de placement, portée du sort choisi (avec ou sans ligne de vue, zone sous le pointeur),
+ * ou cases atteignables et chemin sous le pointeur.
  * @param {object} tactical  état du combat (store.state.tactical)
- * @param {{ mode: 'move' | 'punch', hoverId: number | null }} ui
+ * @param {{ spellId: string | null, hoverId: number | null }} ui  spellId null = déplacement
  */
-export function overlaySvg(tactical, { mode, hoverId }) {
-    if (tactical.phase !== 'fighting') return '';
+export function overlaySvg(tactical, { spellId, hoverId }) {
     const { board } = tactical;
     const shape = (id, cls) => {
         const { cx, cy } = center(board.cells[id]);
         return `<polygon class="${cls}" points="${diamond(cx, cy)}"/>`;
     };
 
-    if (mode === 'punch') {
-        return tactical.targets.map(id => shape(id, id === hoverId ? 'tTarget' : 'tRange')).join('');
+    if (tactical.phase === 'placement') {
+        return board.cells.filter(c => c.placement !== null)
+            .map(c => shape(c.id, c.placement === 0 ? 'tPlaceA' : 'tPlaceB')).join('');
+    }
+    if (tactical.phase !== 'fighting') return '';
+
+    if (spellId) {
+        const options = tactical.spells[spellId];
+        const spell = tactical.fighters[tactical.activeIndex].spells.find(s => s.id === spellId);
+        const base = options.range.map(id => shape(id, 'tRange')).join('')
+            + options.blocked.map(id => shape(id, 'tBlocked')).join('');
+        if (!options.valid.includes(hoverId)) return base;
+        // Zone touchée : cases de sol à au plus `area` pas de la case visée (affichage seulement, les règles décident)
+        const target = board.cells[hoverId];
+        const zone = board.cells.filter(c => c.terrain === 'floor'
+            && Math.abs(c.x - target.x) + Math.abs(c.y - target.y) <= spell.area);
+        return base + zone.map(c => shape(c.id, 'tTarget')).join('');
     }
 
     const reachable = Object.keys(tactical.reachable).map(Number);

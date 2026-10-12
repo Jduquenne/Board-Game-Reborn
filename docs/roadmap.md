@@ -4,7 +4,7 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⏸ waiting for a dec
 
 ## Current focus
 
-**Current (2026-10-12):** Phase 9 (owner's go, 2026-10-12) — Dofus Retro-like tactical fights, new mode next to the current game (D-017). Specification [`spec-tactical.md`](spec-tactical.md) v0.2. **Batch 1 done 2026-10-12** (isometric SVG board of `assets/image.png`, PA / PM, several moves per turn, test "Coup de poing", "Fin du tour", 2 humans — D-018), awaiting the owner's check in the browser. Next: batch 2 (spells, 4 classes, placement, initiative) — needs the owner's answers to §11.
+**Current (2026-10-12):** Phase 9 (owner's go, 2026-10-12) — Dofus Retro-like tactical fights, new mode next to the current game (D-017). Specification [`spec-tactical.md`](spec-tactical.md) v0.2. **Batch 1 done 2026-10-12** (isometric SVG board, PA / PM, D-018), checked by the owner. **Batch 2 done 2026-10-12** (class choice, placement, initiative, 4 classes × 4 spells + Coup de poing, line of sight — spec §13), awaiting the owner's check in the browser. Next: batch 3 (stats, elements, criticals, tackle).
 
 **Previous (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell), 4 (weapon types), 5 (classes, auto-tuned health), 6 (derived initiative, sudden death), 7 (AIs re-checked, fight learning fixed with γ = 1) 8 (Intelligence, mana, spells Soin / Entrave, Mage class) and 9 (critical × 2, Thief PM 4, health re-tuned and applied) are done. AI levels "Difficile", "Expert", "Godlike" done 2026-10-09 (D-016), checked by the owner on 2026-10-12 ("Godlike est vraiment très compliqué à battre"), as well as the flee re-engage fix. Fight models saved in the browser before batch 3 must be retrained on the training page.
 
@@ -107,8 +107,8 @@ Owner's wish on 2026-10-09 ("grave chaud"): give movement and placement real wei
 
 Update 2026-10-12: the owner wants **Dofus Retro's gameplay** — PA / PM spent in any order, spells at range / in melee / semi-melee with line of sight, the 12 classes (4 first), an isometric 15 × 17 board (`assets/image.png`), no pickups; built as a **new mode next to the current game** ([D-017](decisions.md#d-017--tactical-mode-built-next-to-the-current-game)). The candidates above are replaced by [`spec-tactical.md`](spec-tactical.md) v0.2 (draft, 6 batches proposed).
 
-- ✅ **Batch 1 — Isometric board** (2026-10-12, [D-018](decisions.md#d-018--tactical-board-drawn-in-svg-tacticalview-dispatches-to-tacticalengine)): menu "Combat tactique" (`#tactical`), SVG board of `assets/image.png`, PA / PM, several moves per turn, test "Coup de poing", "Fin du tour", 2 humans. Awaiting the owner's check in the browser.
-- ⬜ Batch 2 — Spells, 4 classes, placement phase, initiative (owner's answers to spec §11 needed).
+- ✅ **Batch 1 — Isometric board** (2026-10-12, [D-018](decisions.md#d-018--tactical-board-drawn-in-svg-tacticalview-dispatches-to-tacticalengine)): menu "Combat tactique" (`#tactical`), SVG board of `assets/image.png`, PA / PM, several moves per turn, test "Coup de poing", "Fin du tour", 2 humans. Checked by the owner (2026-10-12).
+- ✅ **Batch 2 — Spells** (2026-10-12): class choice, placement phase, initiative, Iop / Crâ / Eniripsa / Sacrieur with 4 spells each + Coup de poing, line of sight, spell bar ([spec §13](spec-tactical.md#13-as-built-batches-12-2026-10-12)). Awaiting the owner's check in the browser.
 - ⬜ Batch 3 — Stats, criticals, tackle. ⬜ Batch 4 — AI Normal. ⬜ Batch 5 — Random maps, balance lab. ⬜ Batch 6 — Later items.
 
 Done when (proposal, spec §12): a full fight can be played on the isometric board with the 4 first classes, two humans or against the AI, on every screen size without scrolling.

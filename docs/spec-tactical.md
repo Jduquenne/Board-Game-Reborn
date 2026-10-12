@@ -1,6 +1,6 @@
 # Tactical specification — Dofus Retro-like fights (Phase 9)
 
-> **Status: DRAFT v0.2 (2026-10-12) — batch 1 implemented (2026-10-12), the rest is a proposal.** Batch 1 used the recommended answers to §11 (6 PA / 3 PM, existing portraits as placeholders, SVG rendering, no turn timer); still open for the next batches. Decided by the owner: Dofus Retro gameplay (PA / PM spent freely in any order during a turn, spells at range, in melee and semi-melee, line of sight), its 12 classes (4 first), an isometric board of the size of [`assets/image.png`](../assets/image.png), a **new mode next to the current game** ([D-017](decisions.md#d-017--tactical-mode-built-next-to-the-current-game)), no pickups in fights. Numbers and formulas marked "proposal" are still to be validated (open questions in §11). Once validated, rules move to a gameplay specification batch by batch.
+> **Status: DRAFT v0.2 (2026-10-12) — batches 1 and 2 implemented (2026-10-12), the rest is a proposal.** Batches 1–2 used the recommended answers to §11 (6 PA / 3 PM for every class, existing portraits as placeholders, SVG rendering, no turn timer, the spells of §8, a Coup de poing for every class); the owner can still change them. The implemented rules are in §13. Decided by the owner: Dofus Retro gameplay (PA / PM spent freely in any order during a turn, spells at range, in melee and semi-melee, line of sight), its 12 classes (4 first), an isometric board of the size of [`assets/image.png`](../assets/image.png), a **new mode next to the current game** ([D-017](decisions.md#d-017--tactical-mode-built-next-to-the-current-game)), no pickups in fights. Numbers and formulas marked "proposal" are still to be validated (open questions in §11). Once validated, rules move to a gameplay specification batch by batch.
 >
 > v0.1 (same day) proposed ranged weapons and terrain on top of the current game; the owner chose a deeper change instead.
 >
@@ -120,10 +120,48 @@ Phones: 479 cells in portrait give ~23 px wide cells — landscape will be recom
 Each batch: pure rules with tests, UI checked with `tools/ui-check.mjs` (new screen) and in the browser by the owner.
 
 1. ✅ **Isometric board** (2026-10-12): new route / screen "Combat tactique" (menu), map of `image.png` in SVG, coordinates, pathfinding, PA / PM turn, move several times, "Fin du tour", 2 humans, one test melee attack. Fits the viewport. As built: test attack "Coup de poing" (3 PA, range 1, 8–12 damage, only on an enemy: a click on an empty cell is refused); two random characters of the current game (with their health) on a random placement cell of their colour; player 1 starts; reachable cells in light green, path under the pointer in dark green, punch range in blue; no line of sight yet (range 1 only).
-2. **Spells**: spell model (cost, range, line of sight, in line, effects: damage, push, pull, heal, PA / PM changes, cooldown), range and line-of-sight display, the 4 classes, class choice, placement phase, initiative.
+2. ✅ **Spells** (2026-10-12): spell model (cost, range, line of sight, in line, effects: damage, push, pull, heal, PA / PM changes, cooldown), range and line-of-sight display, the 4 classes, class choice, placement phase, initiative. See §13.
 3. **Stats and tackle**: elements, criticals, tackle / dodge, sudden death.
 4. **AI Normal** for the tactical mode + simulator + arena.
 5. **Random maps** (seeded) + balance lab for classes.
 6. Later: stronger AIs, the 8 other classes, Range stat, turn timer, visual style.
 
 **Done when** (v1 = batches 1–4): a full fight can be played on the isometric board with the 4 classes, two humans or against the AI, on every screen size without scrolling.
+
+## 13. As built (batches 1–2, 2026-10-12)
+
+Rules implemented in `src/Engine/Tactical/` (tested in `tests/Tactical*.test.mjs`); values are first drafts, to tune in batch 3–5.
+
+**Fight flow**
+
+1. **Class choice** (window "Choix des classes"): each player picks Iop, Crâ, Eniripsa or Sacrieur (same class allowed: names get "bleu" / "rouge").
+2. **Placement**: each character starts on a random placement cell of its colour (shown in blue / red); a click on a free cell of a colour moves that colour's character there; "Prêt" ends the placement.
+3. **Initiative**: the higher class initiative plays first (Crâ 110, Eniripsa 105, Iop 100, Sacrieur 90; tie → coin flip).
+4. **Turn**: 6 PA and 3 PM, spent in any order: a click on a reachable cell (light green; path under the pointer in dark green) moves by the shortest path, 1 PM per cell; a spell button then a target cell casts the spell. "Fin du tour" passes; PA and PM are refilled at the start of the player's turn.
+5. **End**: a character at 0 HP loses ("X remporte le combat !", "Rejouer" goes back to the class choice).
+
+**Line of sight**: segment between cell centres on the square grid; blocked by blocks and characters (start and end cells excluded), not by holes; a segment through an exact corner touches neither side cell. Cells in range with line of sight are shown in blue, without in grey; the target (and its area) under the pointer in dark blue.
+
+**Spell rules**: a spell needs its PA, fewer casts this turn than `perTurn`, and no cooldown left; the target cell must be in range (and in line / in sight if required) and match the spell's target (`enemy`, `self`, `free` cell, any `cell`). Damage is a roll between min and max (no stats yet). Push / pull move the target cell by cell along the main axis between caster and target, stopping at a block, a hole, the border or a character (no push damage yet). PA changes apply at the start of the target's next turn. Cooldown N: castable again N turns of the caster later.
+
+| Class | HP | Spell | PA | Range | Effect |
+|---|---|---|---|---|---|
+| Iop | 110 | Pression | 3 | 1 | 13–17 damage, 2 per turn |
+| | | Bond | 4 | 2–5, no line of sight | teleport to a free cell, 1 per turn, cooldown 2 |
+| | | Intimidation | 2 | 1 | 4–6 damage + push 3, 1 per turn |
+| | | Colère de Iop | 6 | 1 | 34–42 damage, cooldown 3 |
+| Crâ | 90 | Flèche magique | 3 | 2–8 | 8–11 damage, 2 per turn |
+| | | Flèche de recul | 3 | 1–6, in line | 5–7 damage + push 3, 1 per turn |
+| | | Flèche glacée | 3 | 2–6 | 4–6 damage, −2 PA next turn, 1 per turn |
+| | | Flèche explosive | 4 | 3–7 | 9–12 damage in a radius of 1 (any floor cell), 1 per turn |
+| Eniripsa | 95 | Mot interdit | 3 | 1–6 | 8–11 damage, 2 per turn |
+| | | Mot soignant | 3 | self | heal 14–18, 1 per turn |
+| | | Mot de frayeur | 2 | 1–3, in line | push 3, 1 per turn |
+| | | Mot stimulant | 2 | self | +2 PA next turn, cooldown 3 |
+| Sacrieur | 120 | Attirance | 3 | 2–6, in line | pull 5 (next to the caster), 1 per turn |
+| | | Transposition | 2 | 1–5, no line of sight | swap places, 1 per turn, cooldown 2 |
+| | | Absorption | 4 | 1–2 | 11–14 damage, heals half the damage dealt |
+| | | Châtiment | 2 | self | 3 turns: +10 % damage per hit taken, cooldown 4 |
+| all | | Coup de poing | 3 | 1 | 6–9 damage, 2 per turn |
+
+Flèche magique, Flèche de recul, Flèche glacée, Flèche explosive and Mot interdit are marked "range modifiable" for the future Range stat (no effect yet). Spell details are in each button's tooltip.

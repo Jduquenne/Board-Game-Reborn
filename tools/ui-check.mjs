@@ -102,28 +102,37 @@ const SCREENS = [
     ['trap',    '#game',    `(async () => {${fightSetup}
         eventBus.emit('trap:triggered', { playerInfo: a });
     })()`],
-    // Mode tactique (Phase 9, lot 1) : plateau isométrique SVG, portée du Coup de poing, fin de combat
-    ['tactical',       '#tactical', null],
-    ['tactical-range', '#tactical', `(async () => {
+    // Mode tactique (Phase 9) : choix des classes, placement, portée d'un sort, déplacement, fin de combat
+    ['tactical',           '#tactical', null],
+    ['tactical-placement', '#tactical', `document.querySelector('#t-classes-ok').click()`],
+    // Crâ (initiative 110) commence ; l'Iop est mis à 4 cases en ligne : Flèche magique sélectionnée, Iop sous le pointeur
+    ['tactical-spell', '#tactical', `(async () => {
         const { store } = await import('/src/core/Store.js');
         const { tacticalEngine } = await import('/src/Engine/Tactical/TacticalEngine.js');
         const { cellAt } = await import('/src/Engine/Tactical/TacticalGrid.js');
+        document.querySelector('#t-classes-ok').click();
+        tacticalEngine.ready();
         const { board, fighters } = store.state.tactical;
-        const enemy = board.cells[fighters[1].cellId];
-        const next = cellAt(board, enemy.x - 1, enemy.y);
-        store.setState(s => ({ tactical: { ...s.tactical, fighters: s.tactical.fighters.map((f, i) => i === 0 ? { ...f, cellId: next.id } : f) } }));
+        const cra = board.cells[fighters[1].cellId];
+        const spot = cellAt(board, cra.x - 4, cra.y);
+        store.setState(s => ({ tactical: { ...s.tactical, fighters: s.tactical.fighters.map((f, i) => i === 0 ? { ...f, cellId: spot.id } : f) } }));
         tacticalEngine.endTurn();
         tacticalEngine.endTurn();
-        document.querySelector('#t-punch').click();
+        document.querySelector('[data-spell="fleche-magique"]').click();
+        document.querySelector('#t-floor [data-cell="' + spot.id + '"]').dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+        if (!store.state.tactical.spells['fleche-magique'].valid.includes(spot.id)) throw new Error('tactical-spell: the Iop is not a valid target');
     })()`],
-    // Clic sur une case atteignable : le personnage s'y déplace et dépense ses PM (délégation des clics du SVG)
+    // Clic sur une case atteignable : le personnage actif s'y déplace et dépense ses PM (délégation des clics du SVG)
     ['tactical-move',  '#tactical', `(async () => {
         const { store } = await import('/src/core/Store.js');
-        const [id, path] = Object.entries(store.state.tactical.reachable).find(([, p]) => p.length === 2);
+        document.querySelector('#t-classes-ok').click();
+        document.querySelector('#t-ready').click();
+        const { activeIndex, reachable } = store.state.tactical;
+        const [id] = Object.entries(reachable).find(([, p]) => p.length === 2);
         const cell = document.querySelector('#t-floor [data-cell="' + id + '"]');
         cell.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
         cell.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-        const me = store.state.tactical.fighters[0];
+        const me = store.state.tactical.fighters[activeIndex];
         if (me.cellId !== Number(id) || me.pm !== 1) throw new Error('tactical-move: click did not move the fighter');
     })()`],
     ['tactical-over',  '#tactical', `(async () => {
