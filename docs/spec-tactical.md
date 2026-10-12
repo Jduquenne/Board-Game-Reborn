@@ -1,108 +1,129 @@
-# Tactical specification — ranged attacks, board spells, terrain, procedural maps (Phase 9)
+# Tactical specification — Dofus Retro-like fights (Phase 9)
 
-> **Status: DRAFT v0.1 (2026-10-12) — proposal, nothing implemented.** Everything here is a proposal to be validated by the owner (questions in §9). Once validated, the rules move to [`spec-gameplay.md`](spec-gameplay.md) batch by batch, as for [`spec-game-design.md`](spec-game-design.md).
+> **Status: DRAFT v0.2 (2026-10-12) — proposal, nothing implemented.** Decided by the owner: Dofus Retro gameplay (PA / PM spent freely in any order during a turn, spells at range, in melee and semi-melee, line of sight), its 12 classes (4 first), an isometric board of the size of [`assets/image.png`](../assets/image.png), a **new mode next to the current game** ([D-017](decisions.md#d-017--tactical-mode-built-next-to-the-current-game)), no pickups in fights. Numbers and formulas marked "proposal" are still to be validated (open questions in §11). Once validated, rules move to a gameplay specification batch by batch.
+>
+> v0.1 (same day) proposed ranged weapons and terrain on top of the current game; the owner chose a deeper change instead.
+>
+> **Names**: class and spell names are those of Dofus Retro (Ankama), used as a reference for this personal learning project. If the game is ever published, they must be renamed.
 
 ## 1. Why
 
-Today a game is mostly decided by stats, weapon and who strikes first: the board is only a way to reach a weapon, a bonus or the enemy, and every fight is a melee duel. Measured gap between AI levels (arena, 2026-10-09): Expert beats Normal 68.7 %, Godlike beats Expert 86 % — strong AIs already win, but there are few decisions where position matters.
-
-Owner's goal (2026-10-09): **movement and placement must have real weight**, so that decisions matter more than stats and stronger AIs can show their level.
+Today a game is mostly decided by stats, weapon and who strikes first; the board is only a way to reach a weapon or the enemy. Owner's goal (2026-10-09, refined 2026-10-12): **Dofus Retro's tactical fights** — every point of action and movement is a decision, position and line of sight matter, and stronger AIs can show their level.
 
 ## 2. Design goals
 
-1. **Position matters**: where a character ends its move changes what it can do next turn and what the enemy can do to it (range, line of sight, cover).
-2. **Meaningful choice every turn**: move, shoot, cast, take cover, or close in for a melee duel.
-3. **Fair maps**: a generated map never favours one starting position (symmetry), never blocks a player, and is reproducible from a seed (AI training and balance lab).
-4. **Readable**: ranges, line of sight and terrain effects are shown on the board before acting.
-5. **Measurable**: each batch is checked in the balance lab and the arena (§8).
-6. **Every AI level plays every new action** (Normal by rules, Difficile / Expert by features, Godlike by search).
+1. **Every turn is a puzzle**: spend 6 PA and 3 PM in the best order (move, hit, move away).
+2. **Position matters**: range, line of sight, melee vs distance, tackle.
+3. **Classes play differently**: melee, distance, heal, semi-melee.
+4. **Readable**: movement paths, spell ranges and blocked line of sight are shown before acting, as in Dofus.
+5. **Measurable**: balance lab and arena for classes (§9).
+6. **Fits the viewport** without scrolling, on every screen size ([ui-design](ui-design.md)).
 
-## 3. Turn structure (proposal)
+## 3. Board
 
-Today: exactly one move per turn; moving next to the enemy starts a melee duel.
+Same size and look as `assets/image.png` (a standard Dofus Retro map):
 
-Proposal: **move, then one optional action**.
+- **15 cells wide × 17 rows**, rows staggered (17 rows of 15 + 16 rows of 14 = **479 cells**), drawn as isometric diamonds.
+- **Border** cells (black in the image): not playable.
+- **Blocks** (raised brown tiles): block movement **and** line of sight.
+- **Holes** (black cells inside): block movement, **not** line of sight.
+- **Placement cells**: blue (player 1) and red (player 2), chosen before the fight.
+- Style: current colours for now (owner: visual style later).
 
-1. **Move** (optional): as today, straight line, 1 to PM cells. New: the player may **stay in place** (needed to shoot from a good spot).
-2. **Action** (optional), from the cell reached:
-   - **Shoot** with a ranged weapon (§4);
-   - **Cast a board spell** (§5);
-   - **Melee**: as today, ending the move in a security zone starts the duel (the duel replaces the action);
-   - **End turn**.
+Engine model (proposal): the staggered map is a square grid turned 45°. The engine stores cells with square coordinates `(x, y)`; the 4 neighbours of a cell are the 4 diagonal neighbours on screen. Distances are Manhattan distances in `(x, y)` (as in Dofus), so pathfinding, ranges and line of sight stay simple; only the view converts `(x, y)` to screen positions.
 
-Alternative A (simpler, fewer AI branches): the action **replaces** the move (move *or* shoot *or* cast). Recommended: the proposal above (move then act) — it is what makes positioning tactical.
+**Maps**: batch 1 reproduces the map of `image.png` as a fixed map. Later: random maps in the current style (random blocks and holes, seeded, every cell connected, mirrored placement cells).
 
-## 4. Ranged attacks (proposal)
+## 4. Fight flow
 
-- New weapon type **ranged** (`WEAPON_TYPE.RANGED`, label "à distance"), with a **range** (`range`, 2–4 cells).
-  - Arc de Nodens becomes ranged (range 3); 2 new weapons, e.g. a crossbow (range 4, high damage) and throwing knives (range 2, light) — names and images to choose (no image yet: reuse existing ones or add free ones, see [`ATTRIBUTION.md`](../ATTRIBUTION.md)).
-- **Line of sight**: straight lines only (same 4 directions as movement), blocked by obstacles and by the other player. Simple to read and to compute; diagonal shots: later.
-- **Shot**: same damage formula as a melee attack (Strength, criticals, dodge, defense), but the target **does not** enter a duel: it simply takes the damage and plays its turn normally.
-- **Ranged weapon in a melee duel**: hits at 50 % damage (an archer caught in melee is weak) — this is the counterplay: close in on an archer.
-- Minimum range: 2 (adjacent = duel).
-- No ammunition in v1.
+1. **Placement**: each player chooses a starting cell among their colour (AI: chosen by its rule); "Prêt" starts the fight.
+2. **Turn order**: by **Initiative** (higher plays first).
+3. **Turn**: the player has **6 PA** and **3 PM** (base values per class, proposal), spent in **any order**:
+   - **Move**: click a reachable cell; the path (shortest, through free cells) costs 1 PM per cell. Several moves per turn are allowed while PM remain.
+   - **Cast a spell**: select a spell, then a target cell in range and (if required) in line of sight; costs its PA.
+   - **End turn** ("Fin du tour"). PA and PM are refilled at the start of the next turn.
+   - Turn timer: none in v1 (proposal: optional later, 30 s as in Dofus).
+4. **End**: the fight ends when a character reaches 0 HP. Anti-stalemate: sudden death kept (proposal).
 
-## 5. Board spells (proposal)
+## 5. Line of sight and range
 
-Cast with mana (Intelligence, batch 8) as the turn's action. Proposal: pick **2 for v1**.
+- A spell has a **range** `min–max` (Dofus "PO"), e.g. 1–1 (melee), 1–3 (semi-melee), 2–8 (distance).
+- Flags per spell (as in Dofus): **line of sight required**, **cast in line only** (same row / column in `(x, y)`), **range modifiable** (for the future Range stat — owner's wish).
+- **Line of sight**: straight line between the centres of the two cells; blocked if it crosses a block or a character (holes do not block). Exact cell-crossing rule: proposal, tested on known cases.
+- UI: selecting a spell shows cells in range in blue, cells in range but without line of sight in a lighter colour; hovering a reachable cell shows the movement path in green.
 
-| Spell | Cost | Effect | Why |
-|---|---|---|---|
-| **Boule de feu** (fireball) | 30 | range 3, line of sight; 10 + 2 × INT damage to the target cell and the 4 adjacent cells (the caster too, if inside) | ranged option for Mages |
-| **Téléportation** | 25 | move to any free floor cell within 4 cells (Manhattan), no line of sight needed | escape / ambush |
-| **Piège posé** (lay trap) | 20 | place a hidden trap on an adjacent empty cell (hidden from the enemy, like random traps) | zone control |
-| **Ralentissement** (slow) | 20 | range 3; the enemy has −2 PM on its next move (minimum 1) | stops a runner / a Thief |
+## 6. Stats (proposal, Dofus Retro inspired)
 
-Recommended for v1: **Boule de feu** and **Ralentissement** (easiest to read and for AIs; Piège posé creates hidden information that only the caster knows, Téléportation makes maps less important).
+| Stat | Effect |
+|---|---|
+| Vitalité → HP | health |
+| PA / PM | action / movement points per turn |
+| Force | earth damage +1 % per point |
+| Intelligence | fire damage +1 % per point, heals +1 % per point |
+| Chance | water damage +1 % per point |
+| Agilité | air damage +1 % per point; dodge / tackle (§7) |
+| Initiative | turn order |
+| Portée (PO) | **later** (owner): + range on spells with modifiable range |
 
-## 6. Terrain (proposal)
+Spell damage = roll between min and max × (1 + element stat / 100), rounded. Criticals: per-spell chance (e.g. 1/50) with higher damage (proposal). Resistances: later.
 
-New decor values next to `floor` and `obstacle`, using the unused images `grass.png`, `wood.png`, `rock.jpg`:
+Current stats (Strength / Agility / Intelligence / Luck, scale 0–10) and the 15 characters stay in the current game; the tactical mode has its own data.
 
-| Terrain | Image | Effect |
+## 7. Tackle and dodge (proposal)
+
+Leaving a cell next to an enemy costs a dodge roll based on both Agilities; on a failure, the mover loses part or all of its remaining PM. Exact formula: proposal at batch 3, checked in the balance lab.
+
+## 8. Classes (4 first, 12 later)
+
+Each class: HP, PA, PM, main element, and 4–5 spells (Dofus Retro inspired; values to tune). Proposal for the first 4:
+
+| Class | Role | Spells (proposal) |
 |---|---|---|
-| **Couvert** (cover: bush, crates) | `grass.png` or `wood.png` | a character standing on it takes −50 % damage from **shots and spells** (not melee); does not block line of sight |
-| **Hauteur** (high ground) | `rock.jpg` | a character shooting from it has +1 range and +10 % shot damage |
-| **Boue** (mud, slow) | to find | entering it stops the move (the cell is reachable, cells behind it are not) |
+| **Iop** | melee | Pression (melee, earth), Bond (jump to a free cell, range 1–5), Intimidation (push back 1 cell), Colère de Iop (big melee hit, once every 3 turns) |
+| **Crâ** | distance | Flèche magique (range 2–8, air), Flèche de recul (push back 2), Flèche glacée (−PA to the target), Flèche explosive (small area) |
+| **Eniripsa** | heal / support | Mot interdit (range 1–6, fire), Mot soignant (heal self), Mot de frayeur (push back), Mot stimulant (+PA next turn) |
+| **Sacrieur** | semi-melee / bruiser | Attirance (pull the enemy, in line), Transposition (swap places), Absorption (damage + heal), Châtiment (gets stronger when hit) |
 
-Effects are shown in the cell tooltip and in the rules modal.
+The other 8 (Féca, Osamodas, Enutrof, Sram, Xélor, Écaflip, Sadida, Pandawa) come once the first 4 are balanced. Some need things that do not exist yet (summons, glyphs, traps, teams).
 
-## 7. Procedural maps (proposal)
+Class choice: a class selection screen before the fight (the existing portraits as placeholders until class images exist — to decide, §11).
 
-New pure module `src/Engine/MapGenerator.js` (no DOM), seeded: **same seed + same settings → same map**.
+## 9. AI
 
-- **Style**: "Arène" (open areas, scattered cover) and "Donjon" (small rooms joined by corridors), chosen in Options; "Classique" (current random placement) kept.
-- **Point symmetry** (the map turned 180° is identical): both players start at mirrored positions, items are placed in mirrored pairs → no starting position is better. Odd counts (e.g. 3 weapons): the extra item goes on the centre line.
-- **Checks** at generation (regenerate with the next seed if they fail): every floor cell is connected (flood fill), both players can move on turn 1, minimum distance between the starting positions.
-- **Seed**: random by default; shown in Options ("Graine") so a map can be replayed; the arena and the balance lab use fixed seeds.
-- Board size: grids stay 7–12 × 7–12 (viewport rule). Question: is 12 × 12 enough for ranged combat (§9)?
+The current AIs (Normal, Difficile, Expert, Godlike, trained) belong to the current game and keep working there. The tactical mode gets its own:
 
-## 8. AIs and measurement
+1. A pure simulator (same idea as `GameEnv`, D-010) for the tactical rules.
+2. **Normal** (rules): place, walk to the best cell to cast the most damaging spell(s) with its PA, then move away with remaining PM if it is a distance class.
+3. Later: Godlike-style search (sequences of actions in a turn), then trained AIs — a turn is a sequence of actions, which is a new learning problem (good material for the learning notes).
 
-- **Normal** (rules): shoot if the enemy is in range and line of sight; otherwise, prefer a cell from which it can shoot next turn without being in the enemy's line of sight; spells: fireball when in range, slow a runner; keeps today's melee rules.
-- **Difficile / Expert** (features + trained weights): new features (can shoot from the cell, in the enemy's line of sight, cover, high ground, distance to the best shooting cell); retrained with `train-expert.mjs`. The shipped Difficile champion and the neural network (7.4b) do not know the new actions: they fall back to Normal's rules for actions until retrained.
-- **Godlike** (search): searches over (cell, action) pairs instead of cells; Expert plays the simulations. Thinking time to watch (more branches).
-- **Q-learning fight table**: unchanged (melee duel only).
-- **Balance lab / arena**: measure per batch: character and class win rates, first-player advantage, draws, and **gap between AI levels**.
+Balance lab: class against class win rates, first-player advantage.
 
-**Done when** (proposal): the new actions are playable by humans and every AI level; characters stay within 45–55 %, first player ≤ 55 %; and the skill gap widens — **Expert beats Normal ≥ 75 %** (68.7 % today) on generated maps.
+## 10. Rendering (proposal, decision to record when validated)
 
-## 9. Open questions for the owner
+**SVG** board: one polygon per cell (exact diamond hit-testing, no maths for clicks), the `viewBox` scales the whole map to the available space (no-scroll rule), blocks drawn as raised tiles (top + two faces, as in the image), characters as upright images on their cell, drawn from back to front. No dependency.
 
-1. Turn structure: **move then act** (recommended) or action **instead of** moving (simpler)?
-2. Ranged attacks: straight-line line of sight only (recommended for v1), ranged weapon at 50 % in melee, no ammunition — OK? Which new ranged weapons (names)?
-3. Board spells: which 2 for v1 (recommended: Boule de feu + Ralentissement)? Are spells still allowed in melee duels (Soin, Entrave) — yes, unchanged?
-4. Terrain: cover, high ground, mud — all three, or start with cover only?
-5. Maps: styles "Arène" and "Donjon" + "Classique" kept? Symmetry mandatory? Seed shown in Options?
-6. Board size: keep 12 × 12 as the maximum, or try up to 14 × 14 (to check against the no-scroll rule on phones)?
-7. Batch order (§10).
+Alternatives: DOM elements with `clip-path` diamonds (heavier layout); Canvas (fast, but hit-testing, tooltips and the UI check need more work).
 
-## 10. Delivery in batches (proposal)
+Phones: 479 cells in portrait give ~23 px wide cells — landscape will be recommended, portrait must still fit without scrolling.
 
-Each batch: rules in `Rules.js` with tests, UI, Normal AI and `GameEnv` actions (so that every AI keeps working), arena + balance lab measurement, owner's check in the browser.
+## 11. Open questions for the owner
 
-1. **Turn structure + ranged weapons**: optional move ("Rester sur place"), action phase, `range`, line of sight, shot, 50 % in melee; range and targets shown on the board; Normal AI shoots.
-2. **Procedural maps**: `MapGenerator.js`, styles, symmetry, seed in Options, checks; arena / balance lab on generated maps.
-3. **Terrain**: cover, high ground, mud (generated by the map styles).
-4. **Board spells**: the 2 chosen spells; Normal AI casts them.
-5. **AIs**: Expert features and retraining, Godlike searches over actions, Difficile retrained; final measurement against the "done when".
+1. PA / PM: 6 / 3 for every class (Dofus base), or different per class?
+2. Are the 4 first classes Iop, Crâ, Eniripsa, Sacrieur OK? Spells in §8 OK as a start?
+3. Images for classes: existing portraits as placeholders, or simple coloured tokens until we have class images?
+4. Weapons: a basic melee attack for every class ("Coup de poing", 3 PA, range 1), or spells only?
+5. Rendering in SVG (§10)?
+6. Turn timer: none in v1?
+
+## 12. Delivery in batches (proposal)
+
+Each batch: pure rules with tests, UI checked with `tools/ui-check.mjs` (new screen) and in the browser by the owner.
+
+1. **Isometric board**: new route / screen "Combat tactique" (menu), map of `image.png` in SVG, coordinates, pathfinding, PA / PM turn, move several times, "Fin du tour", 2 humans, one test melee attack. Fits the viewport.
+2. **Spells**: spell model (cost, range, line of sight, in line, effects: damage, push, pull, heal, PA / PM changes, cooldown), range and line-of-sight display, the 4 classes, class choice, placement phase, initiative.
+3. **Stats and tackle**: elements, criticals, tackle / dodge, sudden death.
+4. **AI Normal** for the tactical mode + simulator + arena.
+5. **Random maps** (seeded) + balance lab for classes.
+6. Later: stronger AIs, the 8 other classes, Range stat, turn timer, visual style.
+
+**Done when** (v1 = batches 1–4): a full fight can be played on the isometric board with the 4 classes, two humans or against the AI, on every screen size without scrolling.

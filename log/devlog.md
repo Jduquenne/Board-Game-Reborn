@@ -13,11 +13,11 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
-## 2026-10-12 — Phase 9 started: tactical specification draft
+## 2026-10-12 — Phase 9 started: Dofus Retro-like tactical mode specification
 
-- **Done**: owner checked the 2026-10-09 work in the browser (AI levels Difficile / Expert / Godlike — "Godlike est vraiment très compliqué à battre" — and the flee re-engage fix: all OK) and gave the go for Phase 9. Draft specification [`docs/spec-tactical.md`](../docs/spec-tactical.md) v0.1: turn = move then optional action (stay in place allowed), ranged weapons with straight-line line of sight (50 % in melee), board spells (4 candidates, 2 recommended), terrain (cover, high ground, mud — reusing the unused `grass.png`, `wood.png`, `rock.jpg`), seeded point-symmetric procedural maps (`MapGenerator.js`, styles Arène / Donjon / Classique), AI plan per level, "done when" proposal, 5 batches. Roadmap (Phase 9 🟡), AGENTS.md orientation table.
+- **Done**: owner checked the 2026-10-09 work in the browser (AI levels Difficile / Expert / Godlike — "Godlike est vraiment très compliqué à battre" — and the flee re-engage fix: all OK) and gave the go for Phase 9. First draft `docs/spec-tactical.md` v0.1 (ranged weapons, terrain, generated maps on top of the current game); the owner then chose **Dofus Retro's gameplay** instead: PA / PM in any order, spells (distance, melee, semi-melee; a Range stat later), the 12 classes, isometric board of `assets/image.png` (15 × 17 staggered, 479 cells, blocks cut line of sight). Owner's answers: standard 15 × 17 map, **new mode next to the current game** (D-017), no pickups in fights, 4 classes first. Specification rewritten as v0.2 (board model as a square grid turned 45°, fight flow, line of sight, stats, tackle, Iop / Crâ / Eniripsa / Sacrieur, AI, SVG rendering proposal, 6 batches). Roadmap, decisions (D-017), AGENTS.md orientation table.
 - **Numbers**: docs only; no code changed, no tests run.
-- **Still open**: owner's answers to the specification's open questions (§9) before batch 1.
+- **Still open**: owner's answers to the specification's §11 (PA / PM per class, first classes and spells, class images, basic melee attack, SVG rendering, turn timer) before batch 1; project preamble in AGENTS.md ("same game, same gameplay") to revisit with the owner.
 
 ## 2026-10-09 — AI levels Difficile, Expert, Godlike; flee re-engage bug; roadmap phases 9–10
 

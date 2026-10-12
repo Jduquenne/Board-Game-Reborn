@@ -4,7 +4,7 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⏸ waiting for a dec
 
 ## Current focus
 
-**Current (2026-10-12):** Phase 9 (owner's go, 2026-10-12) — draft specification [`spec-tactical.md`](spec-tactical.md) v0.1, waiting for the owner's answers (§9) before batch 1.
+**Current (2026-10-12):** Phase 9 (owner's go, 2026-10-12) — Dofus Retro-like tactical fights, new mode next to the current game (D-017). Draft specification [`spec-tactical.md`](spec-tactical.md) v0.2, waiting for the owner's answers (§11) before batch 1.
 
 **Previous (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell), 4 (weapon types), 5 (classes, auto-tuned health), 6 (derived initiative, sudden death), 7 (AIs re-checked, fight learning fixed with γ = 1) 8 (Intelligence, mana, spells Soin / Entrave, Mage class) and 9 (critical × 2, Thief PM 4, health re-tuned and applied) are done. AI levels "Difficile", "Expert", "Godlike" done 2026-10-09 (D-016), checked by the owner on 2026-10-12 ("Godlike est vraiment très compliqué à battre"), as well as the flee re-engage fix. Fight models saved in the browser before batch 3 must be retrained on the training page.
 
@@ -105,9 +105,9 @@ Owner's wish on 2026-10-09 ("grave chaud"): give movement and placement real wei
 - **Procedurally generated maps**: rooms, corridors, terrain zones instead of obstacles dropped at random; seeded (same seed → same map) so that AI training and the balance lab stay reproducible.
 - Every AI level (Normal, Difficile, Expert, Godlike) must handle the new actions; the balance lab must measure them.
 
-Specification: [`spec-tactical.md`](spec-tactical.md) v0.1 (draft, 2026-10-12), 5 batches proposed; waiting for the owner's answers.
+Update 2026-10-12: the owner wants **Dofus Retro's gameplay** — PA / PM spent in any order, spells at range / in melee / semi-melee with line of sight, the 12 classes (4 first), an isometric 15 × 17 board (`assets/image.png`), no pickups; built as a **new mode next to the current game** ([D-017](decisions.md#d-017--tactical-mode-built-next-to-the-current-game)). The candidates above are replaced by [`spec-tactical.md`](spec-tactical.md) v0.2 (draft, 6 batches proposed), waiting for the owner's answers.
 
-Done when: TODO(owner) — proposal in the specification §8 (Expert beats Normal ≥ 75 % on generated maps, characters 45–55 %, first player ≤ 55 %).
+Done when (proposal, spec §12): a full fight can be played on the isometric board with the 4 first classes, two humans or against the AI, on every screen size without scrolling.
 
 ### ⬜ Phase 10 — Value network learned by self-play for Godlike (proposed)
 

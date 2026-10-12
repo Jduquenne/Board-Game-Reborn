@@ -58,6 +58,15 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Alternatives considered**: not documented.
 - **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
 
+## D-017 — Tactical mode built next to the current game
+
+- **Date**: 2026-10-12
+- **Status**: accepted (owner, 2026-10-12)
+- **Context**: Phase 9 — the owner wants Dofus Retro's fight gameplay (PA / PM, spells, line of sight, classes, isometric 15 × 17 board). Almost every rule changes; the current game, its trained AIs, the training page and the balance lab all depend on the current rules.
+- **Decision**: the tactical mode gets its own rules, data, simulator and screen, next to the current game ([`spec-tactical.md`](spec-tactical.md)). The current game stays playable and unchanged until the tactical mode can replace it (to be decided then). No pickups (weapons, bonuses, traps) in tactical fights.
+- **Alternatives considered**: rewriting the current rules in place — rejected: the game, trained AIs and balance lab would be broken for many batches.
+- **Consequences**: two rule sets coexist for a while; layer rules (D-003) apply to the new code; the project preamble ("same game, same gameplay") no longer describes the goal once the tactical mode is the main game.
+
 ## D-016 — AI levels Difficile, Expert, Godlike: learned movement, then Monte-Carlo search
 
 - **Date**: 2026-10-09
