@@ -1,6 +1,6 @@
 # Tactical specification — Dofus Retro-like fights (Phase 9)
 
-> **Status: DRAFT v0.2 (2026-10-12) — proposal, nothing implemented.** Decided by the owner: Dofus Retro gameplay (PA / PM spent freely in any order during a turn, spells at range, in melee and semi-melee, line of sight), its 12 classes (4 first), an isometric board of the size of [`assets/image.png`](../assets/image.png), a **new mode next to the current game** ([D-017](decisions.md#d-017--tactical-mode-built-next-to-the-current-game)), no pickups in fights. Numbers and formulas marked "proposal" are still to be validated (open questions in §11). Once validated, rules move to a gameplay specification batch by batch.
+> **Status: DRAFT v0.2 (2026-10-12) — batch 1 implemented (2026-10-12), the rest is a proposal.** Batch 1 used the recommended answers to §11 (6 PA / 3 PM, existing portraits as placeholders, SVG rendering, no turn timer); still open for the next batches. Decided by the owner: Dofus Retro gameplay (PA / PM spent freely in any order during a turn, spells at range, in melee and semi-melee, line of sight), its 12 classes (4 first), an isometric board of the size of [`assets/image.png`](../assets/image.png), a **new mode next to the current game** ([D-017](decisions.md#d-017--tactical-mode-built-next-to-the-current-game)), no pickups in fights. Numbers and formulas marked "proposal" are still to be validated (open questions in §11). Once validated, rules move to a gameplay specification batch by batch.
 >
 > v0.1 (same day) proposed ranged weapons and terrain on top of the current game; the owner chose a deeper change instead.
 >
@@ -119,7 +119,7 @@ Phones: 479 cells in portrait give ~23 px wide cells — landscape will be recom
 
 Each batch: pure rules with tests, UI checked with `tools/ui-check.mjs` (new screen) and in the browser by the owner.
 
-1. **Isometric board**: new route / screen "Combat tactique" (menu), map of `image.png` in SVG, coordinates, pathfinding, PA / PM turn, move several times, "Fin du tour", 2 humans, one test melee attack. Fits the viewport.
+1. ✅ **Isometric board** (2026-10-12): new route / screen "Combat tactique" (menu), map of `image.png` in SVG, coordinates, pathfinding, PA / PM turn, move several times, "Fin du tour", 2 humans, one test melee attack. Fits the viewport. As built: test attack "Coup de poing" (3 PA, range 1, 8–12 damage, only on an enemy: a click on an empty cell is refused); two random characters of the current game (with their health) on a random placement cell of their colour; player 1 starts; reachable cells in light green, path under the pointer in dark green, punch range in blue; no line of sight yet (range 1 only).
 2. **Spells**: spell model (cost, range, line of sight, in line, effects: damage, push, pull, heal, PA / PM changes, cooldown), range and line-of-sight display, the 4 classes, class choice, placement phase, initiative.
 3. **Stats and tackle**: elements, criticals, tackle / dodge, sudden death.
 4. **AI Normal** for the tactical mode + simulator + arena.

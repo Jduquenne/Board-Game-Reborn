@@ -40,7 +40,7 @@ Read this file first, then the relevant file in `docs/`.
 | [`docs/ui-design.md`](docs/ui-design.md) | Viewport / no-scroll rules, adaptive board, visual identity, known deviations |
 | [`docs/spec-gameplay.md`](docs/spec-gameplay.md) | Game rules: setup, movement, pickups, traps, fights, AI |
 | [`docs/spec-game-design.md`](docs/spec-game-design.md) | Game-design draft (stats, combat with flee, weapon types, classes) — proposals, not implemented |
-| [`docs/spec-tactical.md`](docs/spec-tactical.md) | Phase 9 draft: Dofus Retro-like tactical mode (PA / PM, spells, line of sight, classes, isometric board) — proposals, not implemented |
+| [`docs/spec-tactical.md`](docs/spec-tactical.md) | Phase 9 draft: Dofus Retro-like tactical mode (PA / PM, spells, line of sight, classes, isometric board) — batch 1 implemented, the rest proposals |
 | [`docs/roadmap.md`](docs/roadmap.md) | Current focus, honest status, phases, ideas |
 | [`docs/decisions.md`](docs/decisions.md) | Architecture decisions (ADR) |
 | [`log/devlog.md`](log/devlog.md) | What was done in each session, what is still open |
@@ -54,14 +54,14 @@ index.html          ← loads css/style.css and src/app.js
 css/style.css       ← all styles
 assets/dungeon/     ← images (characters, weapons, bonus, trap, tiles)
 src/
-├── app.js          ← entry point, routes: menu, options, game
+├── app.js          ← entry point, routes: menu, options, game, training, balance, tactical
 ├── AssetManager.js ← the only place that builds image paths
 ├── core/           ← EventBus, Store, Component, Router
-├── Engine/         ← Rules (pure game rules), GameEngine, FightEngine, AIEngine, MovementSystem (no DOM)
+├── Engine/         ← Rules (pure game rules), GameEngine, FightEngine, AIEngine, MovementSystem; Tactical/ = tactical mode (no DOM)
 ├── AI/             ← agents, GameEnv simulator, Arena (no DOM; shared by the game and training)
 ├── Models/         ← createCell/Player/Weapon/Bonus/Trap factories
-├── Repository/     ← static game content (PLAYER_DATA, WEAPON_DATA…)
-└── Views/          ← Menu, Options, Game + Board, PlayersSidebar, BattleBanner, TrapBanner, Training (AI training page), Balance (balance lab)
+├── Repository/     ← static game content (PLAYER_DATA, WEAPON_DATA, tactical maps…)
+└── Views/          ← Menu, Options, Game + Board, PlayersSidebar, BattleBanner, TrapBanner, Training (AI training page), Balance (balance lab), Tactical (tactical mode, SVG board)
 training/           ← Node scripts to evaluate / train AI agents (see D-010)
 tests/              ← node:test suites for src/Engine/ and src/AI/ (see D-008)
 tools/ui-check.mjs  ← responsive UI check in headless Chrome (see D-009)
@@ -74,7 +74,7 @@ Details: [`docs/architecture.md`](docs/architecture.md#directory-structure).
 ## Golden rules
 
 1. Never reference `document`, `window` or any DOM API in `src/Engine/`, `src/AI/`, `src/Models/` or `src/Repository/`.
-2. Only `GameView`, `BoardView` and `BattleBanner` may import from `src/Engine/`, only to dispatch user actions.
+2. Only `GameView`, `BoardView`, `BattleBanner` and `TacticalView` may import from `src/Engine/`, only to dispatch user actions.
 3. Never put game rules in Views: they render state and forward user actions.
 4. Models are pure factory functions — no methods, no classes.
 5. `Repository.findAll()` always returns fresh instances.
@@ -88,7 +88,7 @@ Verification for rules 1–2:
 
 ```bash
 grep -rnE "document|window" src/Engine src/AI src/Models src/Repository   # must print nothing
-grep -rln "Engine/" src/Views                                       # only GameView, BoardView, BattleBanner
+grep -rln "Engine/" src/Views                                       # only GameView, BoardView, BattleBanner, TacticalView
 ```
 
 Details: [`docs/conventions.md`](docs/conventions.md#layer-rules) and [`docs/ui-design.md`](docs/ui-design.md).

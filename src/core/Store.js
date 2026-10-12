@@ -1,7 +1,7 @@
 import { eventBus } from './EventBus.js';
 
 const createInitialState = () => ({
-    phase: 'menu', // 'menu' | 'playing' | 'fighting' | 'gameover'
+    phase: 'menu', // 'menu' | 'playing' | 'fighting' | 'gameover' | 'tactical'
     config: {
         rows: 10,
         cols: 10,
@@ -15,6 +15,7 @@ const createInitialState = () => ({
     players: [], // PlayerInfo[]  { player, position: { row, col } }
     activePlayerIndex: 0,
     fight: null, // { attackerIndex, targetIndex } | null
+    tactical: null, // combat du mode tactique (TacticalRules.js) | null
 });
 
 class Store {

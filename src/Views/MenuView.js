@@ -9,6 +9,7 @@ export class MenuView extends Component {
                 <div class="title gameTitle">Board Game Reborn</div>
                 <div class="menuSelect">
                     <button class="btn borderPixel fatFont" id="btn-play">Lancer le combat</button>
+                    <button class="btn borderPixel fatFont" id="btn-tactical">Combat tactique</button>
                     <button class="btn borderPixel fatFont" id="btn-options">Paramètres</button>
                     <button class="btn borderPixel fatFont" id="btn-training">Entraîner l'IA</button>
                 </div>
@@ -18,6 +19,7 @@ export class MenuView extends Component {
 
     onMount() {
         this.query('#btn-play').addEventListener('click', () => router.navigate('game'));
+        this.query('#btn-tactical').addEventListener('click', () => router.navigate('tactical'));
         this.query('#btn-options').addEventListener('click', () => router.navigate('options'));
         this.query('#btn-training').addEventListener('click', () => router.navigate('training'));
     }

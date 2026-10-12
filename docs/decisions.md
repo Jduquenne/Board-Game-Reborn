@@ -58,6 +58,19 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Alternatives considered**: not documented.
 - **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
 
+## D-018 — Tactical board drawn in SVG; TacticalView dispatches to tacticalEngine
+
+- **Date**: 2026-10-12
+- **Status**: accepted (owner's go for batch 1, whose plan proposed the SVG rendering — [`spec-tactical.md`](spec-tactical.md) §10)
+- **Context**: the tactical mode needs an isometric board of 479 diamond cells (Dofus Retro map) that fits the viewport, with exact clicks on diamonds, raised blocks and upright characters.
+- **Decision**:
+  - The board is one inline `<svg>` (`src/Views/tacticalBoardSvg.js`): one `<polygon>` per cell with `data-cell`; layers floor → highlights (no pointer events) → blocks and characters drawn back to front. The `viewBox` with `preserveAspectRatio="xMidYMid meet"` scales the whole map to `.boardArea`, with no size computation in JS.
+  - The engine keeps square coordinates (map turned 45°, `src/Engine/Tactical/TacticalGrid.js`); only the view converts them to screen positions.
+  - What the active character can do (reachable cells with their paths, cells in range) is computed by the rules and kept in the state (`reachable`, `targets`): the view only reads it.
+  - `TacticalView` may import `tacticalEngine` (`src/Engine/Tactical/TacticalEngine.js`), only to dispatch user actions (golden rule 2 widened, as in D-007).
+- **Alternatives considered**: DOM elements with `clip-path` diamonds (heavier layout, `--cell-size` computations as in `GameView`); Canvas (hit-testing, tooltips and UI checks written by hand).
+- **Consequences**: no resize code for the tactical board; the UI check sees the SVG elements; tactical rules live under `src/Engine/Tactical/` with their own engine and the `tactical` state key.
+
 ## D-017 — Tactical mode built next to the current game
 
 - **Date**: 2026-10-12

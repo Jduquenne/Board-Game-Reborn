@@ -22,7 +22,7 @@ Views/       ← DOM rendering, ZERO business logic
 | `Repository/` | `Models/` | return shared references |
 | `Views/` | `core/`, `AssetManager`, other `Views/`, `Models/` constants (`DECOR`), `Repository/` (read-only display data) | contain business rules; import `Engine/` (exceptions below) |
 
-**Views allowed to import `Engine/`** (to dispatch user actions only): `GameView`, `BoardView`, `BattleBanner` — see [decisions D-007](decisions.md#d-007--battlebanner-may-import-fightengine).
+**Views allowed to import `Engine/`** (to dispatch user actions only): `GameView`, `BoardView`, `BattleBanner`, `TacticalView` — see decisions [D-007](decisions.md#d-007--battlebanner-may-import-fightengine) and [D-018](decisions.md#d-018--tactical-board-drawn-in-svg-tacticalview-dispatches-to-tacticalengine).
 
 Layer rules are summarised as golden rules in [`AGENTS.md`](../AGENTS.md) and detailed in [`conventions.md`](conventions.md#layer-rules).
 
@@ -35,7 +35,7 @@ assets/
 ├── border.svg
 └── dungeon/                       ← floor, obstacle, characters/, weapons/, bonus/, trap/
 src/
-├── app.js                         ← entry point, route registration (menu, options, game)
+├── app.js                         ← entry point, route registration (menu, options, game, training, balance, tactical)
 ├── AssetManager.js                ← resolves every image path
 ├── core/
 │   ├── EventBus.js                ← pub/sub, on() returns an unsubscribe function
@@ -49,7 +49,11 @@ src/
 │   ├── GameEngine.js              ← applies Rules to the Store + emits events (singleton gameEngine)
 │   ├── FightEngine.js             ← same for fights, with the 500 ms round delay (singleton fightEngine)
 │   ├── AIEngine.js                ← plugs an AI agent into the running game (singleton aiEngine)
-│   └── MovementSystem.js          ← pure functions: getMovableCells, getAdjacentPositions
+│   ├── MovementSystem.js          ← pure functions: getMovableCells, getAdjacentPositions
+│   └── Tactical/                  ← tactical mode (Phase 9, D-017 / D-018), no DOM
+│       ├── TacticalGrid.js        ← map parsing, square coordinates of the isometric map, neighbours, distance, reachableCells, cellsInRange
+│       ├── TacticalRules.js       ← pure rules: createTacticalGame, applyMove / applyPunch / applyEndTurn → { state, events }
+│       └── TacticalEngine.js      ← applies TacticalRules to the Store key `tactical` + emits events (singleton tacticalEngine)
 ├── AI/
 │   ├── ScriptedAgents.js          ← hand-written agents: random, easy, normal (SCRIPTED_AGENTS)
 │   ├── GameEnv.js                 ← simulator: reset() / step(action), no delays (training, arena)
@@ -84,7 +88,8 @@ src/
 │   ├── PlayersRepository.js       ← PLAYER_DATA, findAll() returns fresh instances
 │   ├── WeaponsRepository.js       ← WEAPON_DATA
 │   ├── BonusRepository.js         ← BONUS_DATA
-│   └── TrapRepository.js          ← TRAP_DATA
+│   ├── TrapRepository.js          ← TRAP_DATA
+│   └── TacticalMapsRepository.js  ← MAP_DATA: tactical maps as text (15 × 17 staggered; "plaine" = assets/image.png)
 └── Views/
     ├── MenuView.js
     ├── OptionsView.js             ← OPTIONS and AI_MODES arrays (rendering is generic, no CSS per option)
@@ -95,7 +100,9 @@ src/
     ├── TrapBanner.js              ← trap and skipped-turn notices
     ├── TrainingView.js            ← AI training page (#training): drives the Web Worker, chart, policy map, live board
     ├── BalanceView.js             ← Balance lab (#balance): editable character stats, win-rate bars, duel matrix
-    └── boardTemplate.js           ← boardHtml(state): board HTML shared by BoardView and TrainingView
+    ├── boardTemplate.js           ← boardHtml(state): board HTML shared by BoardView and TrainingView
+    ├── TacticalView.js            ← tactical mode (#tactical): SVG board, fighter cards, Coup de poing / Fin du tour, end of fight
+    └── tacticalBoardSvg.js        ← SVG of the isometric board: floor, highlights, blocks and characters
 training/
 ├── arena.mjs                      ← CLI: scripted agents and AI levels against each other (win rates, games/s; --godlike N)
 ├── train-expert.mjs               ← CLI: genetic evolution of the Expert movement against Difficile + Normal
@@ -147,7 +154,7 @@ router.register('menu', () => new MenuView('#app')).start();
 router.navigate('game'); // unmounts the current view, mounts the new one
 ```
 
-Hash-based (`#menu`, `#options`, `#game`, `#training`, `#balance`); default route is `menu`; listens to `popstate`.
+Hash-based (`#menu`, `#options`, `#game`, `#training`, `#balance`, `#tactical`); default route is `menu`; listens to `popstate`.
 
 ## Events
 
@@ -167,6 +174,11 @@ Hash-based (`#menu`, `#options`, `#game`, `#training`, `#balance`); default rout
 | `fight:flee` | FightEngine | `{ fleer, enemy, success, chance }` (on success followed by the move's events and `turn:changed`, no `fight:round-end`) |
 | `fight:round-end` | FightEngine | `{ nextAttacker, nextTarget }` |
 | `fight:end` | FightEngine | `{ winner, loser }` |
+| `tactical:started` | TacticalEngine | — (new tactical fight in `state.tactical`) |
+| `tactical:moved` | TacticalEngine | `{ fighterIndex, path }` (`path`: cell ids, start excluded) |
+| `tactical:attack` | TacticalEngine | `{ attackerIndex, targetIndex, action, damage }` |
+| `tactical:turn` | TacticalEngine | `{ activeIndex, turn }` |
+| `tactical:over` | TacticalEngine | `{ winnerIndex, loserIndex }` |
 | `state:changed` | Store | full `state` |
 
 Events are produced by the pure rules (`Rules.js`) and emitted by `GameEngine` / `FightEngine` after the Store is updated.
@@ -177,13 +189,21 @@ Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` 
 
 ```js
 {
-  phase: 'menu' | 'playing' | 'fighting' | 'gameover',
+  phase: 'menu' | 'playing' | 'fighting' | 'gameover' | 'tactical',
   config: { rows, cols, nbObstacles, nbWeapons, nbBonus, nbTraps, aiMode }, // aiMode: 'none' | 'easy' | 'normal' | 'hard' | 'expert' | 'godlike' | 'trained'
   cells: Cell[][],        // 2D array of plain objects
   players: PlayerInfo[],  // [{ player, position: { row, col } }]
   activePlayerIndex: number,  // first player = higher initiative (createGame)
   turn: number,               // turns played by both players (sudden death from 80)
   fight: { attackerIndex, targetIndex } | null,
+  tactical: null | {          // tactical mode (TacticalRules.js); phase is then 'tactical'
+    phase: 'fighting' | 'over',
+    board: { id, name, width, height, cells: [{ id, row, col, x, y, terrain, placement }], index },
+    fighters: [{ name, image, team, health, maxHealth, pa, pm, maxPA, maxPM, cellId }],
+    activeIndex, turn, winnerIndex,
+    reachable: { [cellId]: path },  // cells the active fighter can reach with its PM, with their path
+    targets: cellId[],               // cells in range of the Coup de poing (empty without enough PA)
+  },
 }
 ```
 

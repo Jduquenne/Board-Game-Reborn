@@ -22,7 +22,7 @@
 ## Layer rules
 
 1. **Engine** never uses `document`, `window`, `querySelector` or any DOM API.
-2. **Views** never contain business logic. Only `GameView`, `BoardView` and `BattleBanner` may import from `Engine/`, and only to dispatch user actions ([D-007](decisions.md#d-007--battlebanner-may-import-fightengine)).
+2. **Views** never contain business logic. Only `GameView`, `BoardView`, `BattleBanner` and `TacticalView` may import from `Engine/`, and only to dispatch user actions ([D-007](decisions.md#d-007--battlebanner-may-import-fightengine), [D-018](decisions.md#d-018--tactical-board-drawn-in-svg-tacticalview-dispatches-to-tacticalengine)).
 3. **Models** are pure factory functions, never methods.
 4. **Repositories**: `findAll()` always returns new instances (no shared references).
 5. **Store**: the only way to modify state is `store.setState(updater)`.
@@ -32,7 +32,7 @@ Verification:
 
 ```bash
 grep -rnE "document|window" src/Engine src/Models src/Repository   # must print nothing
-grep -rln "Engine/" src/Views                                       # only GameView, BoardView, BattleBanner
+grep -rln "Engine/" src/Views                                       # only GameView, BoardView, BattleBanner, TacticalView
 ```
 
 ## Error handling

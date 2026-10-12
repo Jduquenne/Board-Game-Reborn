@@ -24,6 +24,22 @@
     --balance-ok:         #4caf50;
     --flee-tint:          rgba(76, 175, 80, 0.35);
 
+    /* Mode tactique (plateau isométrique, couleurs de assets/image.png) */
+    --t-background:  #c8b89a;
+    --t-floor:       #c7cb7b;
+    --t-floor-alt:   #b9bc72;
+    --t-void:        #000000;
+    --t-line:        rgba(40, 30, 10, 0.55);
+    --t-block-top:   #b9bc72;
+    --t-block-left:  #6b4420;
+    --t-block-right: #56361a;
+    --t-reach:       rgba(76, 175, 80, 0.45);
+    --t-path:        rgba(27, 110, 32, 0.85);
+    --t-range:       rgba(40, 96, 200, 0.45);
+    --t-target:      rgba(20, 60, 170, 0.9);
+    --t-team-a:      #2860a0;
+    --t-team-b:      #a02828;
+
     /* Tailles fluides : basées sur la plus petite dimension de l'écran (vmin) */
     --gap:          clamp(6px, 2vmin, 20px);
     --font-base:    clamp(14px, 3vmin, 24px);
@@ -1099,4 +1115,65 @@ body {
     .balanceBody { grid-template-columns: minmax(0, 1fr); }
     .balanceBody[data-tab="characters"] .balanceMatrixPanel { display: none; }
     .balanceBody[data-tab="matrix"] .balanceCharacters     { display: none; }
+}
+
+/* ─── Mode tactique (plateau isométrique SVG) ─────────────────────────────── */
+/*
+ * Le SVG remplit .boardArea ; son viewBox (preserveAspectRatio meet) met tout le plateau à l'échelle.
+ * Sidebar : même mise en page que l'écran de jeu (#menu, cartes joueurs).
+ */
+
+.tacticalBoard {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: manipulation;
+}
+
+.tacticalBoard .tBackground   { fill: var(--t-background); }
+.tacticalBoard .tFloor        { fill: var(--t-floor); stroke: var(--t-line); stroke-width: 1; cursor: pointer; }
+.tacticalBoard .tFloor.alt    { fill: var(--t-floor-alt); }
+.tacticalBoard .tVoid         { fill: var(--t-void); stroke: var(--t-void); stroke-width: 1; }
+#t-overlay                    { pointer-events: none; }
+.tacticalBoard .tReach        { fill: var(--t-reach); }
+.tacticalBoard .tPath         { fill: var(--t-path); }
+.tacticalBoard .tRange        { fill: var(--t-range); }
+.tacticalBoard .tTarget       { fill: var(--t-target); }
+.tacticalBoard .tBlock        { pointer-events: none; stroke: var(--t-line); stroke-width: 1; }
+.tacticalBoard .tBlockTop     { fill: var(--t-block-top); }
+.tacticalBoard .tBlockLeft    { fill: var(--t-block-left); }
+.tacticalBoard .tBlockRight   { fill: var(--t-block-right); }
+.tacticalBoard .tFighter      { cursor: pointer; }
+.tacticalBoard .tTeamRing     { fill: none; stroke-width: 5; }
+.tacticalBoard .tTeamA        { stroke: var(--t-team-a); }
+.tacticalBoard .tTeamB        { stroke: var(--t-team-b); }
+.tacticalBoard .tActive       { stroke-width: 9; }
+.tacticalBoard.targeting .tFloor,
+.tacticalBoard.targeting .tFighter { cursor: crosshair; }
+
+.tTeamDot {
+    display: inline-block;
+    width: 0.8em;
+    height: 0.8em;
+    margin-right: 0.3em;
+    border: 2px solid var(--ring-light);
+    border-radius: 50%;
+    vertical-align: middle;
+}
+.tTeamDot.teamA { background-color: var(--t-team-a); }
+.tTeamDot.teamB { background-color: var(--t-team-b); }
+.tPA { color: var(--spinner-text); }
+.tPM { color: var(--balance-ok); }
+
+.tacticalLog {
+    min-height: 2.6em;
+    margin: 0;
+    color: var(--text-light);
+    font-size: var(--font-small);
+    text-align: center;
+}
+
+/* Portrait : le journal tient sur une ligne de moins */
+@media (orientation: portrait) {
+    .tacticalLog { min-height: 1.3em; }
 }

@@ -4,6 +4,7 @@ import { OptionsView } from './Views/OptionsView.js';
 import { GameView } from './Views/GameView.js';
 import { TrainingView } from './Views/TrainingView.js';
 import { BalanceView } from './Views/BalanceView.js';
+import { TacticalView } from './Views/TacticalView.js';
 
 router
     .register('menu',    () => new MenuView('#app'))
@@ -11,4 +12,5 @@ router
     .register('game',    () => new GameView('#app'))
     .register('training', () => new TrainingView('#app'))
     .register('balance',  () => new BalanceView('#app'))
+    .register('tactical', () => new TacticalView('#app'))
     .start();
