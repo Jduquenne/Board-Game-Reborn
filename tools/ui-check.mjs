@@ -122,6 +122,24 @@ const SCREENS = [
         document.querySelector('#t-floor [data-cell="' + spot.id + '"]').dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
         if (!store.state.tactical.spells['fleche-magique'].valid.includes(spot.id)) throw new Error('tactical-spell: the Iop is not a valid target');
     })()`],
+    // Lot 3 : l'Iop est collé au Crâ (qui joue) ; le pointeur sur une case qui quitte le contact montre le tacle
+    ['tactical-tackle', '#tactical', `(async () => {
+        const { store } = await import('/src/core/Store.js');
+        const { tacticalEngine } = await import('/src/Engine/Tactical/TacticalEngine.js');
+        const { cellAt } = await import('/src/Engine/Tactical/TacticalGrid.js');
+        document.querySelector('#t-classes-ok').click();
+        tacticalEngine.ready();
+        const { board, fighters } = store.state.tactical;
+        const cra = board.cells[fighters[1].cellId];
+        const spot = cellAt(board, cra.x - 1, cra.y);
+        store.setState(s => ({ tactical: { ...s.tactical, fighters: s.tactical.fighters.map((f, i) => i === 0 ? { ...f, cellId: spot.id } : f) } }));
+        tacticalEngine.endTurn();
+        tacticalEngine.endTurn();
+        await new Promise(r => setTimeout(r, 50));
+        const [away] = Object.keys(store.state.tactical.tackle.rolls);
+        document.querySelector('#t-floor [data-cell="' + away + '"]').dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+        if (!/esquive/.test(document.querySelector('#t-log').textContent)) throw new Error('tactical-tackle: no dodge hint');
+    })()`],
     // Clic sur une case atteignable : le personnage actif s'y déplace et dépense ses PM (délégation des clics du SVG)
     ['tactical-move',  '#tactical', `(async () => {
         const { store } = await import('/src/core/Store.js');

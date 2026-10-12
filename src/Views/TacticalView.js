@@ -8,6 +8,7 @@ import { viewBox, floorSvg, overlaySvg, objectsSvg } from './tacticalBoardSvg.js
 
 const TEAM_LABEL = ['Joueur 1 (bleu)', 'Joueur 2 (rouge)'];
 const TEAM_CLASS = ['teamA', 'teamB'];
+const ELEMENT_LABEL = { neutral: 'neutres', earth: 'terre', fire: 'feu', water: 'eau', air: 'air' };
 
 // Mode tactique (docs/spec-tactical.md, lots 1–2) : choix des classes, placement, sorts, 2 joueurs sur le même écran
 export class TacticalView extends Component {
@@ -15,6 +16,8 @@ export class TacticalView extends Component {
     #picked    = ['iop', 'cra']; // classes choisies pour les joueurs 1 et 2
     #spellId   = null;           // sort sélectionné ; null = un clic déplace
     #hoverId   = null;
+    #lastLog   = '';
+    #logParts  = [];
     #onKeydown = null;
 
     render() {
@@ -91,6 +94,15 @@ export class TacticalView extends Component {
         this.listen('state:changed', ({ tactical }) => { if (tactical) this.#refresh(); });
         this.listen('tactical:moved', ({ fighterIndex, path }) => {
             this.#log(`${this.#name(fighterIndex)} se déplace (${path.length} PM).`);
+        });
+        this.listen('tactical:dodged', ({ fighterIndex, chance }) => {
+            this.#log(`${this.#name(fighterIndex)} esquive le tacle (${Math.round(chance * 100)} %).`);
+        });
+        this.listen('tactical:tackled', ({ fighterIndex, chance }) => {
+            this.#log(`${this.#name(fighterIndex)} est taclé (${Math.round(chance * 100)} % d'esquive) et perd ses PM.`);
+        });
+        this.listen('tactical:sudden-death', ({ fighterIndex, damage }) => {
+            this.#log(`Mort subite ! ${this.#name(fighterIndex)} perd ${damage} PV.`);
         });
         this.listen('tactical:initiative', ({ activeIndex, initiatives }) => {
             const other = initiatives[1 - activeIndex];
@@ -234,7 +246,14 @@ export class TacticalView extends Component {
         if (id === this.#hoverId) return;
         this.#hoverId = id;
         const tactical = store.state.tactical;
-        if (tactical) this.query('#t-overlay').innerHTML = overlaySvg(tactical, { spellId: this.#spellId, hoverId: id });
+        if (!tactical) return;
+        this.query('#t-overlay').innerHTML = overlaySvg(tactical, { spellId: this.#spellId, hoverId: id });
+
+        // Chemin qui quitte le contact de l'ennemi : chance d'esquiver le tacle affichée tant que le pointeur est dessus
+        const rolls = !this.#spellId && tactical.tackle?.rolls[id];
+        this.query('#t-log').textContent = rolls
+            ? `Quitter le contact : ${Math.round(tactical.tackle.chance * 100)} % d'esquive${rolls > 1 ? ` (${rolls} fois)` : ''}, sinon tous les PM sont perdus.`
+            : this.#lastLog;
     }
 
     #cellId(target) {
@@ -246,17 +265,27 @@ export class TacticalView extends Component {
         return store.state.tactical?.fighters[index]?.name ?? '';
     }
 
+    // Les messages des événements d'une même action (émis à la suite) sont réunis sur une ligne
     #log(text) {
-        this.query('#t-log').textContent = text;
+        if (!this.#logParts.length) {
+            queueMicrotask(() => {
+                this.#lastLog = this.#logParts.join(' ');
+                this.#logParts = [];
+                const log = this.query('#t-log');
+                if (log) log.textContent = this.#lastLog;
+            });
+        }
+        this.#logParts.push(text);
     }
 
-    #spellMessage({ casterIndex, spellName, results }) {
-        const parts = results.map(({ fighterIndex, kind, amount }) => {
+    #spellMessage({ casterIndex, spellName, critical, results }) {
+        const parts = results.map(({ fighterIndex, kind, amount, damage }) => {
             const who = this.#name(fighterIndex);
+            const hit = damage ? ` et se cogne (−${damage} PV)` : '';
             switch (kind) {
                 case 'damage':     return `−${amount} PV à ${who}`;
                 case 'heal':       return `+${amount} PV pour ${who}`;
-                case 'push':       return amount ? `${who} repoussé de ${amount} case${amount > 1 ? 's' : ''}` : `${who} ne bouge pas`;
+                case 'push':       return amount ? `${who} repoussé de ${amount} case${amount > 1 ? 's' : ''}${hit}` : `${who} ne bouge pas${hit}`;
                 case 'pull':       return amount ? `${who} attiré de ${amount} case${amount > 1 ? 's' : ''}` : `${who} ne bouge pas`;
                 case 'teleport':   return `${who} bondit`;
                 case 'swap':       return `échange de place avec ${who}`;
@@ -265,7 +294,8 @@ export class TacticalView extends Component {
                 default:           return '';
             }
         });
-        return `${this.#name(casterIndex)} lance ${spellName}${parts.length ? ' : ' + parts.join(', ') : ' : aucune cible'}.`;
+        const crit = critical ? ' Coup critique !' : '';
+        return `${this.#name(casterIndex)} lance ${spellName}${parts.length ? ' : ' + parts.join(', ') : ' : aucune cible'}.${crit}`;
     }
 
     #spellButton(spell, options) {
@@ -287,10 +317,12 @@ export class TacticalView extends Component {
             spell.area ? `zone ${spell.area}` : '',
             `${spell.perTurn} par tour`,
             spell.cooldown ? `relance ${spell.cooldown} tours` : '',
+            spell.critRate ? `critique 1/${spell.critRate} avant Agilité` : '',
         ].filter(Boolean);
+        const crit = e => e.crit ? ` (+${e.crit} sur un critique)` : '';
         const effects = spell.effects.map(e => ({
-            damage:     `dégâts ${e.min}–${e.max}`,
-            heal:       `soin ${e.min}–${e.max}`,
+            damage:     `dégâts ${ELEMENT_LABEL[e.element]} ${e.min}–${e.max}${crit(e)}`,
+            heal:       `soin ${e.min}–${e.max}${crit(e)}`,
             lifesteal:  `rend ${Math.round(e.ratio * 100)} % des dégâts`,
             push:       `repousse de ${e.cells}`,
             pull:       `attire de ${e.cells}`,
@@ -314,6 +346,7 @@ export class TacticalView extends Component {
                     <div class="playerInfos">
                         <div class="playerName"><span class="tTeamDot ${TEAM_CLASS[f.team]}"></span>${f.name}</div>
                         <div class="playerHealth">PV ${f.health} / ${f.maxHealth} · <span class="tPA">PA ${f.pa}</span> · <span class="tPM">PM ${f.pm}</span></div>
+                        <div class="playerStats" title="Force (terre, neutre) · Intelligence (feu, soins) · Chance (eau) · Agilité (air, critiques, esquive)">FOR ${f.stats.strength} · INT ${f.stats.intelligence} · CHA ${f.stats.chance} · AGI ${f.stats.agility}</div>
                         ${status ? `<div class="playerClass">${status}</div>` : ''}
                     </div>
                 </div>

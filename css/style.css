@@ -35,6 +35,7 @@
     --t-block-right: #56361a;
     --t-reach:       rgba(76, 175, 80, 0.45);
     --t-path:        rgba(27, 110, 32, 0.85);
+    --t-path-risk:   rgba(230, 130, 20, 0.9);
     --t-range:       rgba(40, 96, 200, 0.45);
     --t-target:      rgba(20, 60, 170, 0.9);
     --t-blocked:     rgba(90, 90, 110, 0.35);
@@ -1140,6 +1141,7 @@ body {
 #t-overlay                    { pointer-events: none; }
 .tacticalBoard .tReach        { fill: var(--t-reach); }
 .tacticalBoard .tPath         { fill: var(--t-path); }
+.tacticalBoard .tPathRisk     { fill: var(--t-path-risk); }
 .tacticalBoard .tRange        { fill: var(--t-range); }
 .tacticalBoard .tTarget       { fill: var(--t-target); }
 .tacticalBoard .tBlocked      { fill: var(--t-blocked); }

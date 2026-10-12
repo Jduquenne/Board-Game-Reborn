@@ -30,3 +30,12 @@ export const withFighter = (state, index, change) => ({
     ...state,
     fighters: state.fighters.map((f, i) => i === index ? { ...f, ...change } : f),
 });
+
+// Générateur qui renvoie les valeurs données dans l'ordre, puis la dernière indéfiniment
+export const seq = (...values) => {
+    let i = 0;
+    return () => values[Math.min(i++, values.length - 1)];
+};
+
+// Pas de coup critique (premier tirage 0,999), puis jets minimums
+export const NO_CRIT_MIN = () => seq(0.999, 0);

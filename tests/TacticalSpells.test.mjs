@@ -2,13 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { applyCast, applyEndTurn, applyMove, BASE_PA } from '../src/Engine/Tactical/TacticalRules.js';
 import { TacticalClassesRepository } from '../src/Repository/TacticalClassesRepository.js';
-import { duel, at, withFighter } from './tacticalHelpers.mjs';
+import { duel, at, withFighter, seq, NO_CRIT_MIN } from './tacticalHelpers.mjs';
 
-const MIN = () => 0;     // jet minimum
-const MAX = () => 0.999; // jet maximum
+// Le premier tirage d'un sort qui peut faire un critique décide du critique (< 1 / N), les suivants sont les jets
+const MAX = () => 0.999;      // pas de critique, jets maximums
+const CRIT_MIN = () => 0;     // critique, jets minimums
 const hp = (state, i) => state.fighters[i].health;
 const cell = (state, i) => state.fighters[i].cellId;
-const cast = (state, spell, dx, dy, rng = MIN) => applyCast(state, spell, at(state, dx, dy), rng);
+const cast = (state, spell, dx, dy, rng = NO_CRIT_MIN()) => applyCast(state, spell, at(state, dx, dy), rng);
 
 test('every class has 4 spells + Coup de poing, all castable with 6 PA', () => {
     for (const c of TacticalClassesRepository.findAll()) {
@@ -18,16 +19,24 @@ test('every class has 4 spells + Coup de poing, all castable with 6 PA', () => {
     }
 });
 
-test('Pression: 13 to 17 damage on an adjacent enemy, 3 PA, twice per turn', () => {
+test('Pression: 13 to 17 earth damage × (1 + Force 40 %) on an adjacent enemy, 3 PA, twice per turn', () => {
     let state = duel(['iop', 'cra'], [0, 0], [1, 0]);
     const result = cast(state, 'pression', 1, 0, MAX);
-    assert.equal(result.events[0].payload.results[0].amount, 17);
+    assert.equal(result.events[0].payload.results[0].amount, 24);  // 17 × 1,4 = 23,8
+    assert.equal(result.events[0].payload.critical, false);
     state = result.state;
-    assert.equal(hp(state, 1), 90 - 17);
+    assert.equal(hp(state, 1), 135 - 24);
     assert.equal(state.fighters[0].pa, 3);
     state = cast(state, 'pression', 1, 0).state;
-    assert.equal(hp(state, 1), 90 - 17 - 13);
+    assert.equal(hp(state, 1), 135 - 24 - 18);                     // 13 × 1,4 = 18,2
     assert.equal(state.fighters[0].pa, 0);
+});
+
+test('a critical hit adds the spell\'s critical bonus before the stat multiplier', () => {
+    const state = duel(['iop', 'cra'], [0, 0], [1, 0]);
+    const result = cast(state, 'pression', 1, 0, CRIT_MIN);
+    assert.equal(result.events[0].payload.critical, true);
+    assert.equal(result.events[0].payload.results[0].amount, 25);  // (13 + 5) × 1,4 = 25,2
 });
 
 test('line of sight: a block stops Flèche magique, a hole does not', () => {
@@ -70,7 +79,7 @@ test('Attirance pulls the enemy next to the caster', () => {
     let state = duel(['sacrieur', 'cra'], [0, 0], [-4, 0]);
     state = cast(state, 'attirance', -4, 0).state;
     assert.equal(cell(state, 1), at(state, -1, 0));
-    assert.equal(hp(state, 1), 90);
+    assert.equal(hp(state, 1), 135);
 });
 
 test('Bond teleports to a free cell, not onto a fighter; relaunch after 2 turns of the caster', () => {
@@ -92,14 +101,14 @@ test('Transposition swaps the two fighters, even without line of sight', () => {
     assert.deepEqual([cell(state, 0), cell(state, 1)], [b, a]);
 });
 
-test('Mot soignant heals the caster, up to its maximum health', () => {
+test('Mot soignant heals the caster × (1 + Intelligence 40 %), up to its maximum health', () => {
     let state = withFighter(duel(['eniripsa', 'cra'], [0, 0], [4, 4]), 0, { health: 50 });
     state = applyMove(state, at(state, 0, 1)).state; // recalcule les options
     state = cast(state, 'mot-soignant', 0, 1, MAX).state;
-    assert.equal(hp(state, 0), 50 + 18);
+    assert.equal(hp(state, 0), 50 + 25);             // 18 × 1,4 = 25,2
     let full = duel(['eniripsa', 'cra'], [0, 0], [4, 4]);
     full = cast(full, 'mot-soignant', 0, 0, MAX).state;
-    assert.equal(hp(full, 0), 95);
+    assert.equal(hp(full, 0), 140);
 });
 
 test('Flèche glacée: the target has 2 PA less on its next turn', () => {
@@ -123,10 +132,10 @@ test('Flèche explosive hits every fighter in a radius of 1 around the target ce
     let state = duel(['cra', 'iop'], [0, 0], [4, 0]);
     assert.ok(state.spells['fleche-explosive'].valid.includes(at(state, 4, 1))); // case vide
     state = cast(state, 'fleche-explosive', 4, 1).state;
-    assert.equal(hp(state, 1), 110 - 9);
+    assert.equal(hp(state, 1), 165 - 10);                // feu : 9 × (1 + Intelligence 15 %) = 10,35
     state = duel(['cra', 'iop'], [0, 0], [4, 0]);
     state = cast(state, 'fleche-explosive', 3, 2).state; // à 2 pas de l'Iop : hors zone
-    assert.equal(hp(state, 1), 110);
+    assert.equal(hp(state, 1), 165);
 });
 
 test('Absorption heals the caster by half the damage dealt', () => {
@@ -134,8 +143,8 @@ test('Absorption heals the caster by half the damage dealt', () => {
     state = applyMove(state, at(state, 0, 1)).state;
     state = applyMove(state, at(state, 0, 0)).state;
     state = cast(state, 'absorption', 2, 0, MAX).state;
-    assert.equal(hp(state, 1), 90 - 14);
-    assert.equal(hp(state, 0), 100 + 7);
+    assert.equal(hp(state, 1), 135 - 18);                // 14 × (1 + Force 30 %) = 18,2
+    assert.equal(hp(state, 0), 100 + 9);
 });
 
 test('Châtiment: every hit taken gives +10 % damage while it lasts', () => {
@@ -146,14 +155,14 @@ test('Châtiment: every hit taken gives +10 % damage while it lasts', () => {
     state = cast(state, 'pression', 0, 0).state;             // 2 coups reçus
     assert.equal(state.fighters[0].punishment.stacks, 2);
     state = applyEndTurn(state).state;                       // au Sacrieur
-    state = cast(state, 'absorption', 1, 0, MIN).state;
-    assert.equal(hp(state, 1), 110 - Math.round(11 * 1.2));
+    state = cast(state, 'absorption', 1, 0).state;
+    assert.equal(hp(state, 1), 165 - Math.round(11 * 1.3 * 1.2));
 });
 
 test('Colère de Iop: 6 PA, once every 3 turns', () => {
     let state = duel(['iop', 'cra'], [0, 0], [1, 0]);
     state = cast(state, 'colere', 1, 0).state;
-    assert.equal(hp(state, 1), 90 - 34);
+    assert.equal(hp(state, 1), 135 - 48);                // 34 × 1,4 = 47,6
     assert.equal(state.fighters[0].pa, 0);
     state = applyEndTurn(applyEndTurn(state).state).state;
     assert.equal(state.spells.colere.cooldown, 2);

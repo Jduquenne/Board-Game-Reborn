@@ -12,7 +12,7 @@ test('a new game starts with the placement phase, each class on a placement cell
     const [a, b] = state.fighters;
     assert.equal(state.phase, 'placement');
     assert.deepEqual([a.name, b.name], ['Iop', 'Crâ']);
-    assert.deepEqual([a.health, b.health], [110, 90]);
+    assert.deepEqual([a.health, b.health], [165, 135]);
     assert.equal(state.board.cells[a.cellId].placement, 0);
     assert.equal(state.board.cells[b.cellId].placement, 1);
     assert.deepEqual(state.reachable, {});

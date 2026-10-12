@@ -179,7 +179,10 @@ Hash-based (`#menu`, `#options`, `#game`, `#training`, `#balance`, `#tactical`);
 | `tactical:moved` | TacticalEngine | `{ fighterIndex, path }` (`path`: cell ids, start excluded) |
 | `tactical:placed` | TacticalEngine | `{ fighterIndex, cellId }` (placement phase) |
 | `tactical:initiative` | TacticalEngine | `{ activeIndex, initiatives }` (end of placement, before the first `tactical:turn`) |
-| `tactical:spell` | TacticalEngine | `{ casterIndex, spellId, spellName, cellId, results: [{ fighterIndex, kind, amount }] }` (`kind`: damage, heal, push, pull, teleport, swap, pa, punishment) |
+| `tactical:dodged` | TacticalEngine | `{ fighterIndex, chance }` (move leaving contact, dodge succeeded; after `tactical:moved`) |
+| `tactical:tackled` | TacticalEngine | `{ fighterIndex, chance }` (dodge failed: the fighter stops and loses its PM) |
+| `tactical:spell` | TacticalEngine | `{ casterIndex, spellId, spellName, cellId, critical, results: [{ fighterIndex, kind, amount, element?, damage? }] }` (`kind`: damage, heal, push, pull, teleport, swap, pa, punishment; `damage` on push = blocked-push damage) |
+| `tactical:sudden-death` | TacticalEngine | `{ fighterIndex, damage, turn }` (from turn 30, before `tactical:turn`) |
 | `tactical:turn` | TacticalEngine | `{ activeIndex, turn }` |
 | `tactical:over` | TacticalEngine | `{ winnerIndex, loserIndex }` |
 | `state:changed` | Store | full `state` |
@@ -202,10 +205,11 @@ Main listeners: `BoardView` (`game:started`, `state:changed`), `PlayersSidebar` 
   tactical: null | {          // tactical mode (TacticalRules.js); phase is then 'tactical'
     phase: 'placement' | 'fighting' | 'over',
     board: { id, name, width, height, cells: [{ id, row, col, x, y, terrain, placement }], index },
-    fighters: [{ classId, name, image, team, health, maxHealth, initiative, pa, pm, maxPA, maxPM, cellId,
-                 spells, casts, cooldowns, paNext, punishment }],
+    fighters: [{ classId, name, image, team, health, maxHealth, initiative, stats: { strength, intelligence, chance, agility },
+                 pa, pm, maxPA, maxPM, cellId, spells, casts, cooldowns, paNext, punishment }],
     activeIndex, turn, winnerIndex,  // turn: 0 during placement
     reachable: { [cellId]: path },   // cells the active fighter can reach with its PM, with their path
+    tackle: { chance, rolls: { [cellId]: n } } | null, // dodge chance; reachable cells whose path leaves contact n times
     spells: { [spellId]: { range, blocked, valid, available, cooldown } }, // per spell of the active fighter:
                                      // cells in range with / without line of sight, valid targets, castable now
   },

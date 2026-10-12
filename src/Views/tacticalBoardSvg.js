@@ -70,7 +70,8 @@ export function overlaySvg(tactical, { spellId, hoverId }) {
 
     const reachable = Object.keys(tactical.reachable).map(Number);
     const path = new Set(tactical.reachable[hoverId] ?? []);
-    return reachable.map(id => shape(id, path.has(id) ? 'tPath' : 'tReach')).join('');
+    const pathClass = tactical.tackle?.rolls[hoverId] ? 'tPathRisk' : 'tPath'; // le chemin quitte le contact : tacle possible
+    return reachable.map(id => shape(id, path.has(id) ? pathClass : 'tReach')).join('');
 }
 
 // Blocs et personnages, dessinés de la rangée du fond vers l'avant pour que les plus proches recouvrent les autres
