@@ -4,7 +4,9 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⏸ waiting for a dec
 
 ## Current focus
 
-**Current (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell), 4 (weapon types), 5 (classes, auto-tuned health), 6 (derived initiative, sudden death), 7 (AIs re-checked, fight learning fixed with γ = 1) 8 (Intelligence, mana, spells Soin / Entrave, Mage class) and 9 (critical × 2, Thief PM 4, health re-tuned and applied) are done. AI levels "Difficile", "Expert", "Godlike" done 2026-10-09 (D-016), awaiting the owner's check in the browser. Fight models saved in the browser before batch 3 must be retrained on the training page.
+**Current (2026-10-12):** Phase 9 (owner's go, 2026-10-12) — draft specification [`spec-tactical.md`](spec-tactical.md) v0.1, waiting for the owner's answers (§9) before batch 1.
+
+**Previous (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell), 4 (weapon types), 5 (classes, auto-tuned health), 6 (derived initiative, sudden death), 7 (AIs re-checked, fight learning fixed with γ = 1) 8 (Intelligence, mana, spells Soin / Entrave, Mage class) and 9 (critical × 2, Thief PM 4, health re-tuned and applied) are done. AI levels "Difficile", "Expert", "Godlike" done 2026-10-09 (D-016), checked by the owner on 2026-10-12 ("Godlike est vraiment très compliqué à battre"), as well as the flee re-engage fix. Fight models saved in the browser before batch 3 must be retrained on the training page.
 
 Still open on the side: Phase 7.4c (reinforcement on top of imitation) and 7.5 (generic recipe); offline font (Ideas / later).
 
@@ -94,7 +96,7 @@ Owner request on 2026-10-08: train the game's AI and learn how to do it for othe
 
 Owner request on 2026-10-08: more "realism" and content. Candidates, scope to validate: movement animation (and other animations), new bonuses, different weapons, character creation. Done when: TODO(owner).
 
-### ⬜ Phase 9 — Tactical combat and procedural maps (proposed)
+### 🟡 Phase 9 — Tactical combat and procedural maps (started 2026-10-12)
 
 Owner's wish on 2026-10-09 ("grave chaud"): give movement and placement real weight, so that decisions matter more than stats — which is also what lets stronger AIs show their level (today games are mostly decided by stats, weapon and who strikes first). Candidates, scope to validate in a specification first:
 - **Ranged attacks**: bows, ranged spells — attack from 2–3 cells without starting a duel.
@@ -103,7 +105,9 @@ Owner's wish on 2026-10-09 ("grave chaud"): give movement and placement real wei
 - **Procedurally generated maps**: rooms, corridors, terrain zones instead of obstacles dropped at random; seeded (same seed → same map) so that AI training and the balance lab stay reproducible.
 - Every AI level (Normal, Difficile, Expert, Godlike) must handle the new actions; the balance lab must measure them.
 
-Done when: TODO(owner) — defined with the specification.
+Specification: [`spec-tactical.md`](spec-tactical.md) v0.1 (draft, 2026-10-12), 5 batches proposed; waiting for the owner's answers.
+
+Done when: TODO(owner) — proposal in the specification §8 (Expert beats Normal ≥ 75 % on generated maps, characters 45–55 %, first player ≤ 55 %).
 
 ### ⬜ Phase 10 — Value network learned by self-play for Godlike (proposed)
 

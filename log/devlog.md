@@ -13,6 +13,12 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-12 — Phase 9 started: tactical specification draft
+
+- **Done**: owner checked the 2026-10-09 work in the browser (AI levels Difficile / Expert / Godlike — "Godlike est vraiment très compliqué à battre" — and the flee re-engage fix: all OK) and gave the go for Phase 9. Draft specification [`docs/spec-tactical.md`](../docs/spec-tactical.md) v0.1: turn = move then optional action (stay in place allowed), ranged weapons with straight-line line of sight (50 % in melee), board spells (4 candidates, 2 recommended), terrain (cover, high ground, mud — reusing the unused `grass.png`, `wood.png`, `rock.jpg`), seeded point-symmetric procedural maps (`MapGenerator.js`, styles Arène / Donjon / Classique), AI plan per level, "done when" proposal, 5 batches. Roadmap (Phase 9 🟡), AGENTS.md orientation table.
+- **Numbers**: docs only; no code changed, no tests run.
+- **Still open**: owner's answers to the specification's open questions (§9) before batch 1.
+
 ## 2026-10-09 — AI levels Difficile, Expert, Godlike; flee re-engage bug; roadmap phases 9–10
 
 - **Done**:
