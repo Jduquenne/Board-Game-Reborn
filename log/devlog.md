@@ -13,6 +13,13 @@ Entry format:
 - **Still open**: what remains for the next session.
 ```
 
+## 2026-10-13 — Decision: migrate to TypeScript + React (D-019)
+
+- **Done**: owner asked to move the project to TypeScript + React with the most common React libraries before any new feature, and asked whether Next.js would be better for a future server. Recommended Vite + React with an npm workspaces monorepo (`shared` / `client`, later `server` running the same pure rules) rather than Next.js; owner agreed. Recorded D-019 (D-001 and D-002 marked superseded), roadmap Phase 11 with steps M0 → M6, Phase 9 paused after batch 4.
+- **Numbers**: docs only, no code change.
+- **Problems**: npm's cache is on drive C: by default (`AppData\Local\npm-cache`) → a project `.npmrc` must redirect it before the first `npm install`. AGENTS.md still states "zero dependencies": it will be updated in M0, when `package.json` lands.
+- **Still open**: owner's go for M0; owner's browser check of Phase 9 batch 4.
+
 ## 2026-10-12 — Phase 9 batch 4: tactical AI Normal, AI choice, tactical arena
 
 - **Done**: owner checked batch 3 in the browser ("ça marche") and gave the go for batch 4. `src/AI/Tactical/TacticalAgents.js`: `applyAction`, random agent (reference), Normal agent (for each reachable position — stay, walk, Bond — best knapsack of spells castable with its PA: expected damage, useful heals, PA removed; placement score from a preferred distance per class; tackle risk as an expected value; then support spells, repositioning, end) with `choosePlacement`; `TacticalArena.js` (`playTacticalFight`, seeded, 40 actions per turn and 200 turns as safety limits). Fighters get a `controller` ('human' or an agent name, `createTacticalGame({ controllers })`). `TacticalAIEngine` (placement on `tactical:started`, one action every 650 ms on the AI's turn, ends the turn if an action is refused). `TacticalGrid.lineOfSight` caches the traversed cells per board (WeakMap): AI simulations recompute line of sight thousands of times. View: "Humain / IA Normal" per player in the class window (default: player 2 AI), "IA" badge, no highlights or spell bar and clicks ignored during the AI's turn, "X (IA) réfléchit…", AI's placement cells not clickable. `training/tactical-arena.mjs` (class win rates, matrix, first player, seat, length, sudden death). UI check: new screen `tactical-ai` (fails if the AI does not play); the scenarios that play player 2 switch it to "Humain". Docs: spec §12–13, architecture, development (tactical arena), roadmap, learning notes (French: planning a turn, knapsack, expected value).

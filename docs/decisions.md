@@ -7,7 +7,7 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 ## D-001 — Zero dependencies
 
 - **Date**: unknown, before migration
-- **Status**: accepted
+- **Status**: superseded by [D-019](#d-019--migrate-to-typescript--react--vite-npm-workspaces-monorepo) (2026-10-13)
 - **Context**: BoardGame Reborn is an architectural rewrite of BoardGame (same game, same gameplay) aiming for a clean, scalable vanilla JS codebase.
 - **Decision**: no third-party dependency — no jQuery, no bundler, no npm.
 - **Alternatives considered**: not documented.
@@ -16,7 +16,7 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 ## D-002 — Native ES modules, no bundler
 
 - **Date**: unknown, before migration
-- **Status**: accepted
+- **Status**: superseded by [D-019](#d-019--migrate-to-typescript--react--vite-npm-workspaces-monorepo) (2026-10-13)
 - **Context**: follows from D-001.
 - **Decision**: `import` / `export` everywhere, loaded natively by the browser (`<script type="module">`).
 - **Alternatives considered**: not documented.
@@ -57,6 +57,20 @@ Format: `## D-xxx — Title` · Date · Status (accepted / proposed / superseded
 - **Decision**: `AIEngine` listens to `turn:changed`; if the active player has `isAI`, it waits 900 ms then calls `gameEngine.movePlayer`. Since 2026-10-08 it also listens to `fight:start` and `fight:round-end`; if the attacker has `isAI`, it waits 1500 ms (longer than the `BattleBanner` display delays) then calls `fightEngine.attack()` or `defend()`. The player at index 1 is always the AI when an AI mode is selected. `GameView` starts/stops the AI on mount/unmount.
 - **Alternatives considered**: not documented.
 - **Consequences**: the AI uses the same public engine API as a human player. `BattleBanner` hides the action buttons when the attacker is the AI. The fight delay is coupled to the banner delays.
+
+## D-019 — Migrate to TypeScript + React + Vite, npm workspaces monorepo
+
+- **Date**: 2026-10-13
+- **Status**: accepted (owner, 2026-10-13: "Je te fais confiance avec vite react avec le serveur node plus tard"); supersedes D-001 and D-002, will amend D-004, D-005, D-008 and D-009 as the migration lands
+- **Context**: the project has grown to ~10,000 lines of vanilla JS (two rule sets, AI training, 12 views, hand-written Store / Router / Component). The owner wants a typed codebase with the most common React libraries before adding features, and may later plug a Node server (multiplayer, server-side AI) into the same project.
+- **Decision**:
+  - Stack: **TypeScript** (`strict`), **React** (function components + hooks), **Vite** (dev server and build), **Zustand** (global state; its vanilla store stays usable from the engines without React), **React Router** in hash mode (keeps the `#game`, `#tactical`… URLs), **Vitest** + **React Testing Library**, **ESLint** (typescript-eslint, hooks rules) + **Prettier**, **tsx** for the Node scripts in `training/`. Versions: the stable releases of the install day, pinned by the lock file.
+  - One repository, **npm workspaces**: `packages/shared/` (Engine, AI, Models, Repository — pure TS, no DOM, no React), `packages/client/` (React + Vite). A `packages/server/` (Node + WebSockets) may be added later, running the same rules as the client.
+  - Kept: layer separation (D-003), the typed EventBus for one-shot events, AI algorithms written by hand (D-010 — no ML library), `tools/ui-check.mjs` adapted to Vite (no Playwright), `css/style.css` as global CSS at first (CSS Modules later, component by component).
+  - The npm cache goes to `../BoardGameReborn-output/npm-cache` (project `.npmrc`): npm's default cache is on drive C:, which is forbidden.
+  - Incremental migration, the game playable at every step: M0 tooling and workspaces (existing JS runs under Vite), M1 pure layers to TS in `shared/`, M2 React shell (entry, router, Zustand store, Menu, Options), M3 game screen, M4 tactical screen, M5 Training and Balance pages (workers), M6 removal of `core/Component` / `Router` / `Store`, docs and AGENTS.md rules updated.
+- **Alternatives considered**: Next.js (built for websites — server rendering, SEO, REST APIs; no native WebSockets in route handlers, and a 100 % interactive client gets nothing from server rendering — can still be added later as another package for a showcase site); Redux Toolkit (heavier than Zustand for this state); Tailwind (would mean rewriting all the styles); staying vanilla (the owner's request is to leave it).
+- **Consequences**: Phase 9 paused after batch 4 until M6. The game is started with `npm run dev` instead of Live Server. Views get automated tests for the first time. The golden rules, the syntax-check step (replaced by `tsc` and ESLint) and the docs are rewritten during the migration.
 
 ## D-018 — Tactical board drawn in SVG; TacticalView dispatches to tacticalEngine
 

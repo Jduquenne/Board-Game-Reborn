@@ -4,7 +4,9 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⏸ waiting for a dec
 
 ## Current focus
 
-**Current (2026-10-12):** Phase 9 (owner's go, 2026-10-12) — Dofus Retro-like tactical fights, new mode next to the current game (D-017). Specification [`spec-tactical.md`](spec-tactical.md) v0.2. **Batch 1 done 2026-10-12** (isometric SVG board, PA / PM, D-018), checked by the owner. **Batch 2 done 2026-10-12** (class choice, placement, initiative, 4 classes × 4 spells + Coup de poing, line of sight — spec §13), checked by the owner. **Batch 3 done 2026-10-12**, checked by the owner. **Batch 4 done 2026-10-12** (AI Normal, "Humain / IA Normal" choice, tactical arena), awaiting the owner's check in the browser. The arena shows a strict class ranking (Iop > Eniripsa > Sacrieur > Crâ): next is batch 5 (balance lab for classes, random maps) — balance choices to make with the owner.
+**Current (2026-10-13):** Phase 11 — migration to TypeScript + React + Vite in an npm workspaces monorepo (D-019, owner's decision 2026-10-13), before any new feature. Steps M0 → M6 below; M0 (tooling and workspaces) awaiting the owner's go. Phase 9 paused after batch 4 until M6.
+
+**Previous (2026-10-12):** Phase 9 (owner's go, 2026-10-12) — Dofus Retro-like tactical fights, new mode next to the current game (D-017). Specification [`spec-tactical.md`](spec-tactical.md) v0.2. **Batch 1 done 2026-10-12** (isometric SVG board, PA / PM, D-018), checked by the owner. **Batch 2 done 2026-10-12** (class choice, placement, initiative, 4 classes × 4 spells + Coup de poing, line of sight — spec §13), checked by the owner. **Batch 3 done 2026-10-12**, checked by the owner. **Batch 4 done 2026-10-12** (AI Normal, "Humain / IA Normal" choice, tactical arena), awaiting the owner's check in the browser. The arena shows a strict class ranking (Iop > Eniripsa > Sacrieur > Crâ): next is batch 5 (balance lab for classes, random maps) — balance choices to make with the owner.
 
 **Previous (2026-10-09):** game design, [`spec-game-design.md`](spec-game-design.md) v0.3 — batches 1 (stats + Strength), 2 (criticals + dodge), 3 (flee, with the player choosing the escape cell), 4 (weapon types), 5 (classes, auto-tuned health), 6 (derived initiative, sudden death), 7 (AIs re-checked, fight learning fixed with γ = 1) 8 (Intelligence, mana, spells Soin / Entrave, Mage class) and 9 (critical × 2, Thief PM 4, health re-tuned and applied) are done. AI levels "Difficile", "Expert", "Godlike" done 2026-10-09 (D-016), checked by the owner on 2026-10-12 ("Godlike est vraiment très compliqué à battre"), as well as the flee re-engage fix. Fight models saved in the browser before batch 3 must be retrained on the training page.
 
@@ -120,6 +122,20 @@ Done when (proposal, spec §12): a full fight can be played on the isometric boa
 Owner's agreement on 2026-10-09, "if it improves Godlike". AlphaZero-style idea: a neural network (hand-written, D-014) learns to estimate the probability of winning from a position, from games played by Godlike against itself; Godlike then uses it to cut its simulations short (stronger and faster). Best started after Phase 9 (richer game, where hand-made features reach their limit). Related to 7.4c (reinforcement).
 
 Done when: TODO — e.g. Godlike with the value network beats current Godlike (> 55 %) at the same or lower thinking time.
+
+### 🟡 Phase 11 — TypeScript + React migration (started 2026-10-13)
+
+Owner's decision 2026-10-13 ([D-019](decisions.md#d-019--migrate-to-typescript--react--vite-npm-workspaces-monorepo)): the project grows, move from vanilla JS to TypeScript + React (Vite, Zustand, React Router, Vitest, ESLint, Prettier) in one repository with npm workspaces (`packages/shared`, `packages/client`, later `packages/server`). Same game, same rules: no gameplay change during the migration. The game stays playable after every step.
+
+- ⬜ M0 — tooling: `package.json` workspaces, `.npmrc` (cache off drive C:), Vite, TypeScript (`allowJs`), ESLint, Prettier, Vitest; existing JS served by Vite, tests green under Vitest.
+- ⬜ M1 — pure layers (Models, Repository, Engine, AI, workers, `training/`) to strict TS in `packages/shared/`.
+- ⬜ M2 — React shell: entry, hash router, Zustand store wired to the engines, Menu and Options.
+- ⬜ M3 — game screen (board, sidebar, BattleBanner, TrapBanner).
+- ⬜ M4 — tactical screen (SVG board in JSX).
+- ⬜ M5 — Training and Balance pages (Web Workers).
+- ⬜ M6 — remove `core/Component` / `Router` / `Store`, adapt `tools/ui-check.mjs`, rewrite AGENTS.md rules and `docs/`.
+
+Done when: every screen runs from React components, all code is strict TS, tests (engine + views) and the UI check pass, docs describe the new stack.
 
 ### ⏸ Character balance (found 2026-10-08)
 
